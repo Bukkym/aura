@@ -41,6 +41,9 @@ export interface User {
   lookingForExtracted: LookingForExtracted;
   selfEmbedding: number[];
   lookingForEmbedding: number[];
+
+  /** Dev-only label for mock users — used by the "Why these six?" panel. Empty for real users. */
+  _archetype?: string;
 }
 
 export type PlaceType =
