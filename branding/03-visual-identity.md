@@ -34,7 +34,7 @@ This is a deliberate inversion of an earlier draft that put the entry flow on Or
 | **Typography** | Warm geometric sans, regular weight, dark ink on cream | Same family, light ink on indigo |
 | **Motion** | Calm, slow, ambient | Slow rotation of the aurora gradient, breathing |
 
-### When the surface flips to Ora
+### When Ora visits
 
 Three named moments per session, no others:
 
@@ -42,9 +42,11 @@ Three named moments per session, no others:
 2. **"Finding your first Plan..."** — between chips review and Plan card (~3-5 sec).
 3. **"Adjusting..."** — when the user submits a refinement on the Plan card (~2-3 sec).
 
-The transition itself is a brand beat: cream surface fades through to deep indigo (~400ms), Ora's aurora bloom intensifies, ring rotates, microcopy fades in. Then it fades back to cream and the next state appears.
+**Crucially: the surface does NOT flip.** A full-screen indigo flash for a 2-3 second moment reads as visual whiplash, not reverence. Instead, Ora moments are rendered as a **localized bloom centered on the aurora ring**: layered radial gradients (luminous violet + electric magenta + deep indigo) bloom outward from the ring and fade to transparent before they reach the screen edges. The cream world stays intact. The ring becomes a luminous portal in a small pool of aurora dark — atmospheric, contained, and unmistakable.
 
-Everywhere else — Welcome, Voice prompt (idle/recording/review), Follow-up loops, Chips review, Plan card, WhatsApp invite — lives on the Aura cream surface.
+The transition is a 600ms fade-in for the bloom; the ring shifts from calm pulse to slow rotation in step. When the moment ends, the bloom fades out and the ring returns to rest.
+
+Everywhere else — Welcome, Voice prompt (idle/recording/review), Follow-up loops, Chips review, Plan card, WhatsApp invite — lives on the Aura cream surface, with no overlay.
 
 ---
 
