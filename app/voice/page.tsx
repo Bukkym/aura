@@ -27,44 +27,44 @@ export default function VoicePromptPage() {
     }
   }
 
-  // Ora "moment": only during processing the surface flips to deep indigo.
-  // Everything else lives on the warm Aura cream surface.
-  const isOraMoment = state === "processing";
-
+  // Ora "moment": only during processing the ring sits inside a localized
+  // indigo-aurora bloom. The cream world surrounds it; the ring becomes a
+  // luminous portal rather than the screen flipping.
+  const isProcessing = state === "processing";
   const promptOpacity = state === "recording" ? "opacity-30" : "opacity-100";
 
   return (
-    <main
-      className={`relative min-h-dvh w-full overflow-hidden transition-colors duration-500 ${
-        isOraMoment ? "bg-ora-bg text-ora-light" : "bg-aura-bg text-aura-ink"
-      }`}
-    >
-      {/* Background bloom — switches with state */}
-      {isOraMoment ? (
+    <main className="relative min-h-dvh w-full overflow-hidden bg-aura-bg text-aura-ink">
+      {/* Soft ambient cream bloom — always present */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 opacity-50 blur-3xl"
+        style={{
+          background:
+            "radial-gradient(45% 45% at 25% 25%, rgba(255, 123, 172, 0.22) 0%, transparent 70%), radial-gradient(40% 40% at 75% 75%, rgba(201, 125, 255, 0.18) 0%, transparent 75%)",
+        }}
+      />
+
+      {/* Ora moment: localized bloom centered behind the ring. Cream world
+          stays. Indigo + violet + magenta layered radial gradients fade out
+          to transparent before they hit the screen edges. */}
+      {isProcessing && (
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-40 blur-3xl animate-fade-in"
+          className="pointer-events-none absolute inset-0 animate-fade-in"
           style={{
-            background:
-              "radial-gradient(60% 60% at 50% 40%, #A237FF 0%, transparent 60%), radial-gradient(50% 50% at 70% 70%, #FF3D9A 0%, transparent 70%)",
-          }}
-        />
-      ) : (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 opacity-50 blur-3xl"
-          style={{
-            background:
-              "radial-gradient(45% 45% at 25% 25%, rgba(255, 123, 172, 0.22) 0%, transparent 70%), radial-gradient(40% 40% at 75% 75%, rgba(201, 125, 255, 0.18) 0%, transparent 75%)",
+            background: `
+              radial-gradient(circle at 50% 42%, rgba(162, 55, 255, 0.45) 0%, transparent 22%),
+              radial-gradient(circle at 50% 42%, rgba(255, 61, 154, 0.30) 0%, transparent 32%),
+              radial-gradient(circle at 50% 42%, rgba(14, 11, 34, 0.70) 0%, rgba(14, 11, 34, 0.25) 25%, transparent 50%)
+            `,
           }}
         />
       )}
 
       <Link
         href="/"
-        className={`absolute left-5 top-5 text-sm transition hover:opacity-100 ${
-          isOraMoment ? "text-ora-light/60" : "text-aura-ink/50"
-        }`}
+        className="absolute left-5 top-5 text-sm text-aura-ink/50 transition hover:text-aura-ink"
       >
         ← back
       </Link>
@@ -97,9 +97,7 @@ export default function VoicePromptPage() {
               people you&apos;d like to meet.
             </h1>
             <p
-              className={`mt-4 max-w-md text-sm transition-opacity duration-500 ${promptOpacity} ${
-                isOraMoment ? "text-ora-light/60" : "text-aura-ink/55"
-              }`}
+              className={`mt-4 max-w-md text-sm text-aura-ink/55 transition-opacity duration-500 ${promptOpacity}`}
             >
               {state === "recording"
                 ? "tap to stop"

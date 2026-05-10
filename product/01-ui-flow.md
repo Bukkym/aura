@@ -23,13 +23,13 @@ Every screen lives on the **Aura cream surface** by default. Ora's deep indigo *
 6. WhatsApp invite      [Aura cream]     Editable invite message + copy / deeplink CTAs
 ```
 
-Three Ora moments (each is a brief atmospheric overlay on the Aura surface, never a separate screen):
+Three Ora moments (each is a *localized bloom centered on the aurora ring*, never a full-screen surface flip):
 
 - *"Reading your aura..."* — between voice input and extraction (~3-5 sec, Screen 2 / 3).
 - *"Finding your first Plan..."* — between chips and Plan card (~3-5 sec, Screen 4 → 5).
 - *"Adjusting..."* — on refinement submit (~2-3 sec, within Screen 5).
 
-The transition itself is a brand beat: cream surface fades through to deep indigo (~400ms), Ora's aurora bloom intensifies, ring rotates, microcopy fades in. Then it fades back to cream and the next state appears.
+**The surface does NOT flip.** Layered radial gradients (luminous violet + electric magenta + deep indigo) bloom outward from the ring and fade to transparent before they reach the screen edges. The cream world stays intact; the ring becomes a luminous portal in a contained pool of aurora dark. Bloom fades in over 600ms, ring shifts from calm pulse to slow rotation in step. When the moment ends, the bloom fades out and the ring returns to rest.
 
 The rhythm: Aura is the room. Ora visits when the room needs atmosphere.
 
@@ -89,7 +89,7 @@ Cabinet Grotesk, ~28px, `#1A1530` (or `#FAF7F2` during the Processing overlay).
 
 **2. Recording.** Aura cream surface (no surface change). Ring uses **the same calm pulse as idle** — no intensity bump, no audio-reactive modulation. The ring is *present*, not *responsive to your voice*. Prompt fades to ~30% opacity. Tiny "tap to stop" hint near the ring.
 
-**3. Processing.** **Ora moment fires.** Cream surface fades through to deep indigo `#0E0B22` (~400ms transition). Aurora bloom intensifies (electric magenta + violet at higher saturation). Ring shifts to slow rotation of the aurora gradient (~10s per revolution). Text colors switch from dark ink to light ink in step. Microcopy: *"Reading your aura..."*. Lasts ~3-5 sec while Whisper transcribes and the LLM extracts.
+**3. Processing.** **Ora moment fires.** A localized indigo + violet + magenta bloom fades in centered on the ring (~600ms), reaching transparent well before the screen edges. The cream world surrounds it. Ring shifts to slow rotation of the aurora gradient (~10s per revolution) — it now reads as a luminous portal in a small pool of aurora dark. Microcopy: *"Reading your aura..."* sits below the ring, in dark ink on the cream that surrounds the bloom. Lasts ~3-5 sec while Whisper transcribes and the LLM extracts.
 
 **4. Review.** Surface fades back to Aura cream. Ring returns to rest (no animation, halo opacity drops). Transcribed text appears in soft body copy: *"You said:"* [transcript]. Two options:
 - **"Sounds right →"** (continue)
