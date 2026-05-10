@@ -19,19 +19,19 @@ export function AuroraRing({
   state = "idle",
   className = "",
 }: AuroraRingProps) {
+  // Recording uses the SAME calm breath as idle — no intensity bump.
+  // The ring is *present*, not *responsive to you*. Avoids the surveillance read.
   const haloAnimation =
     state === "processing"
       ? "animate-spin-slow"
-      : state === "recording"
-        ? "animate-pulse-slow"
-        : state === "rest"
-          ? ""
-          : "animate-pulse-slow";
+      : state === "rest"
+        ? ""
+        : "animate-pulse-slow";
 
   const ringAnimation =
     state === "processing" ? "animate-spin-slow" : haloAnimation;
 
-  const haloOpacity = state === "recording" ? 0.7 : state === "rest" ? 0.35 : 0.5;
+  const haloOpacity = state === "rest" ? 0.35 : 0.5;
 
   const haloStyle: CSSProperties = {
     background: auroraGradient,

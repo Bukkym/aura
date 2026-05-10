@@ -22,17 +22,29 @@ Aurora colors (deep violets, electric magentas, coral pinks, with optional flash
 
 ## Two surfaces, one family: the Aura / Ora split
 
-Aura is the everyday product surface — warm, friendly, daytime. Ora is the AI's presence — atmospheric, slow-pulsing, intelligent. Same family, different temperature. Ora "shows up" by *shifting the surface*: deep indigo overlay, gradient bloom, orb mark fades in, gentle motion. Ora is a moment, not a button.
+Aura is the everyday product surface — warm, friendly, daytime. The user lives here. Ora is the AI's presence — atmospheric, slow-pulsing, intelligent — and shows up *as a brief moment*, not as a whole screen. The default surface is Aura cream. Ora visits in three short atmospheric beats per session.
 
-|  | **Aura** (everyday product) | **Ora** (when the AI surfaces) |
+This is a deliberate inversion of an earlier draft that put the entry flow on Ora's deep indigo. Leading with darkness was a tonal mismatch for a social product whose first emotional beat should be *spark and warmth*, not *moody and mysterious*. Ora's atmospheric darkness now functions like a camera flash: brief, reverent, and unmistakable when it happens.
+
+|  | **Aura** (default — everyday product) | **Ora** (brief moments only) |
 |---|---|---|
-| **Backgrounds** | Warm off-white / soft cream | Deep midnight indigo |
-| **Gradients** | Soft aurora: coral → lavender → violet | Deep aurora: electric magenta → violet → indigo, animated, luminous |
-| **Mood** | Friendly, daytime, accessible | Atmospheric, slow-pulsing, intelligent presence |
-| **Typography** | Warm geometric sans, light/regular weights | Same family, tighter weight, occasional light italics for Ora's voice |
-| **Motion** | Static or subtle | Breathing, gradient shift, gentle orbital motion |
+| **Backgrounds** | Warm off-white / soft cream | Deep midnight indigo (overlay, ~2-5 sec at a time) |
+| **Gradients** | Soft aurora bloom: peach + lavender + violet at low opacity, behind cream | Deep aurora: electric magenta → violet → indigo, saturated, animated |
+| **Mood** | Spark, warmth, "your people are out there" energy | Atmospheric, intelligent presence revealing itself |
+| **Typography** | Warm geometric sans, regular weight, dark ink on cream | Same family, light ink on indigo |
+| **Motion** | Calm, slow, ambient | Slow rotation of the aurora gradient, breathing |
 
-Ora moments include: welcome / onboarding intro, "Ora is thinking" states, surfacing matches, refinement responses, and any place Ora "speaks."
+### When the surface flips to Ora
+
+Three named moments per session, no others:
+
+1. **"Reading your aura..."** — between voice input and extraction (~3-5 sec).
+2. **"Finding your first Plan..."** — between chips review and Plan card (~3-5 sec).
+3. **"Adjusting..."** — when the user submits a refinement on the Plan card (~2-3 sec).
+
+The transition itself is a brand beat: cream surface fades through to deep indigo (~400ms), Ora's aurora bloom intensifies, ring rotates, microcopy fades in. Then it fades back to cream and the next state appears.
+
+Everywhere else — Welcome, Voice prompt (idle/recording/review), Follow-up loops, Chips review, Plan card, WhatsApp invite — lives on the Aura cream surface.
 
 ---
 
@@ -92,11 +104,23 @@ Ora's identity is a **luminous ring** with aurora gradient. The visual rhyme: Or
 
 Behaviors:
 - Static in mono contexts (company logo, footer)
-- Pulses gently when Ora is active
+- Lives on the Aura cream surface in idle/recording states. Lives on Ora indigo only during the three named moments above.
 - Used as the **app icon**: deep indigo background, luminous aurora ring centered. This will stand out against the rounded-square colorful app-icon herd.
-- Surfacing animation when Ora is thinking, surfacing matches, or speaking
+- Spins (slow rotation of the aurora gradient) only during Ora moments. Pulses calmly otherwise.
 
 The wordmark "aura" is the friend who greets you. The ring is the entity reading you.
+
+### Motion language for the ring
+
+Calm, ambient, *never* anxious or surveillance-y. Specific commitments:
+
+- **Pulse cycle: ~7 seconds** (one full breath in + out). Slower than a heartbeat, closer to deep breathing. Reads as ambient presence, not heart rate.
+- **Pulse amplitude: subtle** — ~3% scale variation, ~10% opacity variation. Just enough to feel alive.
+- **Recording state uses the SAME calm pulse as idle.** No intensity bump, no audio-reactive modulation. The ring is *present*, not *responsive to your voice*. This was a deliberate reversal of an earlier draft: a ring that reacted to voice volume read as surveillance to a meaningful subset of users; a calm ring just feels like attention.
+- **Processing state: slow rotation** of the aurora gradient (~10 sec per revolution). Different from pulse — gives the unmistakable "Ora is thinking" beat.
+- **Rest state (after recording, before continuing): no animation, halo opacity drops.** Calms the screen so the user can read their transcript.
+
+These rules apply to every place the ring appears in the product.
 
 ---
 
