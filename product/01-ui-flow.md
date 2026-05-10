@@ -8,25 +8,34 @@ Date: 2026-05-07
 
 ## Bird's-eye
 
-Six screens, with one repeating template (voice prompt) and three named Ora moments between them.
+Every screen lives on the **Aura cream surface** by default. Ora's deep indigo *visits* in three brief atmospheric beats per session. The user is in the warm world ~95% of the time; Ora flashes through like a camera flash for the moments that matter.
 
 ```
-1. Welcome              [Ora surface]    Brand moment, "Begin"
-2. Voice prompt         [Ora surface]    Single open prompt, user talks freely
+1. Welcome              [Aura cream]     Brand moment, "Begin"
+2. Voice prompt         [Aura cream]     Single open prompt, user talks freely
                                            → Whisper → extract → coverage check
-3. Follow-up loop       [Ora surface]    1-2 targeted questions if extraction is thin
-                                           (reuses voice-prompt template)
-4. Chips review         [Aura surface]   "Here's what I heard." Editable.
-5. Plan card            [Aura surface]   The Plan + the picked attendees + inline refinement
-6. WhatsApp invite      [Aura surface]   Editable invite message + copy / deeplink CTAs
+                                         ★ Ora indigo overlay during processing only
+3. Follow-up loop       [Aura cream]     1-2 targeted questions if extraction is thin
+                                           (reuses voice-prompt template, same overlay rule)
+4. Chips review         [Aura cream]     "Here's what I heard." Editable.
+5. Plan card            [Aura cream]     The Plan + the picked attendees + inline refinement
+                                         ★ Ora indigo overlay during plan-gen and refinement
+6. WhatsApp invite      [Aura cream]     Editable invite message + copy / deeplink CTAs
 ```
 
-Three Ora moments (atmospheric overlays, never loading spinners):
-- *"Reading your aura..."* — between voice → extraction (Screen 2 → 3 or 2 → 4)
-- *"Finding your first Plan..."* — between chips → Plan (Screen 4 → 5)
-- *"Adjusting..."* — on refinement (within Screen 5)
+Three Ora moments (each is a brief atmospheric overlay on the Aura surface, never a separate screen):
 
-The rhythm: Ora opens you up, Aura helps you act, Ora returns at the moments that matter.
+- *"Reading your aura..."* — between voice input and extraction (~3-5 sec, Screen 2 / 3).
+- *"Finding your first Plan..."* — between chips and Plan card (~3-5 sec, Screen 4 → 5).
+- *"Adjusting..."* — on refinement submit (~2-3 sec, within Screen 5).
+
+The transition itself is a brand beat: cream surface fades through to deep indigo (~400ms), Ora's aurora bloom intensifies, ring rotates, microcopy fades in. Then it fades back to cream and the next state appears.
+
+The rhythm: Aura is the room. Ora visits when the room needs atmosphere.
+
+### Tonal direction (why Aura-default, not Ora-default)
+
+This is a deliberate inversion of an earlier draft that opened on Ora's deep indigo. Leading the entry flow with darkness was a tonal mismatch for a social product whose first emotional beat should be *spark, warmth, "your people are out there"* — not "moody, mysterious, atmospheric." The dark mode now functions like a camera flash: brief, reverent, unmistakable when it happens. Aura's warm cream carries the everyday emotion.
 
 ---
 
@@ -42,60 +51,59 @@ Type: Cabinet Grotesk for the wordmark and headers; Cabinet or Geist Sans for bo
 
 ## Screen 1: Welcome
 
-**Surface:** Ora — full-bleed deep indigo `#0E0B22`.
+**Surface:** Aura — warm cream `#FAF7F2`.
 
 **Layout (vertically centered):**
 
-- Aurora ring centered, ~120px diameter, slow pulse (~4s cycle, subtle scale + glow shift).
-- Wordmark "aura" below the ring, Cabinet Grotesk Medium, ~64px, `#FAF7F2`.
-- Tagline below: *"Your people are out there. Let's find them."* — ~18px, `#FAF7F2` at 70% opacity.
-- Single CTA below: *"Begin"* — violet button (`#7752E6` fill) or aurora-gradient fill.
-- *"by Ora"* in the bottom-right corner, ~12px, 50% opacity.
+- Aurora ring centered, ~120px diameter, calm slow pulse (~7s cycle, ~3% scale variation, ~10% opacity variation).
+- Wordmark "aura" below the ring, Cabinet Grotesk Medium, ~64px, `#1A1530`.
+- Tagline below: *"Your people are out there. Let's find them."* — ~18px, `#1A1530` at 70% opacity.
+- Single CTA below: *"Begin"* — violet button (`#7752E6` fill, cream text), pairs with `aura-violet` Tailwind token.
+- *"by Ora"* in the bottom-right corner, ~12px, ~40% opacity.
 
 **Motion:**
-- Aurora ring pulses slowly.
-- Behind everything: subtle aurora gradient bloom drifting in the background — atmospheric, low-opacity, nebula-photography feel.
-- Static otherwise.
+- Aurora ring pulses calmly (no audio-reactive, no intensity bump elsewhere).
+- Behind everything: soft aurora bloom in low opacity — peach + lavender + violet radial gradients on cream, drifting subtly. The surface reads warm and alive without being colorful-busy.
 
-**Why minimal:** brand voice is concise, direct, no hedging. Welcome screens that explain the product undermine confidence.
+**Why minimal:** brand voice is concise, direct, no hedging. Welcome screens that explain the product undermine confidence. Leading with the warm Aura surface (rather than Ora's deep indigo) sets *spark and warmth* as the first emotional beat — exactly what a social product wants.
 
 ---
 
 ## Screen 2: Voice prompt
 
-**Surface:** Ora — same indigo, no jarring transition. The aurora ring grows from its Welcome size to become the focal point.
+**Surface:** Aura cream by default. The Ora deep indigo overlay only appears during the **Processing** state.
 
 **Prompt copy (header):**
 
 > **Tell me about yourself, what you're into, and the kind of people you'd like to meet.**
 
-Cabinet Grotesk, ~28px, `#FAF7F2`.
+Cabinet Grotesk, ~28px, `#1A1530` (or `#FAF7F2` during the Processing overlay).
 
-**Hint below:** *"Take your time. Speak however feels natural."* — ~14px, 50% opacity.
+**Hint below:** *"Take your time. Speak however feels natural."* — ~14px, ~55% opacity (matches whichever ink is current).
 
 **The aurora ring is the only interactive element.** Tap to start, tap to stop. No record button, no waveform meter, no timer.
 
 ### Four states:
 
-**1. Idle.** Ring at default slow pulse. Prompt fully visible. Whole screen breathing.
+**1. Idle.** Aura cream surface. Ring at calm 7s pulse. Prompt fully visible.
 
-**2. Recording.** Ring pulses more strongly with audio-reactive subtle modulation (responds to user's voice volume). Prompt fades to ~30% opacity. Tiny "tap to stop" hint near the ring.
+**2. Recording.** Aura cream surface (no surface change). Ring uses **the same calm pulse as idle** — no intensity bump, no audio-reactive modulation. The ring is *present*, not *responsive to your voice*. Prompt fades to ~30% opacity. Tiny "tap to stop" hint near the ring.
 
-**3. Processing.** Ring shifts to a slow continuous rotation of the aurora gradient. Microcopy below: *"Reading your aura..."* — this is the first named Ora moment. Lasts ~3-5 sec while Whisper transcribes and the LLM extracts.
+**3. Processing.** **Ora moment fires.** Cream surface fades through to deep indigo `#0E0B22` (~400ms transition). Aurora bloom intensifies (electric magenta + violet at higher saturation). Ring shifts to slow rotation of the aurora gradient (~10s per revolution). Text colors switch from dark ink to light ink in step. Microcopy: *"Reading your aura..."*. Lasts ~3-5 sec while Whisper transcribes and the LLM extracts.
 
-**4. Review.** Ring returns to rest. Transcribed text appears in soft body copy: *"You said:"* [transcript]. Two options:
+**4. Review.** Surface fades back to Aura cream. Ring returns to rest (no animation, halo opacity drops). Transcribed text appears in soft body copy: *"You said:"* [transcript]. Two options:
 - **"Sounds right →"** (continue)
 - **"Let me try again"** (re-record)
 
 The Review state is intentional friction — it builds confidence and catches Whisper errors on Berlin-specific words and unusual interests.
 
-**Top-left:** subtle "← back" affordance.
+**Top-left:** subtle "← back" affordance, ink color matches whichever surface is current.
 
 ---
 
 ## Screen 3: Follow-up loop (template reuse)
 
-If extraction coverage is thin (key fields empty: e.g. no `connectionType`, no `activityTypes`, etc.), Ora asks 1-2 targeted follow-ups *before* moving to the chips screen. This loop uses the **same voice-prompt template** as Screen 2 — the only thing that changes is the copy.
+If extraction coverage is thin (key fields empty: e.g. no `connectionType`, no `activityTypes`, etc.), Ora asks 1-2 targeted follow-ups *before* moving to the chips screen. This loop uses the **same voice-prompt template** as Screen 2 — same Aura cream surface, same Ora overlay during processing, same ring behavior. Only the copy changes.
 
 **Prompt format:**
 
@@ -116,9 +124,9 @@ Stop after the first thin field is filled, *or* after two follow-ups, whichever 
 
 ---
 
-## Screen 4: Chips review (first Aura surface)
+## Screen 4: Chips review
 
-**The transition itself is a brand moment.** The deep indigo lifts and the surface turns warm cream `#FAF7F2`. The aurora gradient bleeds upward and dissipates. The user "arrives" in the daylight.
+**Surface:** Aura cream `#FAF7F2` (continuous from the previous screens — no surface change here).
 
 **Layout (top to bottom):**
 

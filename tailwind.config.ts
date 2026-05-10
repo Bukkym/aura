@@ -33,14 +33,16 @@ const config: Config = {
         ],
       },
       animation: {
-        "pulse-slow": "pulse-slow 4s ease-in-out infinite",
-        "spin-slow": "spin 8s linear infinite",
+        // Calm 7s breath — slower than a heartbeat, closer to deep breathing.
+        // Reads as ambient presence, not surveillance.
+        "pulse-slow": "pulse-slow 7s ease-in-out infinite",
+        "spin-slow": "spin 10s linear infinite",
         "fade-in": "fade-in 600ms ease-out",
       },
       keyframes: {
         "pulse-slow": {
           "0%, 100%": { opacity: "1", transform: "scale(1)" },
-          "50%": { opacity: "0.85", transform: "scale(1.04)" },
+          "50%": { opacity: "0.9", transform: "scale(1.03)" },
         },
         "fade-in": {
           "0%": { opacity: "0", transform: "translateY(8px)" },

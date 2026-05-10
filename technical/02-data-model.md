@@ -238,6 +238,41 @@ No data model change required — fully additive on top of the current architect
 
 When showing a matched user, reveal short commonality labels first ("Chill vibes", "Both into startups"); reveal the *details* (e.g. "Both lived in Berlin under a year") only after the user expresses interest in the match. Builds curiosity without spoiling. UI-layer concern, not data model — captured here so we remember when designing the match card.
 
-### Post-event affinity signals
+### Vibe Feedback — the data foundation for the Ora behavioral model
 
-Once the product gets to actual events/plans (Phase 2), collect lightweight post-event feedback (thumbs up/down on co-attendees) and use it as an additional matching signal. Out of MVP scope.
+Per the Ora Intelligence Engine vision in `PROJECT.md` (and `/product/02-ora-intelligence-vision.md`), vibe feedback is **not just a UX feature** — it is the primary training-data collection mechanism for Ora's eventual proprietary behavioral model. Signal quality matters more than UX simplicity. Out of MVP scope to *capture*, but the MVP architecture must not preclude it.
+
+**What vibe feedback will capture (Phase 2):**
+
+- **Per-attendee click signal** — for each other attendee at a Plan, did the user click with them? (binary or 3-point: yes / neutral / no).
+- **Group energy** — overall feel of the group (single rating).
+- **Return intent** — would the user attend a Plan with this group again? (binary).
+- **Per-Plan satisfaction** — was the activity / venue / time the right call independently of the people?
+- **Stated-vs-revealed delta** — implicit. Aggregated across many Plans, this is where Ora learns the gap between what users said they wanted at onboarding and who they actually clicked with.
+
+**Schema reservation (forward-looking):**
+
+```ts
+type Feedback = {
+  feedbackId: string
+  planId: string                  // links to the Plan it came from
+  fromUserId: string              // who is giving the feedback
+  perAttendee: {
+    targetUserId: string
+    clicked: "yes" | "neutral" | "no"
+    note?: string                 // optional free-text
+  }[]
+  groupEnergy: 1 | 2 | 3 | 4 | 5
+  wouldReturn: boolean
+  planSatisfaction: 1 | 2 | 3 | 4 | 5
+  submittedAt: string             // ISO timestamp
+}
+```
+
+**Architectural commitments the MVP must honor today** so this drops in cleanly later:
+
+- **Plans must be persistable.** Currently `Plan` is computed-per-request and not written to disk. The schema already has `planId` + `hostUserId` so it *can* be persisted; we just don't persist it yet. No breaking changes when we start persisting in Phase 2.
+- **Every record carries a `userId`.** Already the rule (see `01-mvp-decisions.md`). Feedback links by IDs, not by sessions or names.
+- **Embeddings stay swappable behind `findSimilar()`.** Already the rule. When the future fine-tuned Ora model replaces or augments cosine matching, swap is local.
+
+The MVP itself doesn't capture vibe feedback (no real Plans run, no real attendees). But the data architecture is ready, which is what the Ora Intelligence Engine vision actually needs from this stage.

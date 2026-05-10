@@ -235,13 +235,25 @@ The matching system operates on two tiers:
 ### Phase 2 Feature Roadmap
 
 1. **Plan suggestion** -- 2-3 curated activity options per group per cycle, based on shared attributes and past activity ratings.
-2. **Vibe feedback system** -- lightweight post-activity rating; feeds re-ranking and group crystallization logic.
+2. **Vibe feedback system** -- lightweight post-activity rating; feeds re-ranking and group crystallization logic. Designed as a behavioral data collection mechanism, not just a UX feature. Signal quality matters more than simplicity: capture who specifically you clicked with, would you see them again, group energy, would you return.
 3. **Smarter matching** -- incorporate feedback signals over time; improve cold-start with behavioral data.
 4. **Group formation detection** -- identify when a stable core has emerged; transition group to Phase 3.
 5. **Shared group calendar** -- ongoing scheduling for formed groups; integrates with personal calendars.
-6. **Personalization loop** -- learn what worked per group and per user; improve future recommendations.
+6. **Personalization loop** -- learn what worked per group and per user; improve future recommendations. This is the early version of the stated-vs-revealed preference gap model: Ora starts learning the delta between what users said they wanted and what their behavior revealed.
 7. **Communication layer** -- group chat is the backbone of Phase 3, not an optional add-on. WhatsApp integration is preferred for the transition (lowest friction, zero build required); native in-app group chat is the long-term target. Presence cards ship alongside -- lightweight identity (name, a few facts, shared Plans) visible within the group after meeting in person, never before.
 8. **Presence cards** -- post-meeting identity layer. Not a browsing profile. Visible only within a formed group, helping members remember and connect with people they've already met.
+9. **Ora behavioral model (fine-tuning)** -- first fine-tuning pass on Ora's proprietary behavioral dataset: vibe signals, convergence outcomes, stated-vs-revealed preference gaps. This is when Ora stops being a wrapper and starts being a proprietary model. Requires 12-18 months of live product data before meaningful training is possible.
+10. **"Ora has learned this about you" in-product moment** -- surface what Ora has observed about a user's actual social patterns, distinct from what they said at onboarding. The product inflection point where Ora shifts from reactive tool to trusted intelligence.
+
+### The Ora Intelligence Engine (Long-Term Vision)
+
+The full strategic vision for Ora as a judgment-grade social intelligence model is documented separately in `/product/02-ora-intelligence-vision.md`. Key points for context here:
+
+- Ora's long-term moat is not the product layer -- it is the behavioral data flywheel the product generates
+- Every Plan run, every vibe signal, every convergence event is a training row for the future model
+- The stated-vs-revealed preference gap (what users say they want vs. what their behavior shows they need) is the core proprietary intelligence Ora builds over time
+- The data architecture and vibe feedback quality decisions made in the MVP directly determine whether the Phase 2 model is possible
+- The deck narrative: "Ora is building the model that understands human connection. Aura is how we train it."
 9. **Gap-detection follow-up questions** -- after free-text/voice input, the system detects under-specified or missing fields in the user's profile and generates targeted follow-up questions ("you mentioned you like building things; what kind of energy do you want from the people you spend time with?"). Distinct from the user-driven refinement loop -- this one is system-driven. Compatible with current MVP architecture, no schema changes required. See `/technical/02-data-model.md` forward-looking design notes.
 
 ---
@@ -273,6 +285,7 @@ Resolved 2026-05-07. Full rationale in `/technical/01-mvp-decisions.md`.
 - 2026-04-29: Group formation architecture documented -- two-tier model (macro personality cluster pools + micro activity groups of up to 10), vibe feedback reshuffle logic, convergence signal definition, user-facing framing.
 - 2026-04-30: Brand names decided -- product is Aura, company and AI entity are Ora. See /branding/ for full documentation.
 - 2026-05-05: Clarified profiles and chat design principles. "No profiles, no chat" applies only to the discovery mechanic, not the full product. Group chat is confirmed core to Phase 3 (Group Life). Presence cards added as post-meeting identity layer. Phase 1 out-of-scope list updated to reflect these are temporary, not permanent exclusions.
+- 2026-05-08: Added Ora Intelligence Engine as the long-term product vision. Full document at /product/02-ora-intelligence-vision.md. Roadmap updated with behavioral model and fine-tuning as explicit milestones. Vibe feedback system reframed as primary data collection infrastructure, not just a UX feature.
 - 2026-05-07: MVP technical scope locked. Stack: Next.js + Node/TS, local in-memory vectors, Whisper voice input for preference gathering, Berlin/English-only, no auth. Data model defined with two-layer profiles (raw inputs → structured extraction → embeddings) and bidirectional cosine matching. See `/technical/01-mvp-decisions.md` and `/technical/02-data-model.md`.
 - 2026-05-07: 7 macro archetypes defined as social-mode clusters (Ambitious Creators, Cultural Explorers, Scene & Nightlife, Outdoor & Active, Wellness & Inner-Work, Cozy Connectors, Sports & Crew). City-agnostic, designed to apply across Berlin / NYC / Toronto / SF / London. Bootcamp MVP matches archetype-blind to validate embedding pipeline; real product uses them as hard cluster pools per the product vision. `connectionType` field added to lookingForExtracted (close-friendships / social-circle / activity-buddies / new-city-support). Tag canonicalization moved from "defer" to "include at extraction." Gap-detection follow-up question loop and tiered match-detail disclosure captured as forward-looking design notes. See `/technical/03-archetypes.md`.
 - 2026-05-07: Visual identity direction set. Anchor concept is aurora — warm aurora (coral / lavender / violet) for Aura's everyday surface, deep aurora (electric magenta / violet / indigo) for Ora's atmospheric AI presence. Two-mode system: warm cream surface for Aura, deep indigo overlay when Ora surfaces. Cabinet Grotesk for the wordmark. Aura is text-only ("aura" lowercase); Ora gets a luminous aurora-ring mark used as the app icon and the AI presence indicator. Domain candidates ranked (youraura.com leading). See `/branding/03-visual-identity.md`.

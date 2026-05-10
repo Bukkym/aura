@@ -27,22 +27,44 @@ export default function VoicePromptPage() {
     }
   }
 
+  // Ora "moment": only during processing the surface flips to deep indigo.
+  // Everything else lives on the warm Aura cream surface.
+  const isOraMoment = state === "processing";
+
   const promptOpacity = state === "recording" ? "opacity-30" : "opacity-100";
 
   return (
-    <main className="relative min-h-dvh w-full overflow-hidden bg-ora-bg text-ora-light">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-25 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(60% 60% at 50% 40%, #A237FF 0%, transparent 60%), radial-gradient(50% 50% at 70% 70%, #FF3D9A 0%, transparent 70%)",
-        }}
-      />
+    <main
+      className={`relative min-h-dvh w-full overflow-hidden transition-colors duration-500 ${
+        isOraMoment ? "bg-ora-bg text-ora-light" : "bg-aura-bg text-aura-ink"
+      }`}
+    >
+      {/* Background bloom — switches with state */}
+      {isOraMoment ? (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-40 blur-3xl animate-fade-in"
+          style={{
+            background:
+              "radial-gradient(60% 60% at 50% 40%, #A237FF 0%, transparent 60%), radial-gradient(50% 50% at 70% 70%, #FF3D9A 0%, transparent 70%)",
+          }}
+        />
+      ) : (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 opacity-50 blur-3xl"
+          style={{
+            background:
+              "radial-gradient(45% 45% at 25% 25%, rgba(255, 123, 172, 0.22) 0%, transparent 70%), radial-gradient(40% 40% at 75% 75%, rgba(201, 125, 255, 0.18) 0%, transparent 75%)",
+          }}
+        />
+      )}
 
       <Link
         href="/"
-        className="absolute left-5 top-5 text-sm text-ora-light/60 transition hover:text-ora-light"
+        className={`absolute left-5 top-5 text-sm transition hover:opacity-100 ${
+          isOraMoment ? "text-ora-light/60" : "text-aura-ink/50"
+        }`}
       >
         ← back
       </Link>
@@ -75,7 +97,9 @@ export default function VoicePromptPage() {
               people you&apos;d like to meet.
             </h1>
             <p
-              className={`mt-4 max-w-md text-sm text-ora-light/50 transition-opacity duration-500 ${promptOpacity}`}
+              className={`mt-4 max-w-md text-sm transition-opacity duration-500 ${promptOpacity} ${
+                isOraMoment ? "text-ora-light/60" : "text-aura-ink/55"
+              }`}
             >
               {state === "recording"
                 ? "tap to stop"
@@ -88,14 +112,14 @@ export default function VoicePromptPage() {
 
         {state === "rest" && transcript && (
           <div className="mt-12 w-full max-w-xl animate-fade-in space-y-6">
-            <p className="text-sm text-ora-light/50">You said:</p>
-            <p className="text-base leading-relaxed text-ora-light/90">
+            <p className="text-sm text-aura-ink/55">You said:</p>
+            <p className="text-base leading-relaxed text-aura-ink">
               {transcript}
             </p>
             <div className="flex flex-col items-center gap-3 pt-2 sm:flex-row sm:justify-center sm:gap-4">
               <Link
                 href="/chips"
-                className="inline-flex h-11 w-full items-center justify-center rounded-full bg-aura-violet px-6 text-sm font-medium transition hover:bg-ora-violet sm:w-auto"
+                className="inline-flex h-11 w-full items-center justify-center rounded-full bg-aura-violet px-6 text-sm font-medium text-aura-bg transition hover:bg-ora-violet sm:w-auto"
               >
                 Sounds right →
               </Link>
@@ -105,7 +129,7 @@ export default function VoicePromptPage() {
                   setTranscript(null);
                   setState("idle");
                 }}
-                className="text-sm text-ora-light/60 underline-offset-4 transition hover:text-ora-light hover:underline"
+                className="text-sm text-aura-ink/55 underline-offset-4 transition hover:text-aura-ink hover:underline"
               >
                 Let me try again
               </button>
