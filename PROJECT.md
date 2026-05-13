@@ -262,21 +262,42 @@ The full strategic vision for Ora as a judgment-grade social intelligence model 
 
 Resolved 2026-05-07. Full rationale in `/technical/01-mvp-decisions.md`.
 
-- **Vector store:** local in-memory cosine (swappable behind `findSimilar()`).
+- ~~**Vector store:** local in-memory cosine (swappable behind `findSimilar()`).~~ Superseded by Slice B′ (2026-05-11): Supabase Postgres + pgvector with HNSW indexes; mutual-fit cosine executed as a single SQL expression via the `<=>` operator.
 - **Frontend framework:** Next.js (App Router).
 - **Backend language:** Node + TypeScript via Next.js API routes.
 - **Mock dataset:** ~175 LLM-generated users across 7 archetypes. See `/technical/02-data-model.md` and `/technical/03-archetypes.md`.
 - **Refinement loop:** re-extract + re-rank.
 - **Voice input:** voice (OpenAI Whisper) for open-ended preference questions; typed for structured fields.
 - **Location:** Berlin, English-only.
-- **Auth:** skip for MVP, but every record carries `userId` from day one.
+- ~~**Auth:** skip for MVP, but every record carries `userId` from day one.~~ Superseded by Slice B′ (2026-05-11): magic-link via Supabase Auth, just-in-time placement at "Find my people." Phone (Twilio) as a fast-follow inside B′. Every record still carries `userId`.
 
 ## Next Steps
 
-1. ~~Lock MVP scope~~ — done, see `/technical/01-mvp-decisions.md`.
-2. ~~Design data model~~ — done, see `/technical/02-data-model.md` and `/technical/03-archetypes.md`.
-3. ~~Sketch UI flow~~ — done, see `/product/01-ui-flow.md`.
-4. Tech setup — scaffold project, wire LLM, basic end-to-end path.
+The build proceeds in slices. Each slice is one or more PRs against `main`. Status as of 2026-05-11.
+
+**Slice A — Mock-data MVP shell.** ✅ Done. Next.js + Tailwind scaffold; AuroraRing + Welcome + Voice screens; OpenAI plumbing; in-memory cosine matching in `/lib/match.ts`; 175 mock users + 33 Berlin venues seeded to JSON with embeddings precomputed. Stubs in place for transcription, extraction, plan generation. PRs #1–#4 merged.
+
+**Slice B′ — Supabase persistence + Auth.** 🟡 In progress. The bootcamp deliverable requires a deployed app with database + auth, so persistence moves ahead of the chips / Plan-card UI work to avoid rewiring later.
+
+- Provision Supabase project (EU Frankfurt, project `aura`) — done.
+- `lib/supabase.ts` — server (service-role) + browser (publishable) client factories.
+- Schema: `users`, `places`, `plans` tables; pgvector extension; HNSW indexes on both embedding columns.
+- One-shot migration `scripts/migrate-json-to-supabase.ts` — preserves precomputed embeddings, no OpenAI calls.
+- Rewrite `lib/findSimilar.ts` (places) and add `lib/matchEngine.ts` (users) to use pgvector; public interface unchanged so consumer code is not touched.
+- Magic-link auth via Supabase Auth at `/auth/login` + `/auth/callback`.
+- Just-in-time auth gate at "Find my people" — Welcome + Voice + Chips remain anonymous.
+- Mock users persist with `auth_user_id = NULL` (matchable, not logged-in-able).
+- Doc updates: `/technical/01-mvp-decisions.md` (vector store → pgvector, auth → magic-link) + new `/technical/04-infrastructure.md` (Supabase + Vercel + auth flow).
+
+Deferred to fast-follow inside B′: phone auth (Twilio), 30–60 min once magic-link is stable.
+
+**Slice B — Chips review + Plan card with real matching.** `/chips` screen, Plan card screen, `lib/generatePlan.ts` real implementation (pick activity → pick venue via pgvector → pick time → pick 6–8 attendees → LLM `whyThisPlan`).
+
+**Slice C — Real LLM pipeline.** Real Whisper transcription (`MediaRecorder` → `/api/transcribe`), real extraction LLM call (replace the `lib/extract.ts` stub), gap-detection follow-up loop capped at 2 follow-ups.
+
+**Slice D — Invite + refinement + polish.** WhatsApp invite screen, Plan-card refinement loop ("more chill" → re-extract + re-rank), "Why these six?" dev panel, copy + motion polish.
+
+**Slice E — Vercel deploy.** Wire env vars, deploy, smoke test live, update README with live URL.
 
 ## Change Log
 
@@ -291,3 +312,8 @@ Resolved 2026-05-07. Full rationale in `/technical/01-mvp-decisions.md`.
 - 2026-05-07: Visual identity direction set. Anchor concept is aurora — warm aurora (coral / lavender / violet) for Aura's everyday surface, deep aurora (electric magenta / violet / indigo) for Ora's atmospheric AI presence. Two-mode system: warm cream surface for Aura, deep indigo overlay when Ora surfaces. Cabinet Grotesk for the wordmark. Aura is text-only ("aura" lowercase); Ora gets a luminous aurora-ring mark used as the app icon and the AI presence indicator. Domain candidates ranked (youraura.com leading). See `/branding/03-visual-identity.md`.
 - 2026-05-07: MVP pivot — Plan-first, not people-first. Realigned the bootcamp MVP to the product vision's core unit: a Plan (activity + venue + time + curated attendees) is the user-facing payoff, not a matched-people list. Added `activityTypes` to selfExtracted (with optional `availability` and `budget`); added `Plan` schema and Plan-generation pipeline; demoted Match record to an internal artifact surfaced only inside a Plan card. UI flow restructured around a single Plan card replacing the previous Results-list screen. "Why these six?" dev/demo panel preserves matching-at-scale visibility for portfolio reviewers. See `/technical/02-data-model.md` for schemas + generation logic.
 - 2026-05-07: UI flow committed. 6 screens (Welcome / Voice prompt / Follow-up loop / Chips review / Plan card / WhatsApp invite) with three named Ora moments ("Reading your aura...", "Finding your first Plan...", "Adjusting..."). Combined the two voice prompts into one open prompt with gap-detection follow-ups. Inline refinement on the Plan card. Per-attendee tiered disclosure (collapsed labels → expanded why-this-match details on tap). Aura-swatch concept (procedurally-generated aurora gradient per user) replaces profile photos. Full microcopy library + per-screen layout, motion, and surface specs in `/product/01-ui-flow.md`.
+- 2026-05-08: PR #1 merged. 33 Berlin venues seeded with embeddings + OpenAI client plumbing (`lib/openai.ts`, `lib/embed.ts`, `scripts/seed-places.ts`).
+- 2026-05-08: PR #2 merged. 175 mock users seeded across 7 archetypes (25 each) with `selfEmbedding` + `lookingForEmbedding` precomputed. Mix: 80% intra-archetype, 15% adjacent bridges, 5% deliberate mismatches.
+- 2026-05-10: PR #3 merged. Design rebalance — Aura cream is the default surface for ~95% of screens; Ora indigo appears only as brief atmospheric moments. AuroraRing motion gentled to 7s breath, no audio-reactive (the ring is present, not responsive to the user's voice — removes the surveillance read).
+- 2026-05-10: PR #4 merged. Localized Ora bloom replaces full-screen surface flip during the Processing state. The bloom is contained; the ring becomes a luminous portal; the cream world surrounds it.
+- 2026-05-11: Slice B′ scoped and inserted before original Slice B. The bootcamp clarified the deliverable must be a fully deployed app with database + auth, not local-only. Supabase project provisioned (EU). The Kiro spec for embedding-match-engine updated to assume Supabase + pgvector as the data layer — mock dataset seeded into the `users` table, mutual-fit cosine executed as a single SQL expression via pgvector `<=>`, group composition still in application code. Vector store decision moves from "local in-memory" to "pgvector"; auth decision moves from "skip for MVP" to "magic-link via Supabase Auth, just-in-time placement." Next Steps section restructured as a slice plan (A done, B′ in progress, B / C / D / E queued).
