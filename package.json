@@ -12,6 +12,8 @@
     "seed": "npm run seed:places && npm run seed:users"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.105.4",
     "geist": "^1.3.1",
     "next": "^15.0.3",
     "openai": "^4.73.0",
