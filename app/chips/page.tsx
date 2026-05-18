@@ -297,17 +297,22 @@ function Chip({
   label: string;
   onRemove: () => void;
 }) {
+  // Softly filled to communicate "currently selected, removable" — distinct
+  // from the bolder filled state of the active ConnectionPill (which uses
+  // full violet because it's an active choice from a closed set, not a
+  // descriptive tag). × is always visible at moderate opacity so the remove
+  // affordance is discoverable without hovering.
   return (
     <button
       type="button"
       onClick={onRemove}
       aria-label={`Remove ${label}`}
-      className="group inline-flex h-9 items-center gap-1.5 rounded-full border border-aura-lavender/60 px-4 text-sm text-aura-violet transition hover:border-aura-violet hover:bg-aura-violet/5 active:scale-[0.97]"
+      className="group inline-flex h-9 items-center gap-1 rounded-full bg-aura-violet/[0.10] py-0.5 pl-4 pr-2 text-sm text-aura-violet transition hover:bg-aura-violet/[0.18] active:scale-[0.97]"
     >
       <span>{label}</span>
       <span
         aria-hidden
-        className="inline-flex h-4 w-4 items-center justify-center rounded-full text-xs text-aura-violet/0 transition group-hover:text-aura-violet"
+        className="inline-flex h-5 w-5 items-center justify-center rounded-full text-base leading-none text-aura-violet/55 transition group-hover:bg-aura-violet/15 group-hover:text-aura-violet"
       >
         ×
       </span>

@@ -27,11 +27,20 @@ export default function VoicePromptPage() {
     }
   }
 
-  // Ora "moment": only during processing the ring sits inside a localized
-  // indigo-aurora bloom. The cream world surrounds it; the ring becomes a
-  // luminous portal rather than the screen flipping.
+  // Ora "moment": during processing, the ring sits inside a localized
+  // luminous aurora bloom — violet + magenta + lavender on cream, no dark
+  // layer. (An earlier draft layered near-black indigo over cream to evoke
+  // "aurora dark"; on cream that alpha-blends to muddy gray, so we drop it
+  // and let the bloom be pure colored light.)
+  //
+  // The prompt fades out during processing too — at that point the user has
+  // finished talking and Ora is reading; keeping the question fully visible
+  // pulls focus away from the moment.
   const isProcessing = state === "processing";
-  const promptOpacity = state === "recording" ? "opacity-30" : "opacity-100";
+  const promptOpacity =
+    state === "recording" || state === "processing"
+      ? "opacity-30"
+      : "opacity-100";
 
   return (
     <main className="relative min-h-dvh w-full overflow-hidden bg-aura-bg text-aura-ink">
@@ -45,18 +54,20 @@ export default function VoicePromptPage() {
         }}
       />
 
-      {/* Ora moment: localized bloom centered behind the ring. Cream world
-          stays. Indigo + violet + magenta layered radial gradients fade out
-          to transparent before they hit the screen edges. */}
+      {/* Ora moment: localized luminous bloom centered behind the ring.
+          Three radial gradients of pure colored light (violet → magenta →
+          lavender) fade out to transparent before they hit the screen edges.
+          No dark element — the ring becomes a luminous portal in a pool of
+          aurora glow, not a dark hole on the cream surface. */}
       {isProcessing && (
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 animate-fade-in"
           style={{
             background: `
-              radial-gradient(circle at 50% 42%, rgba(162, 55, 255, 0.45) 0%, transparent 22%),
-              radial-gradient(circle at 50% 42%, rgba(255, 61, 154, 0.30) 0%, transparent 32%),
-              radial-gradient(circle at 50% 42%, rgba(14, 11, 34, 0.70) 0%, rgba(14, 11, 34, 0.25) 25%, transparent 50%)
+              radial-gradient(circle at 50% 42%, rgba(162, 55, 255, 0.50) 0%, transparent 18%),
+              radial-gradient(circle at 50% 42%, rgba(255, 61, 154, 0.35) 0%, transparent 30%),
+              radial-gradient(circle at 50% 42%, rgba(201, 125, 255, 0.22) 0%, transparent 50%)
             `,
           }}
         />
