@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Match, User } from "@/types";
 import { findSimilarUsers } from "./findSimilar";
+import { userFromRow } from "./userRow";
 
 // Mutual-fit matching with explanations. See /technical/02-data-model.md.
 //
@@ -36,7 +37,7 @@ export async function rankMatches(
     throw new Error(`Failed to hydrate matched users: ${error.message}`);
   }
 
-  const byId = new Map((rows ?? []).map((r) => [r.id as string, fromRow(r)]));
+  const byId = new Map((rows ?? []).map((r) => [r.id as string, userFromRow(r)]));
 
   return ranked
     .map((r) => {
@@ -80,44 +81,4 @@ function explain(a: User, b: User) {
   };
 }
 
-// Internal helper: map a snake_case Supabase row into the camelCase User shape
-// the rest of the app uses. Embeddings come back from pgvector as a string in
-// the bracketed text form ("[0.1, 0.2, ...]"); parse it back into number[].
-type UserRow = {
-  id: string;
-  display_name: string;
-  city: string;
-  age_range_min: number | null;
-  age_range_max: number | null;
-  raw_inputs: User["rawInputs"];
-  self_extracted: User["selfExtracted"];
-  looking_for_extracted: User["lookingForExtracted"];
-  self_embedding: string | number[];
-  looking_for_embedding: string | number[];
-  archetype: string | null;
-  created_at: string;
-};
-
-function fromRow(row: UserRow): User {
-  return {
-    userId: row.id,
-    displayName: row.display_name,
-    city: row.city as "Berlin",
-    ageRange:
-      row.age_range_min !== null && row.age_range_max !== null
-        ? { min: row.age_range_min, max: row.age_range_max }
-        : undefined,
-    createdAt: row.created_at,
-    rawInputs: row.raw_inputs,
-    selfExtracted: row.self_extracted,
-    lookingForExtracted: row.looking_for_extracted,
-    selfEmbedding: parseVector(row.self_embedding),
-    lookingForEmbedding: parseVector(row.looking_for_embedding),
-    _archetype: row.archetype ?? undefined,
-  };
-}
-
-function parseVector(v: string | number[]): number[] {
-  if (Array.isArray(v)) return v;
-  return JSON.parse(v);
-}
+// User-row mapping helpers live in lib/userRow.ts (shared with generatePlan).
