@@ -10,7 +10,8 @@
     "seed:places": "tsx --env-file=.env.local scripts/seed-places.ts",
     "seed:users": "tsx --env-file=.env.local scripts/seed-users.ts",
     "seed": "npm run seed:places && npm run seed:users",
-    "migrate:json-to-db": "tsx --env-file=.env.local scripts/migrate-json-to-supabase.ts"
+    "migrate:json-to-db": "tsx --env-file=.env.local scripts/migrate-json-to-supabase.ts",
+    "smoke:match": "tsx --env-file=.env.local scripts/smoke-match.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
