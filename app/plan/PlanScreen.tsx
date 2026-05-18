@@ -103,6 +103,7 @@ export function PlanScreen() {
 // ----------------------------------------------------------------------------
 
 function OraMoment() {
+  // Pure luminous bloom on cream — see app/voice/page.tsx for the reasoning.
   return (
     <main className="relative min-h-dvh w-full overflow-hidden bg-aura-bg text-aura-ink">
       <div
@@ -118,15 +119,15 @@ function OraMoment() {
         className="pointer-events-none absolute inset-0 animate-fade-in"
         style={{
           background: `
-            radial-gradient(circle at 50% 42%, rgba(162, 55, 255, 0.45) 0%, transparent 22%),
-            radial-gradient(circle at 50% 42%, rgba(255, 61, 154, 0.30) 0%, transparent 32%),
-            radial-gradient(circle at 50% 42%, rgba(14, 11, 34, 0.70) 0%, rgba(14, 11, 34, 0.25) 25%, transparent 50%)
+            radial-gradient(circle at 50% 42%, rgba(162, 55, 255, 0.50) 0%, transparent 18%),
+            radial-gradient(circle at 50% 42%, rgba(255, 61, 154, 0.35) 0%, transparent 30%),
+            radial-gradient(circle at 50% 42%, rgba(201, 125, 255, 0.22) 0%, transparent 50%)
           `,
         }}
       />
       <div className="relative flex min-h-dvh flex-col items-center justify-center px-6 py-12 text-center">
         <AuroraRing size={200} state="processing" />
-        <p className="mt-12 text-base text-aura-bg/80">
+        <p className="mt-12 text-base text-aura-ink/55">
           Finding your first Plan...
         </p>
       </div>
