@@ -28,7 +28,17 @@ export default function RootLayout({
           href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@500,700&display=swap"
         />
       </head>
-      <body className="font-sans antialiased">{children}</body>
+      {/*
+        suppressHydrationWarning is here to silence the React hydration
+        warning produced by browser extensions (Bitdefender's `bis_register`,
+        LastPass's `__processed_*`, Dark Reader, Grammarly, etc.) that
+        inject attributes onto the <body> tag before React hydrates. The
+        prop only suppresses warnings on direct attributes of this element;
+        children still hydrate normally.
+      */}
+      <body className="font-sans antialiased" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }
