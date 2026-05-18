@@ -1,7 +1,7 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { openai, MODELS } from "../lib/openai";
-import { embedBatch } from "../lib/embed";
+import { embedBatch, stringifyExtractedForEmbed } from "../lib/embed";
 import type {
   User,
   SelfExtracted,
@@ -230,19 +230,6 @@ async function generateBatch(
   return parsed.users;
 }
 
-function stringifyForEmbed(
-  layer: SelfExtracted | LookingForExtracted | undefined | null
-): string {
-  if (!layer) return "";
-  return Object.entries(layer)
-    .filter(([, v]) => v !== undefined && v !== null)
-    .map(([k, v]) => {
-      if (Array.isArray(v)) return `${k}: ${v.join(", ")}`;
-      return `${k}: ${v}`;
-    })
-    .join(". ");
-}
-
 function isValidRawUser(u: RawUser): boolean {
   return (
     !!u &&
@@ -292,8 +279,8 @@ async function main() {
   // Embed self + lookingFor in batches.
   const allTexts: string[] = [];
   for (const { user } of validRawUsers) {
-    allTexts.push(stringifyForEmbed(user.selfExtracted));
-    allTexts.push(stringifyForEmbed(user.lookingForExtracted));
+    allTexts.push(stringifyExtractedForEmbed(user.selfExtracted));
+    allTexts.push(stringifyExtractedForEmbed(user.lookingForExtracted));
   }
 
   console.log(`→ embedding ${allTexts.length} text rows in chunks of ${EMBED_BATCH_SIZE}...`);
