@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { AuroraRing } from "@/components/AuroraRing";
 import { createClient } from "@/lib/supabase/server";
 import { sendMagicLink } from "./actions";
+import { LoginErrorMessage } from "./LoginErrorMessage";
 
 // Magic-link login. Server-rendered form, Server Action handles the
 // signInWithOtp call. Errors come back via ?error= in the URL so we can
@@ -72,11 +73,8 @@ export default async function LoginPage({ searchParams }: PageProps) {
           >
             Send me a link
           </button>
-          {error && (
-            <p className="mt-1 text-sm text-aura-violet" role="alert">
-              {error}
-            </p>
-          )}
+          <LoginErrorMessage initialError={error} />
+
         </form>
       </div>
 
