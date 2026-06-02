@@ -45,3 +45,8 @@ next-env.d.ts
 
 # kiro IDE state
 .kiro/
+
+# local-only reference material (current build screenshots, design-tool comps,
+# anti-pattern references). Lives on disk so Claude design can read it; not
+# committed to the public repo.
+/screenshots/
