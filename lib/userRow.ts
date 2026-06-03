@@ -14,8 +14,8 @@ export type UserRow = {
   raw_inputs: User["rawInputs"];
   self_extracted: User["selfExtracted"];
   looking_for_extracted: User["lookingForExtracted"];
-  self_embedding: string | number[];
-  looking_for_embedding: string | number[];
+  self_embedding: string | number[] | null;
+  looking_for_embedding: string | number[] | null;
   archetype: string | null;
   created_at: string;
 };
@@ -39,7 +39,8 @@ export function userFromRow(row: UserRow): User {
   };
 }
 
-export function parseVector(v: string | number[]): number[] {
+export function parseVector(v: string | number[] | null | undefined): number[] {
+  if (v == null) return [];
   if (Array.isArray(v)) return v;
   return JSON.parse(v);
 }

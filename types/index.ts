@@ -16,6 +16,8 @@ export interface SelfExtracted {
   lifeContext: string[];
   vibeKeywords: string[];
   availability?: string[];
+  /** Berlin neighborhoods the user frequents, or ["any"]. Added in Module 3. */
+  neighborhoods?: string[];
   budget?: Budget;
 }
 
@@ -25,6 +27,10 @@ export interface LookingForExtracted {
   socialPreferences: string[];
   vibeKeywords: string[];
   connectionType: ConnectionType[];
+  /** Shared activities the user wants with the people they meet. Added in Module 3. */
+  activityTypes?: string[];
+  /** Preferred neighborhoods to meet in, or ["any"]. Defaults to self.neighborhoods. */
+  neighborhoods?: string[];
 }
 
 export interface User {

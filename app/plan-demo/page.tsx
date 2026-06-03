@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/admin";
 import { generatePlan } from "@/lib/generatePlan";
+import { explain } from "@/lib/match";
 import { userFromRow } from "@/lib/userRow";
-import type { Match } from "@/types";
 import type { PlanResponse } from "../api/plan/create/route";
 import { PlanCard } from "../plan/PlanCard";
 
@@ -66,35 +66,4 @@ export default async function PlanDemoPage() {
   };
 
   return <PlanCard plan={response} backHref="/" />;
-}
-
-// Identical to the explain() in /api/plan/create/route.ts. Inlined here
-// because the demo route doesn't go through the API; both copies share
-// the same shape via Match["explanations"]. If a third caller appears,
-// extract into a shared helper.
-function explain(a: ReturnType<typeof userFromRow>, b: ReturnType<typeof userFromRow>): Match["explanations"] {
-  const intersect = (xs: string[], ys: string[]) =>
-    xs.filter((x) => ys.includes(x));
-  return {
-    sharedInterests: intersect(
-      a.selfExtracted.interests,
-      b.selfExtracted.interests,
-    ),
-    sharedActivityTypes: intersect(
-      a.selfExtracted.activityTypes,
-      b.selfExtracted.activityTypes,
-    ),
-    sharedSocialPreferences: intersect(
-      a.selfExtracted.socialPreferences,
-      b.selfExtracted.socialPreferences,
-    ),
-    sharedLifeContext: intersect(
-      a.selfExtracted.lifeContext,
-      b.selfExtracted.lifeContext,
-    ),
-    matchedPersonalityTraits: intersect(
-      a.lookingForExtracted.personality,
-      b.selfExtracted.personality,
-    ),
-  };
 }

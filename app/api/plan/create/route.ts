@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { embedBatch, stringifyExtractedForEmbed } from "@/lib/embed";
 import { generatePlan } from "@/lib/generatePlan";
+import { explain } from "@/lib/match";
 import { userFromRow } from "@/lib/userRow";
 import type {
   LookingForExtracted,
@@ -14,11 +14,14 @@ import type {
 //
 // Body: { selfExtracted, lookingForExtracted }
 // Side effects: upserts a public.users row tied to the caller's auth_user_id
-//               (creates on first call, refreshes embeddings on subsequent calls
-//               so refinement in Slice D works out of the box).
-// Returns: { plan: PlanResponse } where PlanResponse strips embeddings to keep
-//          the payload small (1536-dim vectors × 7 users would ship ~85kB of
-//          floats the client never uses).
+//               (creates on first call, refreshes the chip arrays on later
+//               calls so refinement reuses the same row).
+// Returns: { plan: PlanResponse } with embeddings stripped.
+//
+// Module 3: NO OpenAI calls. The host row is written with NULL embeddings
+// (the columns are nullable as of the chip-onboarding migration); matching is
+// deterministic structured overlap (see lib/match.ts + lib/generatePlan.ts).
+// Module 4 will lazily backfill real embeddings for chip-onboarded users.
 //
 // Auth: defense in depth — middleware refreshes the cookie on every request,
 // but this route still verifies via supabase.auth.getUser() before touching DB.
@@ -80,18 +83,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // --- Embed both layers in one OpenAI call ------------------------------
-
-  const [selfEmbedding, lookingForEmbedding] = await embedBatch([
-    stringifyExtractedForEmbed(body.selfExtracted),
-    stringifyExtractedForEmbed(body.lookingForExtracted),
-  ]);
-
   // --- Upsert the host's public.users row --------------------------------
   //
   // displayName defaults to the email's local part with the first letter
   // capitalized ("alice.smith@example.com" → "Alice.smith"). User can rename
-  // later. Real-name editing is a polish concern, not Slice B.
+  // later. No embeddings are written (Module 3 is AI-free); the columns are
+  // nullable.
 
   const displayName = deriveDisplayNameFromEmail(authUser.email);
 
@@ -125,8 +122,6 @@ export async function POST(request: NextRequest) {
         display_name: displayName,
         self_extracted: body.selfExtracted,
         looking_for_extracted: body.lookingForExtracted,
-        self_embedding: JSON.stringify(selfEmbedding),
-        looking_for_embedding: JSON.stringify(lookingForEmbedding),
       })
       .eq("id", existing.id)
       .select("*")
@@ -148,8 +143,6 @@ export async function POST(request: NextRequest) {
         raw_inputs: rawInputs,
         self_extracted: body.selfExtracted,
         looking_for_extracted: body.lookingForExtracted,
-        self_embedding: JSON.stringify(selfEmbedding),
-        looking_for_embedding: JSON.stringify(lookingForEmbedding),
         archetype: null,
         created_at: nowIso,
       })
@@ -204,34 +197,4 @@ function deriveDisplayNameFromEmail(email: string | undefined): string {
   const local = email.split("@")[0] ?? "Friend";
   if (!local) return "Friend";
   return local.charAt(0).toUpperCase() + local.slice(1);
-}
-
-// Same shape as lib/match.ts explain(). Inlined here because the API
-// returns AttendeeView with a precomputed explanation, and exposing
-// match.ts's internal helper would couple the two unnecessarily.
-function explain(a: User, b: User): Match["explanations"] {
-  const intersect = (xs: string[], ys: string[]) =>
-    xs.filter((x) => ys.includes(x));
-  return {
-    sharedInterests: intersect(
-      a.selfExtracted.interests,
-      b.selfExtracted.interests,
-    ),
-    sharedActivityTypes: intersect(
-      a.selfExtracted.activityTypes,
-      b.selfExtracted.activityTypes,
-    ),
-    sharedSocialPreferences: intersect(
-      a.selfExtracted.socialPreferences,
-      b.selfExtracted.socialPreferences,
-    ),
-    sharedLifeContext: intersect(
-      a.selfExtracted.lifeContext,
-      b.selfExtracted.lifeContext,
-    ),
-    matchedPersonalityTraits: intersect(
-      a.lookingForExtracted.personality,
-      b.selfExtracted.personality,
-    ),
-  };
 }
