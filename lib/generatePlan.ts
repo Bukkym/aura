@@ -1,29 +1,24 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Place, Plan, User } from "@/types";
-import { findSimilarPlaces, findSimilarUsers } from "./findSimilar";
-import { embed } from "./embed";
-import { openai, MODELS } from "./openai";
-import { userFromRow, parseVector } from "./userRow";
+import { rankSeedUsersForHost } from "./match";
+import { renderWhyTemplate } from "./whyTemplates";
+import { canon, canonAll, overlaps } from "./canon";
+import { parseVector } from "./userRow";
 
-// Plan generation pipeline. See /technical/02-data-model.md.
+// Plan generation pipeline. Deterministic, no runtime AI (Module 3). See
+// /technical/06-deterministic-matching.md.
 //
-// Five steps, chained:
-//   1. pickActivity   — first non-empty entry from host.selfExtracted.activityTypes
-//                        (falls back to interests, then a sensible default).
-//   2. pickVenue      — embed "<activity> + host vibe", call match_places, hydrate top hit.
-//   3. pickTime       — deterministic day/hour mapping per activity class, next occurrence.
-//   4. pickAttendees  — match_users(host) → pad of ~24 → filter by activity overlap → top k.
-//                        Falls back to top k of unfiltered candidates if the filter is too strict.
-//   5. whyThisPlan    — single LLM call, 1-2 sentences in Ora's voice.
-//
-// Per the MVP simplification in 02-data-model.md, we don't optimize for
-// group-internal cohesion yet — that's a Phase 2 concern.
+//   1. pickActivity   — first entry from host.selfExtracted.activityTypes.
+//   2. pickVenue      — score all places by activity-token + vibe + locale
+//                       overlap, pick the best (random among ties).
+//   3. pickTime       — activity-class → next occurrence.
+//   4. pickAttendees  — rankSeedUsersForHost → filter by activity + availability
+//                       → top k, with a relaxation cascade so we never return <k.
+//   5. whyThisPlan    — templated copy from real shared tags (no LLM).
 
 const TARGET_ATTENDEES = 6;
-const ATTENDEE_CANDIDATE_PAD = 24;
+const ATTENDEE_CANDIDATE_PAD = 40;
 
-// Activity-class → next occurrence. First pattern that matches wins, otherwise
-// the default (Saturday afternoon). Day-of-week is 0 = Sunday … 6 = Saturday.
 const TIME_HINTS: ReadonlyArray<{
   pattern: RegExp;
   dayOfWeek: number;
@@ -60,7 +55,6 @@ export async function generatePlan(
 ): Promise<Plan> {
   const activity = pickActivity(host);
 
-  // Venue + attendees both hit the DB; run in parallel.
   const [venue, attendees] = await Promise.all([
     pickVenue(sb, host, activity),
     pickAttendees(sb, host, activity, k),
@@ -68,12 +62,12 @@ export async function generatePlan(
 
   const { dateTime, label: timeLabel } = pickTime(activity);
 
-  const whyThisPlan = await generateWhyThisPlan(
+  const whyThisPlan = renderWhyTemplate(
     host,
+    attendees,
     activity,
     venue,
     timeLabel,
-    attendees,
   );
 
   return {
@@ -82,10 +76,10 @@ export async function generatePlan(
     activityType: activity,
     place: venue,
     dateTime,
-    vibe: [
+    vibe: canonAll([
       ...host.selfExtracted.vibeKeywords,
       ...host.lookingForExtracted.vibeKeywords,
-    ].slice(0, 4),
+    ]).slice(0, 4),
     attendees,
     whyThisPlan,
   };
@@ -103,37 +97,81 @@ function pickActivity(host: User): string {
   return "casual hangout";
 }
 
+function tokens(s: string): string[] {
+  return s
+    .toLowerCase()
+    .split(/\s+/)
+    .filter((w) => w.length > 2);
+}
+
+// Loose activity match between a free-text activity and a place's tags or a
+// user's activityTypes: substring either direction, or a shared token. So
+// "techno clubs" matches place tag "techno club" and user "clubbing".
+function looseActivityMatch(activity: string, tags: string[]): boolean {
+  const a = canon(activity);
+  const aTokens = new Set(tokens(a));
+  return canonAll(tags).some((t) => {
+    if (t.includes(a) || a.includes(t)) return true;
+    return tokens(t).some((tok) => aTokens.has(tok));
+  });
+}
+
 async function pickVenue(
   sb: SupabaseClient,
   host: User,
   activity: string,
 ): Promise<Place> {
-  // Query embedding: the chosen activity plus the host's vibe keywords. We
-  // intentionally do not embed the host's full self/looking-for — that pulls
-  // people-flavored signal into a place query and noises up the result.
-  const queryText = [
-    activity,
+  const { data: rows, error } = await sb.from("places").select("*");
+  if (error || !rows || rows.length === 0) {
+    throw new Error(`Failed to load places: ${error?.message ?? "no places"}`);
+  }
+
+  const hostVibe = canonAll([
     ...host.selfExtracted.vibeKeywords,
     ...host.lookingForExtracted.vibeKeywords,
-  ]
-    .filter(Boolean)
-    .join(", ");
+  ]);
+  const hostNeighborhoods = canonAll(
+    host.selfExtracted.neighborhoods ?? host.lookingForExtracted.neighborhoods,
+  );
 
-  const queryEmbedding = await embed(queryText || activity);
-  const matches = await findSimilarPlaces(sb, queryEmbedding, 3);
-  if (matches.length === 0) {
-    throw new Error("No venues returned from match_places");
-  }
+  type Scored = { row: (typeof rows)[number]; score: number };
+  const scored: Scored[] = rows.map((row) => {
+    const activityTags: string[] = row.activity_type_tags ?? [];
+    const vibeTags = canonAll(row.vibe_tags ?? []);
 
-  const top = matches[0];
-  const { data, error } = await sb
-    .from("places")
-    .select("*")
-    .eq("id", top.placeId)
-    .single();
-  if (error || !data) {
-    throw new Error(`Failed to hydrate venue ${top.placeId}: ${error?.message}`);
-  }
+    // activity-token overlap (the dominant signal)
+    let score = 0;
+    if (looseActivityMatch(activity, activityTags)) score += 2;
+
+    // vibe overlap
+    const vibeSet = new Set(vibeTags);
+    const vibeHits = hostVibe.filter((v) => vibeSet.has(v)).length;
+    score += vibeHits * 1.0;
+
+    // neighborhood preference
+    if (hostNeighborhoods.length === 0 || hostNeighborhoods.includes("any")) {
+      score += 0.5;
+    } else if (hostNeighborhoods.includes(canon(row.neighborhood))) {
+      score += 1.5;
+    }
+
+    return { row, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+
+  // If nothing scored on activity, fall back to the whole list so we still
+  // return a venue (neighborhood/vibe-only ranking).
+  const topScore = scored[0].score;
+  const top =
+    topScore > 0
+      ? scored.filter((s) => s.score === topScore)
+      : scored.slice(0, 5);
+
+  // Deterministic-ish pick among ties by host id hash, so demos vary by user
+  // but stay stable per user.
+  const pickIdx = hashStr(host.userId) % top.length;
+  const data = top[pickIdx].row;
 
   return {
     id: data.id,
@@ -143,7 +181,7 @@ async function pickVenue(
     activityTypeTags: data.activity_type_tags,
     vibeTags: data.vibe_tags,
     description: data.description,
-    embedding: parseVector(data.embedding),
+    embedding: data.embedding ? parseVector(data.embedding) : [],
   };
 }
 
@@ -160,11 +198,20 @@ function nextOccurrence(targetDay: number, hour: number): Date {
   const result = new Date(now);
   const currentDay = result.getDay();
   let daysAhead = (targetDay - currentDay + 7) % 7;
-  // If it's the target day but we're already past the target hour, push to next week.
   if (daysAhead === 0 && now.getHours() >= hour) daysAhead = 7;
   result.setDate(result.getDate() + daysAhead);
   result.setHours(hour, 0, 0, 0);
   return result;
+}
+
+// "anytime" / "flexible" matches everything; otherwise require a shared window.
+function availabilityOk(host: User, cand: User): boolean {
+  const h = canonAll(host.selfExtracted.availability);
+  const c = canonAll(cand.selfExtracted.availability);
+  if (h.length === 0 || c.length === 0) return true;
+  if (h.includes("anytime") || c.includes("anytime")) return true;
+  if (h.includes("flexible") || c.includes("flexible")) return true;
+  return overlaps(h, c);
 }
 
 async function pickAttendees(
@@ -173,92 +220,44 @@ async function pickAttendees(
   activity: string,
   k: number,
 ): Promise<User[]> {
-  const ranked = await findSimilarUsers(sb, host, ATTENDEE_CANDIDATE_PAD);
+  const ranked = await rankSeedUsersForHost(sb, host, ATTENDEE_CANDIDATE_PAD);
   if (ranked.length === 0) return [];
 
-  const { data: rows, error } = await sb
-    .from("users")
-    .select("*")
-    .in(
-      "id",
-      ranked.map((c) => c.userId),
+  const candidates = ranked.map((r) => r.user);
+
+  const matchesActivity = (u: User) =>
+    looseActivityMatch(activity, u.selfExtracted.activityTypes) ||
+    looseActivityMatch(activity, u.lookingForExtracted.activityTypes ?? []);
+
+  const sharesInterest = (u: User) =>
+    overlaps(
+      canonAll(host.selfExtracted.interests),
+      canonAll(u.selfExtracted.interests),
     );
-  if (error || !rows) {
-    throw new Error(`Failed to hydrate attendee candidates: ${error?.message}`);
-  }
 
-  const byId = new Map(rows.map((r) => [r.id as string, userFromRow(r)]));
-  const candidatesInOrder = ranked
-    .map((c) => byId.get(c.userId))
-    .filter((u): u is User => u !== undefined);
-
-  // Activity overlap: case-insensitive substring either direction, or shared
-  // tokens. Loose by design — exact-match would discard "boulder gym" against
-  // user "boulder gym climbing" and we want those to match.
-  const activityLower = activity.toLowerCase();
-  const activityTokens = new Set(
-    activityLower.split(/\s+/).filter((w) => w.length > 2),
+  // Tier 1: activity match AND availability overlap (the ideal group).
+  let pool = candidates.filter(
+    (u) => matchesActivity(u) && availabilityOk(host, u),
   );
-  function matchesActivity(u: User): boolean {
-    return u.selfExtracted.activityTypes.some((at) => {
-      const atLower = at.toLowerCase();
-      if (atLower.includes(activityLower)) return true;
-      if (activityLower.includes(atLower)) return true;
-      const atTokens = atLower.split(/\s+/);
-      return atTokens.some((t) => activityTokens.has(t));
-    });
+
+  // Tier 2: activity OR shared-interest, ignore availability.
+  if (pool.length < k) {
+    pool = candidates.filter((u) => matchesActivity(u) || sharesInterest(u));
   }
 
-  const filtered = candidatesInOrder.filter(matchesActivity);
-  const pool = filtered.length >= k ? filtered : candidatesInOrder;
+  // Tier 3: anyone, ranked. Never return fewer than k when the pool allows.
+  if (pool.length < k) {
+    pool = candidates;
+  }
+
   return pool.slice(0, k);
 }
 
-async function generateWhyThisPlan(
-  host: User,
-  activity: string,
-  venue: Place,
-  timeLabel: string,
-  attendees: User[],
-): Promise<string> {
-  const attendeeSketches = attendees
-    .map((a) => {
-      const interests = a.selfExtracted.interests.slice(0, 2).join(", ");
-      return interests
-        ? `${a.displayName} (${interests})`
-        : a.displayName;
-    })
-    .join(", ");
-
-  const hostConnectionType =
-    host.lookingForExtracted.connectionType.join(", ") || "good people";
-  const hostPersonality =
-    host.selfExtracted.personality.join(", ") || "varied";
-
-  const completion = await openai.chat.completions.create({
-    model: MODELS.chat,
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are Ora, the social intelligence inside Aura. Speak warmly and directly. Output exactly 1 to 2 sentences. No hedging, no emojis, no em dashes, no headers, no quotation marks around the response.",
-      },
-      {
-        role: "user",
-        content: [
-          `Host: ${host.displayName}.`,
-          `Host personality: ${hostPersonality}. Looking for: ${hostConnectionType}.`,
-          `Activity: ${activity}.`,
-          `Venue: ${venue.name} in ${venue.neighborhood}.`,
-          `Time: ${timeLabel}.`,
-          `Attendees: ${attendeeSketches}.`,
-          ``,
-          `Write 1 to 2 sentences explaining why this Plan fits the host. Concrete, warm, no hedging.`,
-        ].join("\n"),
-      },
-    ],
-    temperature: 0.7,
-  });
-
-  return completion.choices[0].message.content?.trim() ?? "";
+function hashStr(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return Math.abs(h);
 }

@@ -6,6 +6,8 @@ Date: 2026-06-03.
 
 The core problem: a brand-new authed user has ONLY structured chips, no precomputed embedding. The 175 seed users have BOTH chips AND embeddings. We match the new user against the seed pool using structured-tag overlap (no OpenAI), with a tiebreak that uses chip-token embeddings computed once at seed time.
 
+> **Implementation note (Module 3, 2026-06-03):** the weighted-Jaccard scoring and venue selection shipped in **TypeScript** (`lib/match.ts`, `lib/generatePlan.ts`) rather than the SQL functions sketched below. At 175 users / 33 places, in-process scoring runs in ~190ms and lets us canonicalize tag drift on read via `lib/canon.ts` without first re-seeding the pool (that re-seed is Slice 5). The chip-embedding centroid tiebreak is deferred as an optional enhancement; pure Jaccard ranks well for the demo. The SQL design below is retained as the scale-out path (move to RPCs when the pool outgrows in-process scoring). Embedding columns were made nullable (`20260603145922_nullable_embeddings.sql`) so chip-onboarded users persist without vectors.
+
 ---
 
 ## 1. New-user matching: hybrid weighted overlap + chip-centroid tiebreak

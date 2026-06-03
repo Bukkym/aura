@@ -1,84 +1,172 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Match, User } from "@/types";
-import { findSimilarUsers } from "./findSimilar";
-import { userFromRow } from "./userRow";
+import { canonAll, jaccard } from "./canon";
 
-// Mutual-fit matching with explanations. See /technical/02-data-model.md.
+// Deterministic mutual-fit matching. No runtime AI (Module 3).
 //
-// The numerical score is computed in Postgres via the `match_users` RPC —
-// see lib/findSimilar.ts and the SQL function in
-// supabase/migrations/20260518200707_match_functions.sql.
+// We rank the seed pool against the host by weighted Jaccard overlap on the
+// structured chip arrays. At 175 users this runs in-process in a few ms, and
+// keeping it in TS lets us canonicalize tag drift on read via lib/canon.ts.
+// The numeric score is interpretable and feeds the "why this plan" copy.
 //
-// The `explanations` block is computed here in TS: it operates on the JSONB
-// `selfExtracted` / `lookingForExtracted` tag arrays after they're hydrated as
-// objects, and exists to give the UI structured "why this match" tags
-// ("Both into startups", "Both new to Berlin"). It is the explainability
-// differentiator and intentionally deterministic.
+// (The earlier embedding-based path via the match_users RPC is retired for
+// Module 3; pgvector still backs match_places-style use if we want it later.)
 
-export async function rankMatches(
-  sb: SupabaseClient,
-  query: User,
-  k: number,
-): Promise<Match[]> {
-  const ranked = await findSimilarUsers(sb, query, k);
-  if (ranked.length === 0) return [];
+// Weights for the mutual-fit score. Host's "looking for" against the
+// candidate's "self", with activity + vibe + social + connection + locale as
+// supporting signal. Tuned so personality + interests dominate.
+const W = {
+  personality: 0.35,
+  interests: 0.2,
+  activityTypes: 0.15,
+  vibeKeywords: 0.1,
+  socialPreferences: 0.1,
+  connectionType: 0.05,
+  neighborhoods: 0.05,
+} as const;
 
-  // Hydrate the matched user rows so we can run explain() against their tags.
-  // Public-read RLS on `users` means this works from any client.
-  const matchedIds = ranked.map((r) => r.userId);
-  const { data: rows, error } = await sb
-    .from("users")
-    .select(
-      "id, display_name, city, age_range_min, age_range_max, raw_inputs, self_extracted, looking_for_extracted, self_embedding, looking_for_embedding, archetype, created_at",
-    )
-    .in("id", matchedIds);
-
-  if (error) {
-    throw new Error(`Failed to hydrate matched users: ${error.message}`);
-  }
-
-  const byId = new Map((rows ?? []).map((r) => [r.id as string, userFromRow(r)]));
-
-  return ranked
-    .map((r) => {
-      const matched = byId.get(r.userId);
-      if (!matched) return null;
-      return {
-        queryUserId: query.userId,
-        matchedUserId: r.userId,
-        score: r.score,
-        explanations: explain(query, matched),
-      } satisfies Match;
-    })
-    .filter((m): m is Match => m !== null);
+export interface RankedCandidate {
+  user: User;
+  score: number;
 }
 
-function explain(a: User, b: User) {
-  const intersect = (xs: string[], ys: string[]) =>
-    xs.filter((x) => ys.includes(x));
+// Lightweight row shape: we deliberately do NOT select the 1536-dim embedding
+// columns here (175 of them would be megabytes the deterministic path never
+// uses). Attendee User objects are built with empty embeddings.
+type LiteRow = {
+  id: string;
+  display_name: string;
+  city: string;
+  age_range_min: number | null;
+  age_range_max: number | null;
+  raw_inputs: User["rawInputs"];
+  self_extracted: User["selfExtracted"];
+  looking_for_extracted: User["lookingForExtracted"];
+  archetype: string | null;
+  created_at: string;
+};
+
+const LITE_COLUMNS =
+  "id, display_name, city, age_range_min, age_range_max, raw_inputs, self_extracted, looking_for_extracted, archetype, created_at";
+
+function userFromLiteRow(row: LiteRow): User {
+  return {
+    userId: row.id,
+    displayName: row.display_name,
+    city: row.city as "Berlin",
+    ageRange:
+      row.age_range_min !== null && row.age_range_max !== null
+        ? { min: row.age_range_min, max: row.age_range_max }
+        : undefined,
+    createdAt: row.created_at,
+    rawInputs: row.raw_inputs,
+    selfExtracted: row.self_extracted,
+    lookingForExtracted: row.looking_for_extracted,
+    selfEmbedding: [],
+    lookingForEmbedding: [],
+    _archetype: row.archetype ?? undefined,
+  };
+}
+
+// Mutual-fit score in [0,1]. Host perspective: what the host is looking for
+// against who the candidate is, plus supporting overlaps. Host fields fall
+// back sensibly when an optional field is absent (e.g. lookingFor.activityTypes
+// → self.activityTypes; neighborhoods → ["any"]).
+export function scorePair(host: User, cand: User): number {
+  const hp = canonAll(host.lookingForExtracted.personality);
+  const hi = canonAll(host.lookingForExtracted.interests);
+  const ha = canonAll(
+    host.lookingForExtracted.activityTypes ?? host.selfExtracted.activityTypes,
+  );
+  const hv = canonAll(host.lookingForExtracted.vibeKeywords);
+  const hs = canonAll(host.lookingForExtracted.socialPreferences);
+  const hc = canonAll(host.lookingForExtracted.connectionType);
+  const hn = canonAll(
+    host.lookingForExtracted.neighborhoods ?? host.selfExtracted.neighborhoods,
+  );
+
+  const cp = canonAll(cand.selfExtracted.personality);
+  const ci = canonAll(cand.selfExtracted.interests);
+  const ca = canonAll(cand.selfExtracted.activityTypes);
+  const cv = canonAll(cand.selfExtracted.vibeKeywords);
+  const cs = canonAll(cand.selfExtracted.socialPreferences);
+  const cc = canonAll(cand.lookingForExtracted.connectionType);
+  const cn = canonAll(cand.selfExtracted.neighborhoods);
+
+  // connection + neighborhood are binary "any overlap" signals.
+  const connSet = new Set(cc);
+  const connHit = hc.some((x) => connSet.has(x)) ? 1 : 0;
+  const nbSet = new Set(cn);
+  const nbHit =
+    hn.length === 0 || hn.includes("any") || cn.includes("any")
+      ? 0.5 // neutral when unspecified
+      : hn.some((x) => nbSet.has(x))
+        ? 1
+        : 0;
+
+  return (
+    W.personality * jaccard(hp, cp) +
+    W.interests * jaccard(hi, ci) +
+    W.activityTypes * jaccard(ha, ca) +
+    W.vibeKeywords * jaccard(hv, cv) +
+    W.socialPreferences * jaccard(hs, cs) +
+    W.connectionType * connHit +
+    W.neighborhoods * nbHit
+  );
+}
+
+// Rank the whole pool (everyone but the host) by mutual-fit score, return the
+// top k. Pass a large k from pickAttendees so downstream filters have room.
+export async function rankSeedUsersForHost(
+  sb: SupabaseClient,
+  host: User,
+  k: number,
+): Promise<RankedCandidate[]> {
+  const { data: rows, error } = await sb
+    .from("users")
+    .select(LITE_COLUMNS)
+    .neq("id", host.userId);
+
+  if (error) {
+    throw new Error(`Failed to load candidate pool: ${error.message}`);
+  }
+
+  return (rows ?? [])
+    .map((r) => {
+      const user = userFromLiteRow(r as LiteRow);
+      return { user, score: scorePair(host, user) };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, k);
+}
+
+// Deterministic structured-overlap explanation, reused by the API response
+// and the "why this plan" templates. Canonicalized so drift doesn't hide a
+// real overlap.
+export function explain(a: User, b: User): Match["explanations"] {
+  const inter = (xs: string[] | undefined, ys: string[] | undefined) => {
+    const ca = canonAll(xs);
+    const setB = new Set(canonAll(ys));
+    return ca.filter((x) => setB.has(x));
+  };
 
   return {
-    sharedInterests: intersect(
-      a.selfExtracted.interests,
-      b.selfExtracted.interests,
-    ),
-    sharedActivityTypes: intersect(
+    sharedInterests: inter(a.selfExtracted.interests, b.selfExtracted.interests),
+    sharedActivityTypes: inter(
       a.selfExtracted.activityTypes,
       b.selfExtracted.activityTypes,
     ),
-    sharedSocialPreferences: intersect(
+    sharedSocialPreferences: inter(
       a.selfExtracted.socialPreferences,
       b.selfExtracted.socialPreferences,
     ),
-    sharedLifeContext: intersect(
+    sharedLifeContext: inter(
       a.selfExtracted.lifeContext,
       b.selfExtracted.lifeContext,
     ),
-    matchedPersonalityTraits: intersect(
+    matchedPersonalityTraits: inter(
       a.lookingForExtracted.personality,
       b.selfExtracted.personality,
     ),
   };
 }
-
-// User-row mapping helpers live in lib/userRow.ts (shared with generatePlan).

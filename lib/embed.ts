@@ -19,7 +19,21 @@ export function stringifyExtractedForEmbed(
     .join(". ");
 }
 
+// Runtime guard: Module 3 has zero OpenAI calls in the request path. The seed
+// scripts still need embeddings, so they set EMBED_ALLOW_RUNTIME=true before
+// importing. Any stray import from app/ or lib/ that tries to embed at request
+// time throws loudly instead of silently re-introducing an AI dependency.
+function assertEmbedAllowed(): void {
+  if (process.env.EMBED_ALLOW_RUNTIME !== "true") {
+    throw new Error(
+      "embed() is disabled in the request path (Module 3 is AI-free). " +
+        "Set EMBED_ALLOW_RUNTIME=true only in seed scripts.",
+    );
+  }
+}
+
 export async function embed(text: string): Promise<number[]> {
+  assertEmbedAllowed();
   const r = await openai.embeddings.create({
     model: MODELS.embedding,
     input: text,
@@ -28,6 +42,7 @@ export async function embed(text: string): Promise<number[]> {
 }
 
 export async function embedBatch(texts: string[]): Promise<number[][]> {
+  assertEmbedAllowed();
   if (texts.length === 0) return [];
   const r = await openai.embeddings.create({
     model: MODELS.embedding,
