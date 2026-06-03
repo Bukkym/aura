@@ -42,5 +42,6 @@ export async function sendMagicLink(formData: FormData) {
     redirect(`/auth/login?error=${encodeURIComponent(error.message)}`);
   }
 
-  redirect(`/auth/check-email?email=${encodeURIComponent(email)}`);
+  const qs = new URLSearchParams({ email, next: nextPath });
+  redirect(`/auth/check-email?${qs.toString()}`);
 }
