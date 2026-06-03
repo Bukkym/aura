@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { AuroraRing } from "@/components/AuroraRing";
+import { SignOutButton } from "@/components/SignOutButton";
 import type {
   LookingForExtracted,
   SelfExtracted,
@@ -87,16 +88,28 @@ export function PlanScreen() {
     };
   }, []);
 
+  let screen;
   if (phase.kind === "loading" || phase.kind === "generating") {
-    return <OraMoment />;
+    screen = <OraMoment />;
+  } else if (phase.kind === "no-draft") {
+    screen = <NoDraft />;
+  } else if (phase.kind === "error") {
+    screen = <ErrorState message={phase.message} />;
+  } else {
+    screen = <PlanCard plan={phase.plan} />;
   }
-  if (phase.kind === "no-draft") {
-    return <NoDraft />;
-  }
-  if (phase.kind === "error") {
-    return <ErrorState message={phase.message} />;
-  }
-  return <PlanCard plan={phase.plan} />;
+
+  // This wrapper only renders on the authed /plan route, so sign-out belongs
+  // here. Fixed top-right, clear of PlanCard's top-left back link and the
+  // bottom-right "by Ora" mark.
+  return (
+    <>
+      {screen}
+      <div className="fixed right-5 top-5 z-20">
+        <SignOutButton />
+      </div>
+    </>
+  );
 }
 
 function OraMoment() {
