@@ -271,31 +271,87 @@ Resolved 2026-05-07. Full rationale in `/technical/01-mvp-decisions.md`.
 - **Location:** Berlin, English-only.
 - ~~**Auth:** skip for MVP, but every record carries `userId` from day one.~~ Superseded by Slice B′ (2026-05-11): magic-link via Supabase Auth, just-in-time placement at "Find my people." Email-only; phone (Twilio) is explicitly out of scope for the bootcamp MVP. Every record still carries `userId`.
 
-## Next Steps
+## Next Steps — Module 3 Demo Plan (target 2026-06-17)
 
-The build proceeds in slices. Each slice is one or more PRs against `main`. Status as of 2026-05-11.
+The build proceeds in slices. Each slice is one or more PRs against `main`. Restructured 2026-06-03 around the Module 3 bootcamp presentation.
 
-**Slice A — Mock-data MVP shell.** ✅ Done. Next.js + Tailwind scaffold; AuroraRing + Welcome + Voice screens; OpenAI plumbing; in-memory cosine matching in `/lib/match.ts`; 175 mock users + 33 Berlin venues seeded to JSON with embeddings precomputed. Stubs in place for transcription, extraction, plan generation. PRs #1–#4 merged.
+### What's changing in the build plan
 
-**Slice B′ — Supabase persistence + Auth.** 🟡 In progress. The bootcamp deliverable requires a deployed app with database + auth, so persistence moves ahead of the chips / Plan-card UI work to avoid rewiring later.
+The original plan (Slices C/D/E) assumed Module 4's voice + LLM pipeline shipped first. That order inverts for Module 3.
 
-- Provision Supabase project (EU Frankfurt, project `aura`) — done.
-- `lib/supabase.ts` — server (service-role) + browser (publishable) client factories.
-- Schema: `users`, `places`, `plans` tables; pgvector extension; HNSW indexes on both embedding columns.
-- One-shot migration `scripts/migrate-json-to-supabase.ts` — preserves precomputed embeddings, no OpenAI calls.
-- Rewrite `lib/findSimilar.ts` as a thin RPC wrapper (`findSimilarUsers`, `findSimilarPlaces`) over the `match_users` and `match_places` Postgres functions. Prune `lib/match.ts` to keep `rankMatches()` (now RPC-backed) + `explain()` (deterministic structured-tag overlap, the explainability differentiator).
-- Magic-link auth via Supabase Auth at `/auth/login` + `/auth/callback`. ✅ Landed.
-- Just-in-time auth gate at "Find my people" — Welcome + Voice + Chips remain anonymous. Gate wiring lives in Slice B alongside the Plan card.
-- Mock users persist with `auth_user_id = NULL` (matchable, not logged-in-able).
-- Doc updates: `/technical/01-mvp-decisions.md` (vector store → pgvector, auth → magic-link) + new `/technical/04-infrastructure.md` (Supabase + Vercel + auth flow).
+**Pivot:**
+- **Voice-first → chip-first.** Onboarding becomes a 6-screen chip flow over a closed taxonomy mined from the seed pool. Voice is kept as a non-AI stub (records audio, stores the blob for Module 4 to transcribe later, then routes into the chip flow). LLM extraction defers to Module 4 and layers additively: voice pre-fills the same chips; chips stay the contract.
+- **Runtime AI → deterministic.** No OpenAI calls in the request path. Matching, venue selection, and "why this plan" all run on weighted Jaccard overlap, a pgvector tiebreak against a one-time chip-embeddings table, and templated copy. The 175 archetype-labelled seed embeddings keep earning their keep.
+- **Why:** Module 3 is a non-AI end-to-end demo. Real auth, real backend, real data, no AI runtime. Module 4 layers AI behind the same chip schema and Plan-card contract, so nothing built here gets thrown away.
 
-**Slice B — Chips review + Plan card with real matching.** ✅ Done. `/chips` screen, Plan card screen at `/plan` with the just-in-time auth gate, `lib/generatePlan.ts` real implementation (pick activity → pick venue via pgvector → pick time → pick 6 attendees → LLM `whyThisPlan`), `/api/plan/create` route upserts the host's `public.users` row on first call and runs the pipeline.
+Full specs: `/technical/05-onboarding-spec.md` (chip taxonomy + screens) and `/technical/06-deterministic-matching.md` (algorithm + code changes).
 
-**Slice C — Real LLM pipeline.** Real Whisper transcription (`MediaRecorder` → `/api/transcribe`), real extraction LLM call (replace the `lib/extract.ts` stub), gap-detection follow-up loop capped at 2 follow-ups.
+### Risk register (top 3 for the 2-week window)
 
-**Slice D — Invite + refinement + polish.** WhatsApp invite screen, Plan-card refinement loop ("more chill" → re-extract + re-rank), "Why these six?" dev panel, copy + motion polish.
+1. **Auth is the first frame and still has a parked OTP branch.** The 6-digit code path (`claude/beautiful-heisenberg-otp-code`) plus a Supabase email-template edit need to land, and there is no sign-out anywhere in the app today (`grep signOut` = zero hits). If sign-up stutters, the rest of the demo does not matter. Mitigated by making this Slice 1.
+2. **Chip taxonomy drift.** Seed users have `easy-going`/`easygoing`, `settled`/`settled in Berlin`, `exploratory`/`explorative` variants. If `lib/canon.ts` misses a token, deterministic matching scores it as zero overlap and the demo looks dumb. Mitigated by canonicalizing at seed-replay time + a unit test asserting every seed token resolves to a taxonomy token.
+3. **Empty-result edge cases in deterministic matching.** An obscure chip combo could yield <6 attendees or a venue with no overlap. Mitigated by the relaxation cascade in `pickAttendees` and venue fallback to neighborhood-only scoring.
 
-**Slice E — Vercel deploy.** Wire env vars, deploy, smoke test live, update README with live URL. Before any non-test demo: configure Resend (or similar) as the custom SMTP provider in Supabase Auth → SMTP Settings, with `Aura <hello@youraura.com>` as the sender — needed so emails come from the brand and the free-tier 4/hour rate limit lifts. Also add the production Vercel callback URL to Authentication → URL Configuration → Redirect URLs.
+---
+
+### Completed slices
+
+- **Slice A** — Mock-data MVP shell. ✅ Done. PRs #1–#4.
+- **Slice B′** — Supabase persistence + magic-link auth (initial pass). ✅ Done. PRs #5–#11.
+- **Slice B** — Chips review + Plan card with live OpenAI matching. ✅ Done. PRs #12–#14. Caveat: chips screen has stub data; voice transcript hardcoded; `generatePlan`, `pickVenue`, and `whyThisPlan` use live OpenAI. Slices 3 and 4 below replace the runtime AI; the chips screen UI and Plan card visuals are reused, just rewired.
+
+---
+
+### Slice 1 — Auth productionization (ships before Module 3)
+
+Land the parked OTP branch, fix the Supabase email template, add sign-out, prove sign-up → session → protected route end-to-end. Highest known risk, goes first.
+
+- Merge the parked OTP 6-digit code path; rebase against current `main`; update the Supabase Magic Link email template to include `{{ .Token }}`; verify `otp_expired` and related fragment errors surface cleanly.
+- Add sign-out (a `/auth/logout` route + a minimal signed-in affordance) and a `resend code` button on `/auth/check-email`.
+- Auth E2E smoke documented in README for the demo dry-run.
+
+### Slice 2 — Chip-based onboarding (ships before Module 3)
+
+Replace the stub chips screen with the 6-screen flow from `/technical/05-onboarding-spec.md`. Slice B visual components are reused; data layer, taxonomy, screen routing are new.
+
+- `lib/canon.ts` canonicalization table + a unit test asserting every distinct seed tag canonicalizes into the chip taxonomy. `types/index.ts` schema delta (`availability` required, `neighborhoods` new on `SelfExtracted`; `activityTypes` + optional `neighborhoods` new on `LookingForExtracted`).
+- 6-screen onboarding flow (Welcome, Vibe+Personality, Interests+Activities, Location+Availability, Connection type+Traits, Shared ground). Berlin neighborhood multi-select with an "Anywhere in Berlin" toggle. Chip taxonomy hard-coded from the spec; multi-select minimums, custom-chip cap, skip-with-defaults wired. Old `/chips` redirects to step 1.
+- Voice kept as a non-AI stub: an entry choice ("Talk to Ora" / "Tap through it"); the voice path records + stores the blob, then continues into the chip flow.
+- Server-side defaults applied in `/api/plan/create` before write; new fields persist to jsonb (no SQL migration); JIT auth gate fires on the final submit.
+
+### Slice 3 — Deterministic matching engine (ships before Module 3)
+
+Strip runtime OpenAI from the matching path. Existing seed embeddings stay; one new static `chip_embeddings` table holds chip-token embeddings computed once at seed time. Full algorithm in `/technical/06-deterministic-matching.md`.
+
+- Migrations: `chip_embeddings` table + HNSW index; `rank_seed_users_for_host` (Jaccard-over-jsonb) function; `pick_venue_deterministic` (tag + neighborhood scoring) function. `scripts/seed-chip-embeddings.ts` one-shot batch-embed, run once locally and against Supabase, never at runtime.
+- TS rewrite: `lib/match.ts` → `rankSeedUsersForHost(host)`; `lib/findSimilar.ts` RPC wrapper; `lib/generatePlan.ts` `pickVenue` + `pickAttendees` (with activity + availability filters and the relaxation cascade) deterministic; top-30 candidates get the chip-centroid cosine tiebreak in TS. `lib/embed.ts` gated behind `EMBED_ALLOW_RUNTIME` so a stray import can't reintroduce OpenAI.
+
+### Slice 4 — Deterministic "why this plan" + Plan card rewire (ships before Module 3)
+
+The Plan card visuals from Slice B survive; the data comes from templates, not an LLM.
+
+- `lib/whyTemplates.ts` with the three templates, slot-fillers, empty-slot dropping, and template selection by hash of `(host.id, plan_date)`. `generateWhyThisPlan` replaced with `renderWhyTemplate(...)`; OpenAI import deleted from `lib/generatePlan.ts`.
+- `/api/plan/create` stops calling `embedBatch`; writes a chip-derived centroid into `self_embedding`/`looking_for_embedding` so the columns stay non-null and `match_users` survives as a fallback. Plan card pulls scored attendees + template copy. Borrow from the Lovable reference: vibe pills in the venue area (data already on `places.vibe_tags`), relative time format, a warm gradient header zone. "Refine" routes back into the onboarding flow with chips pre-checked.
+
+### Slice 5 — Demo hardening (ships before Module 3)
+
+Pre-presentation polish, no new surfaces.
+
+- Seed canonicalization replay: push all 175 seed users' tags through `lib/canon.ts` (embeddings untouched, only tag arrays rewritten) + a CI assertion that no seed user retains pre-canonical forms.
+- Demo dry-run: full sign-up → onboarding → Find my people → Plan card walkthrough on the deployed build; file + fix every glitch. An auth-gated `/demo-reset` route that clears the current user's plan + chip data for repeated rehearsal.
+
+### Slice 6 — Vercel deploy (ships before Module 3, final slice)
+
+Production URL, env vars, Supabase pointed at prod, `OPENAI_API_KEY` removed from the runtime env (kept only in the seed-script env). Custom-SMTP via Resend (`Aura <hello@youraura.com>`) so emails come from the brand and the free-tier rate limit lifts. Add the production callback URL to Supabase → Authentication → URL Configuration. Production smoke of the Slice 1 E2E flow against the live URL.
+
+---
+
+### Deferred to Module 4 (layers on top, nothing lost)
+
+- **Voice onboarding (real).** Whisper transcription of the stored blob, `lib/extract.ts` returning JSON-schema-constrained output mapped to the chip taxonomy, pre-filling onboarding chips. Chip schema stays the contract.
+- **LLM-narrated "why this plan."** `lib/whyNarrate.ts` wraps an LLM call on the same payload `whyTemplates.ts` uses; falls through to the deterministic template on error or >800ms timeout.
+- **Lazy real embeddings** for chip-onboarded users (background re-embed, upgrades tiebreak quality; no user-visible change).
+- **Original Slice D scope** beyond demo hardening: WhatsApp invite flow, deeper refinement UI, "Why these six?" dev panel, copy + motion polish.
 
 ## Change Log
 
@@ -314,6 +370,7 @@ The build proceeds in slices. Each slice is one or more PRs against `main`. Stat
 - 2026-05-08: PR #2 merged. 175 mock users seeded across 7 archetypes (25 each) with `selfEmbedding` + `lookingForEmbedding` precomputed. Mix: 80% intra-archetype, 15% adjacent bridges, 5% deliberate mismatches.
 - 2026-05-10: PR #3 merged. Design rebalance — Aura cream is the default surface for ~95% of screens; Ora indigo appears only as brief atmospheric moments. AuroraRing motion gentled to 7s breath, no audio-reactive (the ring is present, not responsive to the user's voice — removes the surveillance read).
 - 2026-05-10: PR #4 merged. Localized Ora bloom replaces full-screen surface flip during the Processing state. The bloom is contained; the ring becomes a luminous portal; the cream world surrounds it.
+- 2026-06-03: Build plan restructured around the Module 3 bootcamp presentation (target 2026-06-17). Pivot from voice-first to chip-first onboarding and from runtime AI to deterministic matching, so the entire flow works end-to-end with no OpenAI dependency. AI (voice transcription, LLM extraction, LLM-narrated explanations) defers to Module 4 and layers on top of the same chip schema + Plan-card contract. New slice plan: Slice 1 auth productionization (merge parked OTP branch, add sign-out, email template), Slice 2 chip onboarding (6 screens, taxonomy mined from the seed pool, Berlin neighborhood multi-select, voice kept as a non-AI stub), Slice 3 deterministic matching (weighted Jaccard + chip-centroid tiebreak, `chip_embeddings` table seeded once, no runtime OpenAI), Slice 4 templated "why this plan" + Plan card rewire, Slice 5 demo hardening, Slice 6 Vercel deploy. Full specs in `/technical/05-onboarding-spec.md` and `/technical/06-deterministic-matching.md`. Slice C/D/E from the prior plan fold into Module 4 + Slice 6. Plan produced via a multi-agent audit + design workflow (4 parallel code audits → onboarding design → matching design → synthesis).
 - 2026-05-19: Visual fixes — Ora bloom and chips affordance. The processing-state Ora moment on `/voice` (and the matching one on `/plan`) was using a layered gradient with a near-black indigo at 70% alpha as the outer halo; on the cream surface that alpha-blends to muddy gray, not the intended "pool of aurora dark." Dropped the dark layer entirely and replaced it with three layers of pure colored light (luminous violet → electric magenta → soft lavender) so the ring sits in a *bloom of aurora glow*, not a dark hole. The prompt copy also fades to 30% opacity during processing now (previously only during recording) so attention shifts to the ring + "Reading your aura..." microcopy. On `/chips`, the descriptive Chip component shifted from outlined-on-cream to softly-filled (pale violet tint with violet text) so the "currently selected, removable" state reads correctly — outlined chips were colliding visually with the outlined inactive ConnectionPill and users were reading them as further options to pick. The × remove cue is now always visible at moderate opacity, fully opaque on hover, with a subtle bg-tint hover ring around it. Three distinct treatments now map to three distinct meanings: pale-filled + × = removable descriptive tag; bold-filled = active toggle; outlined = inactive toggle.
 - 2026-05-19: Magic-link callback fixed to handle both auth-link flavors. Default Supabase email templates use `{{ .ConfirmationURL }}` which lands users on the callback with `?code=…` (PKCE flow), not `?token_hash=…&type=…` (OTP flow). The original implementation only handled the OTP shape, so clicking a magic link bounced back to the login page with an "Invalid or missing sign-in link" error. Callback now branches: `?code` → `exchangeCodeForSession`, `?token_hash + type` → `verifyOtp` (kept as a fallback for custom templates).
 - 2026-05-19: `/plan` screen + just-in-time auth gate landed. Plan card renders per Screen 5 spec: activity headline (uppercase), venue + neighborhood, day + time formatted for `Europe/Berlin`, divider, `whyThisPlan` line, divider, "THE PEOPLE" section. Each attendee row is an aura swatch (procedural conic-gradient from the user's id) + first name + a one-line summary derived from the precomputed overlap explanation ("also boulder gym · into startups"). Tap any row to expand the full shared-interests / shared-activities / shared-personality / shared-social-style / shared-life-context breakdown. New `/api/plan/create` POST route handles the host upsert (`public.users` row keyed on `auth_user_id`, embeds both layers in one batched OpenAI call, refreshes embeddings on repeat calls so refinement in Slice D works out of the box) and runs `generatePlan`. The "Finding your first Plan..." Ora moment shows during the fetch (localized indigo bloom around the aurora ring, cream world surrounding). Refinement controls, "Why these six?" dev panel, and WhatsApp invite are deferred to Slice D.
