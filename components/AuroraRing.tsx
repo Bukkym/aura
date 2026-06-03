@@ -1,5 +1,3 @@
-"use client";
-
 import { CSSProperties } from "react";
 
 export type RingState = "idle" | "recording" | "processing" | "rest";
@@ -8,57 +6,27 @@ interface AuroraRingProps {
   size?: number;
   state?: RingState;
   className?: string;
+  style?: CSSProperties;
 }
 
-// Aurora gradient — flows around the ring. Order chosen for a smooth violet → magenta → coral cycle.
-const auroraGradient =
-  "conic-gradient(from 0deg, #5B2EFF, #A237FF, #FF3D9A, #FF7BAC, #C97DFF, #5B2EFF)";
-
+// The brand mark + Ora's presence. A live, breathing ring (never a static SVG in
+// product UI): conic aurora gradient + radial mask cutting the center hole + a
+// blurred halo copy behind. Animation is driven by data-state via .aura-ring CSS
+// in globals.css. Halo blur scales with size (18% of diameter).
 export function AuroraRing({
   size = 120,
   state = "idle",
   className = "",
+  style,
 }: AuroraRingProps) {
-  // Recording uses the SAME calm breath as idle — no intensity bump.
-  // The ring is *present*, not *responsive to you*. Avoids the surveillance read.
-  const haloAnimation =
-    state === "processing"
-      ? "animate-spin-slow"
-      : state === "rest"
-        ? ""
-        : "animate-pulse-slow";
-
-  const ringAnimation =
-    state === "processing" ? "animate-spin-slow" : haloAnimation;
-
-  const haloOpacity = state === "rest" ? 0.35 : 0.5;
-
-  const haloStyle: CSSProperties = {
-    background: auroraGradient,
-    opacity: haloOpacity,
-  };
-
-  // Radial mask cuts a hole in the middle of a filled disc, leaving an aurora ring.
-  const ringStyle: CSSProperties = {
-    background: auroraGradient,
-    WebkitMask: "radial-gradient(transparent 58%, black 62%)",
-    mask: "radial-gradient(transparent 58%, black 62%)",
-  };
-
   return (
     <div
-      className={`relative no-select ${className}`}
-      style={{ width: size, height: size }}
+      className={`aura-ring ${className}`.trim()}
       data-state={state}
+      style={{ ["--ring-size" as string]: `${size}px`, width: size, height: size, ...style }}
     >
-      <div
-        className={`absolute inset-0 rounded-full blur-2xl ${haloAnimation}`}
-        style={haloStyle}
-      />
-      <div
-        className={`absolute inset-0 rounded-full ${ringAnimation}`}
-        style={ringStyle}
-      />
+      <div className="aura-ring__halo" />
+      <div className="aura-ring__band" />
     </div>
   );
 }

@@ -2,6 +2,122 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==========================================================================
+   aura design tokens — ported from design_handoff_aura/prototype/colors_and_type.css
+   Single source of truth for color, type, spacing, radius, elevation, motion.
+   Consumed by the shared primitives + flow screens via var(--token) references.
+   ========================================================================== */
+:root {
+  /* COLOR — base tokens (aura mode, the default surface) */
+  --aura-bg: #faf7f2; /* primary background, warm cream */
+  --aura-coral: #ff7bac; /* warm accent / energy */
+  --aura-lavender: #c97dff; /* soft accent / secondary */
+  --aura-violet: #7752e6; /* PRIMARY brand violet (buttons, links, brand) */
+  --aura-ink: #1a1530; /* body text / high-contrast ink (violet-black) */
+
+  /* COLOR — Ora mode (bloom moments only; pure colored light, never near-black) */
+  --ora-bg: #0e0b22; /* deep indigo, RESERVED: app icon / future dark canvas only */
+  --ora-indigo: #5b2eff;
+  --ora-violet: #a237ff; /* luminous violet, also the single-color brand anchor */
+  --ora-magenta: #ff3d9a;
+  --ora-light: #faf7f2;
+  --aura-anchor: #a237ff;
+
+  /* COLOR — canonical alpha tints (use ONLY these) */
+  --aura-ink-90: rgba(26, 21, 48, 0.9);
+  --aura-ink-70: rgba(26, 21, 48, 0.7);
+  --aura-ink-55: rgba(26, 21, 48, 0.55);
+  --aura-ink-45: rgba(26, 21, 48, 0.45);
+  --aura-ink-40: rgba(26, 21, 48, 0.4);
+  --aura-ink-10: rgba(26, 21, 48, 0.1);
+  --aura-ink-06: rgba(26, 21, 48, 0.06);
+  --aura-violet-12: rgba(119, 82, 230, 0.12);
+  --aura-violet-10: rgba(119, 82, 230, 0.1);
+  --aura-violet-30: rgba(119, 82, 230, 0.3);
+  --aura-violet-40: rgba(119, 82, 230, 0.4);
+  --aura-lavender-50: rgba(201, 125, 255, 0.5);
+  --aura-lavender-15: rgba(201, 125, 255, 0.15);
+
+  /* BACKGROUND BLOOM — the always-on aurora behind every aura screen */
+  --bloom-welcome:
+    radial-gradient(50% 50% at 25% 20%, rgba(255, 123, 172, 0.28) 0%, transparent 65%),
+    radial-gradient(45% 45% at 80% 30%, rgba(201, 125, 255, 0.22) 0%, transparent 70%),
+    radial-gradient(40% 40% at 60% 90%, rgba(119, 82, 230, 0.18) 0%, transparent 70%);
+  --bloom-plan:
+    radial-gradient(60% 55% at 20% 15%, rgba(255, 123, 172, 0.16) 0%, transparent 70%),
+    radial-gradient(55% 55% at 85% 25%, rgba(201, 125, 255, 0.14) 0%, transparent 72%),
+    radial-gradient(60% 60% at 55% 100%, rgba(119, 82, 230, 0.12) 0%, transparent 72%);
+
+  /* ORA BLOOM — localized colored-light overlay during the 3 Ora moments */
+  --ora-bloom:
+    radial-gradient(38% 38% at 50% 50%, rgba(162, 55, 255, 0.55) 0%, transparent 70%),
+    radial-gradient(50% 50% at 38% 42%, rgba(255, 61, 154, 0.4) 0%, transparent 72%),
+    radial-gradient(55% 55% at 62% 58%, rgba(201, 125, 255, 0.38) 0%, transparent 74%);
+
+  /* The aurora gradient itself, flows around the ring */
+  --aurora-conic: conic-gradient(from 0deg, #5b2eff, #a237ff, #ff3d9a, #ff7bac, #c97dff, #5b2eff);
+
+  /* TYPOGRAPHY — families. Geist (body) + Cabinet Grotesk (display) load in app/layout.tsx. */
+  --font-display: "Cabinet Grotesk", var(--font-geist-sans), "Geist", system-ui, sans-serif;
+  --font-body: var(--font-geist-sans), "Geist", "Cabinet Grotesk", system-ui, sans-serif;
+
+  /* TYPE SCALE — 5 distinct styles only */
+  --display-size: 56px;
+  --display-line: 1.02;
+  --display-weight: 500;
+  --display-track: -0.02em;
+  --heading-size: 32px;
+  --heading-line: 1.12;
+  --heading-weight: 500;
+  --heading-track: -0.01em;
+  --body-size: 16px;
+  --body-line: 1.55;
+  --body-weight: 400;
+  --body-track: 0;
+  --caption-size: 14px;
+  --caption-line: 1.45;
+  --caption-weight: 400;
+  --caption-track: 0;
+  --label-size: 12px;
+  --label-line: 1.2;
+  --label-weight: 500;
+  --label-track: 0.18em;
+
+  /* SPACING SCALE */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --card-padding: 28px;
+  --section-gap: 32px;
+
+  /* RADIUS */
+  --radius-pill: 9999px;
+  --radius-card: 24px;
+  --radius-sm: 12px;
+
+  /* ELEVATION / SHADOW — soft, warm, ink-tinted (never hard black) */
+  --shadow-card:
+    0 1px 2px rgba(26, 21, 48, 0.04), 0 12px 32px -8px rgba(26, 21, 48, 0.12);
+  --shadow-raised:
+    0 2px 4px rgba(26, 21, 48, 0.05), 0 24px 48px -12px rgba(26, 21, 48, 0.16);
+  --height-control: 48px;
+
+  /* MOTION — named primitives */
+  --motion-breath: 7s ease-in-out infinite;
+  --motion-spin: 10s linear infinite;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fade: 600ms;
+  --press-scale: 0.97;
+
+  /* tiny svg-noise placeholder referenced by some artboards */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg'/%3E");
+}
+
 html,
 body {
   height: 100%;
@@ -18,4 +134,394 @@ body {
   user-select: none;
   -webkit-user-select: none;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ==========================================================================
+   SEMANTIC TYPE CLASSES
+   ========================================================================== */
+.aura-display {
+  font-family: var(--font-display);
+  font-size: var(--display-size);
+  line-height: var(--display-line);
+  font-weight: var(--display-weight);
+  letter-spacing: var(--display-track);
+  color: var(--aura-ink);
+}
+.aura-heading {
+  font-family: var(--font-display);
+  font-size: var(--heading-size);
+  line-height: var(--heading-line);
+  font-weight: var(--heading-weight);
+  letter-spacing: var(--heading-track);
+  color: var(--aura-ink);
+}
+.aura-body {
+  font-family: var(--font-body);
+  font-size: var(--body-size);
+  line-height: var(--body-line);
+  font-weight: var(--body-weight);
+  color: var(--aura-ink);
+}
+.aura-caption {
+  font-family: var(--font-body);
+  font-size: var(--caption-size);
+  line-height: var(--caption-line);
+  color: var(--aura-ink-55);
+}
+.aura-label {
+  font-family: var(--font-body);
+  font-size: var(--label-size);
+  line-height: var(--label-line);
+  font-weight: var(--label-weight);
+  letter-spacing: var(--label-track);
+  text-transform: uppercase;
+  color: var(--aura-ink-45);
+}
+.aura-wordmark {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  text-transform: lowercase;
+  color: var(--aura-ink);
+}
+
+/* ==========================================================================
+   MOTION KEYFRAMES
+   ========================================================================== */
+@keyframes aura-breath {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.03); }
+}
+@keyframes aura-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes aura-fade-in {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* flow-level keyframes used by screen entrances + ambient discs */
+@keyframes flowFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes orbFloat {
+  50% { transform: translateY(-7px); }
+}
+@keyframes formPulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1.15); }
+}
+
+.anim-breath { animation: aura-breath var(--motion-breath); }
+.anim-spin { animation: aura-spin var(--motion-spin); }
+/* No fill-mode: resting opacity stays 1, the fade is a one-shot enhancement on load. */
+.anim-fade-in { animation: aura-fade-in var(--dur-fade) var(--ease-out); }
+
+/* ==========================================================================
+   AURORA RING — brand mark + Ora's presence. data-state drives the animation.
+   ========================================================================== */
+.aura-ring {
+  position: relative;
+  width: var(--ring-size, 120px);
+  height: var(--ring-size, 120px);
+  user-select: none;
+  -webkit-user-select: none;
+  flex: none;
+}
+.aura-ring__halo,
+.aura-ring__band {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--aurora-conic);
+}
+.aura-ring__halo {
+  filter: blur(calc(var(--ring-size, 120px) * 0.18));
+  opacity: 0.5;
+}
+.aura-ring__band {
+  -webkit-mask: radial-gradient(transparent 58%, #000 62%);
+  mask: radial-gradient(transparent 58%, #000 62%);
+}
+.aura-ring[data-state="idle"] .aura-ring__halo,
+.aura-ring[data-state="idle"] .aura-ring__band,
+.aura-ring[data-state="recording"] .aura-ring__halo,
+.aura-ring[data-state="recording"] .aura-ring__band {
+  animation: aura-breath var(--motion-breath);
+}
+.aura-ring[data-state="processing"] .aura-ring__halo,
+.aura-ring[data-state="processing"] .aura-ring__band {
+  animation: aura-spin var(--motion-spin);
+}
+.aura-ring[data-state="rest"] .aura-ring__halo {
+  opacity: 0.35;
+  animation: none;
+}
+.aura-ring[data-state="rest"] .aura-ring__band {
+  animation: none;
+}
+
+/* ==========================================================================
+   ORA BLOOM — localized colored-light overlay during the 3 Ora moments
+   ========================================================================== */
+.ora-bloom {
+  position: absolute;
+  inset: -60%;
+  pointer-events: none;
+  background: var(--ora-bloom);
+  filter: blur(40px);
+  opacity: 0;
+  transition: opacity var(--dur-fade) var(--ease-out);
+}
+.ora-bloom.is-on {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   AURA SWATCH — frame for the procedural disc / monogram
+   ========================================================================== */
+.aura-swatch {
+  width: var(--swatch-size, 32px);
+  height: var(--swatch-size, 32px);
+  border-radius: 9999px;
+  flex: none;
+  box-shadow: inset 0 0 0 1px rgba(26, 21, 48, 0.06);
+}
+
+/* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+.btn {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 500;
+  height: var(--height-control);
+  padding: 0 32px;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    background-color 180ms var(--ease-out),
+    transform 120ms var(--ease-out),
+    opacity 180ms var(--ease-out),
+    color 180ms var(--ease-out);
+}
+.btn:active {
+  transform: scale(var(--press-scale));
+}
+.btn--primary {
+  background: var(--aura-violet);
+  color: var(--aura-bg);
+}
+.btn--primary:hover {
+  background: var(--ora-violet);
+}
+.btn--primary:disabled,
+.btn--primary[disabled] {
+  background: var(--aura-violet-12);
+  color: var(--aura-ink-40);
+  cursor: not-allowed;
+  transform: none;
+}
+/* Aurora primary — the hero/payoff CTA. Reserve for the ONE primary action. */
+.btn--aurora {
+  background: linear-gradient(108deg, #7752e6 0%, #a338d6 46%, #ff5c9c 84%, #ff7bac 100%);
+  background-size: 140% 140%;
+  color: #fff;
+  box-shadow: 0 10px 26px rgba(150, 60, 170, 0.32), 0 2px 8px rgba(120, 40, 150, 0.18);
+  transition:
+    background-position 320ms var(--ease-out),
+    transform 120ms var(--ease-out),
+    box-shadow 220ms var(--ease-out);
+}
+.btn--aurora:hover {
+  background-position: 100% 0;
+  box-shadow: 0 12px 30px rgba(170, 60, 150, 0.4);
+}
+.btn--aurora:disabled,
+.btn--aurora[disabled] {
+  background: var(--aura-violet-12);
+  color: var(--aura-ink-40);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+.btn--ghost {
+  background: transparent;
+  color: var(--aura-ink);
+  padding: 0 8px;
+}
+.btn--ghost:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.btn--back {
+  background: transparent;
+  color: var(--aura-ink-45);
+  font-size: 14px;
+  height: auto;
+  padding: 4px 6px;
+}
+.btn--back:hover {
+  color: var(--aura-ink);
+}
+
+/* ==========================================================================
+   CHIPS — three treatments, three meanings. outline < pale < bold.
+   ========================================================================== */
+.chip {
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: var(--radius-pill);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    background-color 180ms var(--ease-out),
+    border-color 180ms var(--ease-out),
+    transform 120ms var(--ease-out),
+    color 180ms var(--ease-out);
+  white-space: nowrap;
+}
+.chip:active {
+  transform: scale(var(--press-scale));
+}
+.chip--pale {
+  background: var(--aura-violet-12);
+  color: var(--aura-violet);
+}
+.chip--pale .chip__x {
+  opacity: 0.45;
+  transition: opacity 160ms var(--ease-out);
+  font-size: 15px;
+  line-height: 1;
+}
+.chip--pale:hover .chip__x {
+  opacity: 1;
+}
+.chip--bold {
+  background: var(--aura-violet);
+  color: var(--aura-bg);
+}
+.chip--bold:hover {
+  background: var(--ora-violet);
+}
+.chip--outline {
+  background: transparent;
+  color: var(--aura-violet);
+  border-color: var(--aura-lavender-50);
+}
+.chip--outline:hover {
+  border-color: var(--aura-violet);
+  background: var(--aura-violet-10);
+}
+.chip--add {
+  background: transparent;
+  color: var(--aura-ink-45);
+  border: 1px dashed var(--aura-ink-10);
+}
+.chip--add:hover {
+  color: var(--aura-violet);
+  border-color: var(--aura-violet-30);
+}
+
+/* ==========================================================================
+   INPUTS
+   ========================================================================== */
+.field {
+  font-family: var(--font-body);
+  font-size: 16px;
+  height: var(--height-control);
+  padding: 0 20px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--aura-violet-30);
+  background: var(--aura-bg);
+  color: var(--aura-ink);
+  width: 100%;
+  outline: none;
+  transition:
+    border-color 180ms var(--ease-out),
+    box-shadow 180ms var(--ease-out);
+}
+.field::placeholder {
+  color: var(--aura-ink-45);
+}
+.field:focus {
+  border-color: var(--aura-violet);
+  box-shadow: 0 0 0 4px var(--aura-violet-12);
+}
+.field--code {
+  text-align: center;
+  font-size: 28px;
+  letter-spacing: 0.4em;
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  padding-right: calc(20px - 0.4em);
+}
+.field-group {
+  position: relative;
+  width: 100%;
+}
+.field-group .field {
+  padding-right: 52px;
+}
+.field-group .mic {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--aura-ink-45);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.field-group .mic:hover {
+  color: var(--aura-violet);
+  background: var(--aura-violet-10);
+}
+
+/* ==========================================================================
+   CARD — hero / Plan container + dividers + by-Ora attribution
+   ========================================================================== */
+.aura-card {
+  background: var(--aura-bg);
+  border: 1px solid var(--aura-ink-10);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--card-padding);
+}
+.aura-divider {
+  height: 1px;
+  background: var(--aura-ink-10);
+  border: none;
+  margin: var(--space-6) 0;
+}
+.by-ora {
+  font-family: var(--font-body);
+  font-size: 12px;
+  color: var(--aura-ink-40);
+  pointer-events: none;
+}
+
+/* aura full-flow scroll container — hide the scrollbar, the prototype has none */
+.aura-flow-scroll {
+  scrollbar-width: none;
+}
+.aura-flow-scroll::-webkit-scrollbar {
+  display: none;
 }
