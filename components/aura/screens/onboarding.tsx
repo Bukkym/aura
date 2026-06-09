@@ -6,6 +6,7 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { Ring, Wordmark, OraBloom, mono } from "../primitives";
+import type { Selections } from "../mapDraft";
 
 // ── Screen 1 · Welcome ──
 export function ScWelcome({ onNext }: { onNext: () => void }) {
@@ -396,14 +397,14 @@ function StepChip({ on, children, onClick }: { on: boolean; children: ReactNode;
 }
 
 // ── Screen 4 · Chip flow (data-driven, 6 steps, empty start + min-gating) ──
-export function ScChips({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
+export function ScChips({ onDone, onBack }: { onDone: (sel: Selections) => void; onBack: () => void }) {
   const initSel = () => {
-    const s: Record<string, string[]> = {};
+    const s: Selections = {};
     STEPS.forEach((st) => st.groups.forEach((g) => (s[g.key] = g.def ? [g.def] : [])));
     return s;
   };
   const [step, setStep] = useState(0);
-  const [sel, setSel] = useState<Record<string, string[]>>(initSel);
+  const [sel, setSel] = useState<Selections>(initSel);
   const st = STEPS[step];
 
   const toggle = (g: ChipGroup, opt: string) =>
@@ -439,7 +440,7 @@ export function ScChips({ onDone, onBack }: { onDone: () => void; onBack: () => 
   const next = () => {
     if (!ready) return;
     if (step < STEPS.length - 1) setStep(step + 1);
-    else onDone();
+    else onDone(sel);
   };
   const back = () => {
     if (step > 0) setStep(step - 1);

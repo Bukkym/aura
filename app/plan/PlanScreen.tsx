@@ -2,27 +2,17 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AuroraRing } from "@/components/AuroraRing";
+import { Ring, OraBloom, Wordmark } from "@/components/aura/primitives";
+import { PhoneFrame } from "@/components/aura/PhoneFrame";
+import { LivePlanCard } from "@/components/aura/screens/live-plan";
 import { SignOutButton } from "@/components/SignOutButton";
-import type {
-  LookingForExtracted,
-  SelfExtracted,
-} from "@/types";
+import type { LookingForExtracted, SelfExtracted } from "@/types";
 import type { PlanResponse } from "../api/plan/create/route";
-import { PlanCard } from "./PlanCard";
 
-// Screen 5 wrapper: drives the fetch + Ora moment + edge states. The card
-// itself lives in PlanCard.tsx so /plan-demo can render it without going
-// through the fetch.
-//
-// Flow:
-//   1. On mount, read aura:draft from sessionStorage (set by /chips).
-//   2. If absent, show a friendly nudge to start at /voice.
-//   3. If present, POST to /api/plan/create — this triggers the Ora moment.
-//   4. On success, render PlanCard.
-//
-// Refinement controls (inline refinement chips + free-form text) and the
-// "Why these six?" dev panel are deferred to Slice D.
+// Screen 5 wrapper: drives the fetch + the "finding" Ora moment + edge states,
+// inside the shared mobile column. The deterministic pipeline runs server-side
+// in /api/plan/create; this just reads aura:draft (written by the onboarding
+// flow at /), POSTs it, and renders the live Plan card.
 
 const STORAGE_KEY = "aura:draft";
 
@@ -66,9 +56,7 @@ export function PlanScreen() {
         });
         if (!res.ok) {
           const detail = await res.json().catch(() => ({}));
-          throw new Error(
-            detail?.error ?? `Request failed: ${res.status}`,
-          );
+          throw new Error(detail?.error ?? `Request failed: ${res.status}`);
         }
         const { plan } = (await res.json()) as { plan: PlanResponse };
         if (!cancelled) setPhase({ kind: "ready", plan });
@@ -88,101 +76,81 @@ export function PlanScreen() {
     };
   }, []);
 
-  let screen;
-  if (phase.kind === "loading" || phase.kind === "generating") {
-    screen = <OraMoment />;
-  } else if (phase.kind === "no-draft") {
-    screen = <NoDraft />;
-  } else if (phase.kind === "error") {
-    screen = <ErrorState message={phase.message} />;
-  } else {
-    screen = <PlanCard plan={phase.plan} />;
-  }
+  let screen: React.ReactNode;
+  if (phase.kind === "loading" || phase.kind === "generating") screen = <FindingMoment />;
+  else if (phase.kind === "no-draft") screen = <NoDraft />;
+  else if (phase.kind === "error") screen = <ErrorState message={phase.message} />;
+  else screen = <LivePlanCard plan={phase.plan} />;
 
-  // This wrapper only renders on the authed /plan route, so sign-out belongs
-  // here. Fixed top-right, clear of PlanCard's top-left back link and the
-  // bottom-right "by Ora" mark.
   return (
-    <>
+    <PhoneFrame
+      screenKey={phase.kind}
+      overlay={
+        <div style={{ position: "absolute", bottom: 16, left: 18, zIndex: 40 }}>
+          <SignOutButton />
+        </div>
+      }
+    >
       {screen}
-      <div className="fixed right-5 top-5 z-20">
-        <SignOutButton />
-      </div>
-    </>
+    </PhoneFrame>
   );
 }
 
-function OraMoment() {
-  // Pure luminous bloom on cream — see app/voice/page.tsx for the reasoning.
+// The earned wait: processing ring + localized bloom + cycling status, no
+// auto-advance (the fetch decides when we're done).
+const FINDING_STEPS = ["Reading your aura…", "Looking across Berlin…", "Finding the few who truly fit…"];
+function FindingMoment() {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setI((v) => (v + 1) % FINDING_STEPS.length), 1600);
+    return () => clearInterval(id);
+  }, []);
   return (
-    <main className="relative min-h-dvh w-full overflow-hidden bg-aura-bg text-aura-ink">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 opacity-50 blur-3xl"
-        style={{
-          background:
-            "radial-gradient(45% 45% at 25% 25%, rgba(255, 123, 172, 0.22) 0%, transparent 70%), radial-gradient(40% 40% at 75% 75%, rgba(201, 125, 255, 0.18) 0%, transparent 75%)",
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 animate-fade-in"
-        style={{
-          background: `
-            radial-gradient(circle at 50% 42%, rgba(162, 55, 255, 0.50) 0%, transparent 18%),
-            radial-gradient(circle at 50% 42%, rgba(255, 61, 154, 0.35) 0%, transparent 30%),
-            radial-gradient(circle at 50% 42%, rgba(201, 125, 255, 0.22) 0%, transparent 50%)
-          `,
-        }}
-      />
-      <div className="relative flex min-h-dvh flex-col items-center justify-center px-6 py-12 text-center">
-        <AuroraRing size={200} state="processing" />
-        <p className="mt-12 text-base text-aura-ink/55">
-          Finding your first Plan...
+    <div style={{ position: "relative", height: "100%", background: "var(--aura-bg)", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+      <OraBloom show />
+      <div style={{ position: "relative", textAlign: "center", padding: "0 36px" }}>
+        <div style={{ display: "flex", justifyContent: "center" }}>
+          <Ring size={140} state="processing" dark />
+        </div>
+        <p key={i} style={{ marginTop: 38, fontFamily: "var(--font-body)", fontSize: 16.5, color: "var(--aura-ink-90)", lineHeight: 1.4, animation: "flowFade 500ms ease both" }}>
+          {FINDING_STEPS[i]}
         </p>
       </div>
-    </main>
+    </div>
   );
 }
 
 function NoDraft() {
   return (
-    <main className="relative min-h-dvh w-full overflow-hidden bg-aura-bg text-aura-ink">
-      <div className="relative flex min-h-dvh flex-col items-center justify-center px-6 py-12 text-center">
-        <AuroraRing size={96} state="idle" />
-        <h1 className="font-display mt-8 text-3xl font-medium tracking-tight">
-          Let&apos;s start with you.
-        </h1>
-        <p className="mt-3 max-w-sm text-sm text-aura-ink/60">
-          Tell me a bit about yourself first, then I&apos;ll find your people.
-        </p>
-        <Link
-          href="/voice"
-          className="mt-10 inline-flex h-12 items-center justify-center rounded-full bg-aura-violet px-8 text-base font-medium text-aura-bg transition hover:bg-ora-violet"
-        >
+    <div style={{ position: "relative", height: "100%", background: "var(--aura-bg)", color: "var(--aura-ink)", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", textAlign: "center" }}>
+      <div aria-hidden style={{ position: "absolute", inset: 0, background: "var(--bloom-welcome)", opacity: 0.5, filter: "blur(64px)" }} />
+      <div style={{ position: "relative" }}>
+        <Ring size={96} state="idle" />
+        <div style={{ marginTop: 24 }}>
+          <Wordmark size={40} />
+        </div>
+        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", margin: "18px 0 6px" }}>Let&apos;s start with you.</h1>
+        <p style={{ fontSize: 14, color: "var(--aura-ink-70)", margin: "0 auto", maxWidth: 280, lineHeight: 1.5 }}>Tell me a bit about yourself first, then I&apos;ll find your people.</p>
+        <Link href="/" className="btn btn--aurora" style={{ marginTop: 28, display: "inline-flex", textDecoration: "none", padding: "0 48px" }}>
           Begin
         </Link>
       </div>
-    </main>
+    </div>
   );
 }
 
 function ErrorState({ message }: { message: string }) {
   return (
-    <main className="relative min-h-dvh w-full overflow-hidden bg-aura-bg text-aura-ink">
-      <div className="relative flex min-h-dvh flex-col items-center justify-center px-6 py-12 text-center">
-        <AuroraRing size={96} state="idle" />
-        <h1 className="font-display mt-8 text-3xl font-medium tracking-tight">
-          Something didn&apos;t land.
-        </h1>
-        <p className="mt-3 max-w-sm text-sm text-aura-ink/60">{message}</p>
-        <Link
-          href="/chips"
-          className="mt-10 text-sm text-aura-ink/55 underline-offset-4 transition hover:text-aura-ink hover:underline"
-        >
-          ← back to chips
+    <div style={{ position: "relative", height: "100%", background: "var(--aura-bg)", color: "var(--aura-ink)", overflow: "hidden", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "0 32px", textAlign: "center" }}>
+      <div aria-hidden style={{ position: "absolute", inset: 0, background: "var(--bloom-welcome)", opacity: 0.5, filter: "blur(64px)" }} />
+      <div style={{ position: "relative" }}>
+        <Ring size={96} state="idle" />
+        <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 26, letterSpacing: "-0.01em", margin: "24px 0 6px" }}>Something didn&apos;t land.</h1>
+        <p style={{ fontSize: 14, color: "var(--aura-ink-70)", margin: "0 auto", maxWidth: 300, lineHeight: 1.5 }}>{message}</p>
+        <Link href="/" className="btn btn--ghost" style={{ marginTop: 24, display: "inline-flex", color: "var(--aura-violet)", textDecoration: "none" }}>
+          ← start over
         </Link>
       </div>
-    </main>
+    </div>
   );
 }
