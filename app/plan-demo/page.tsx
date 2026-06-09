@@ -3,20 +3,20 @@ import { generatePlan } from "@/lib/generatePlan";
 import { explain } from "@/lib/match";
 import { userFromRow } from "@/lib/userRow";
 import type { PlanResponse } from "../api/plan/create/route";
-import { PlanCard } from "../plan/PlanCard";
+import { PhoneFrame } from "@/components/aura/PhoneFrame";
+import { LivePlanCard } from "@/components/aura/screens/live-plan";
 
 // Demo route — bypasses auth and renders a full Plan card for a seeded
 // user (Sofia, an ambitious-creator). Useful for reviewing the visual
-// design without going through the voice → chips → magic-link → /plan
-// flow.
+// design without going through the onboarding → magic-link → /plan flow.
 //
-// Server Component so we can do the OpenAI + DB work at request time and
-// hand the finished PlanResponse to the shared PlanCard render. Uses the
-// admin Supabase client to keep things simple (users + places are
-// publicly readable, but this route shouldn't need to think about RLS).
+// Server Component so we run the deterministic pipeline + DB reads at request
+// time and hand the finished PlanResponse to LivePlanCard. Uses the admin
+// Supabase client (users + places are publicly readable; this route shouldn't
+// need to think about RLS).
 //
-// Force-dynamic so each visit generates a fresh Plan against the live
-// data. Each render costs ~one embedding + one chat completion (~$0.001).
+// Force-dynamic so each visit generates a fresh Plan against live data. No
+// OpenAI calls (Module 3 matching is deterministic).
 
 export const dynamic = "force-dynamic";
 
@@ -65,5 +65,9 @@ export default async function PlanDemoPage() {
     whyThisPlan: plan.whyThisPlan,
   };
 
-  return <PlanCard plan={response} backHref="/" />;
+  return (
+    <PhoneFrame screenKey="plan-demo">
+      <LivePlanCard plan={response} />
+    </PhoneFrame>
+  );
 }

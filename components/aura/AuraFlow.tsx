@@ -5,12 +5,13 @@
 // go(), with planStatus + stretchStatus shared across the in-app shell. The
 // device bezel and in-browser Babel from the prototype do not ship.
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { ScWelcome, ScEntry, ScVoice, ScFollowup, ScChips } from "./screens/onboarding";
 import { ScAssembling, Home } from "./screens/app-shell";
 import { MobilePlanA } from "./screens/plan-card";
 import { MobilePlanReady } from "./screens/plan-ready";
 import { PlansTab, StretchPlan } from "./screens/plans-tab";
+import { PhoneFrame } from "./PhoneFrame";
 
 type Screen = "welcome" | "entry" | "voice" | "followup" | "chips" | "assembling" | "home" | "plan" | "accepted" | "plans" | "stretch";
 
@@ -18,11 +19,7 @@ export function AuraFlow() {
   const [screen, setScreen] = useState<Screen>("welcome");
   const [planStatus, setPlanStatus] = useState<"forming" | "ready" | "confirmed">("forming");
   const [stretchStatus, setStretchStatus] = useState<"new" | "confirmed">("new");
-  const scroller = useRef<HTMLDivElement>(null);
-  const go = (s: Screen) => {
-    setScreen(s);
-    if (scroller.current) scroller.current.scrollTop = 0;
-  };
+  const go = (s: Screen) => setScreen(s);
 
   let view: React.ReactNode = null;
   if (screen === "welcome") view = <ScWelcome onNext={() => go("entry")} />;
@@ -74,34 +71,5 @@ export function AuraFlow() {
   else if (screen === "stretch")
     view = <StretchPlan onBack={() => go("plans")} onAccept={() => setStretchStatus("confirmed")} accepted={stretchStatus === "confirmed"} />;
 
-  return (
-    <main
-      style={{
-        minHeight: "100dvh",
-        width: "100%",
-        display: "flex",
-        justifyContent: "center",
-        background: "#14101f",
-      }}
-    >
-      {/* Mobile column. Every screen is designed at ~402px; we center that column. */}
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          maxWidth: 430,
-          height: "100dvh",
-          background: "var(--aura-bg)",
-          overflow: "hidden",
-          boxShadow: "0 0 60px rgba(0,0,0,0.25)",
-        }}
-      >
-        <div ref={scroller} style={{ position: "absolute", inset: 0, overflowY: "auto", overflowX: "hidden" }} className="aura-flow-scroll">
-          <div key={screen} style={{ height: "100%", animation: "flowFade 360ms ease both" }}>
-            {view}
-          </div>
-        </div>
-      </div>
-    </main>
-  );
+  return <PhoneFrame screenKey={screen}>{view}</PhoneFrame>;
 }
