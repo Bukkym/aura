@@ -62,6 +62,23 @@ Sign-out: the `/plan` screen shows a "Sign out" control (top-right) that POSTs t
 3. Confirm you land authenticated (e.g. on `/plan`).
 4. Click "Sign out" on `/plan`, confirm you return to `/` and `/plan` redirects back to `/auth/login`.
 
+### Full demo walkthrough
+
+1. `npm run dev`, open `/`. Walk the onboarding spine: Begin → "Tap through it instead" (or "Talk to Ora", a non-AI stub) → the 6-step chip capture → "Find my people →".
+2. The just-in-time auth gate bounces to `/auth/login?next=/plan`; sign in (above). `aura:draft` survives the bounce.
+3. You land on `/plan`: the "finding" Ora moment, then your Plan card (deterministic matching, real seed people), then "I'm in →" → the WhatsApp handoff.
+4. To rehearse again from scratch, visit **`/demo-reset`** (auth-gated): it deletes your profile row + clears the draft and returns you to `/`.
+- `/flow` is the full design showcase on sample data (Home, Plans tab, the "Ora stretched your usual" stretch moment); `/plan-demo` renders a live Plan card without auth.
+
+### Demo data hygiene
+
+Seed tags are kept canonical at rest so deterministic matching never scores a real overlap as zero:
+
+```
+npm run seed:canon:check   # CI assertion: exits non-zero if any seed user has pre-canonical tags
+npm run seed:canon         # rewrite drifted tag arrays through lib/canon.ts (idempotent; embeddings untouched)
+```
+
 ## Status
 
-Module 3 build in progress (chip-first onboarding, deterministic matching, no runtime AI). See `PROJECT.md` Next Steps for the slice plan. Auth productionization (Slice 1) landed the OTP code path and sign-out.
+Module 3 build in progress (chip-first onboarding, deterministic matching, no runtime AI). See `PROJECT.md` Next Steps for the slice plan. Done: Slice 1 (auth + OTP + sign-out), Slice 3 (deterministic matching), the `design_handoff_aura` full flow at `/flow`, Slice 2 (onboarding wired to the live pipeline at `/`), Slice 5 (canon replay + `/demo-reset`). Remaining: Slice 6 (Vercel deploy on meetonaura.com).
