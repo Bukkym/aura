@@ -24,12 +24,15 @@ export function OnboardingFlow() {
 
   const finish = (sel: Selections) => {
     try {
+      // A fresh profile invalidates any previously cached plan + status.
+      sessionStorage.removeItem("aura:plan");
+      sessionStorage.removeItem("aura:planStatus");
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(mapSelectionsToDraft(sel)));
     } catch {
-      // sessionStorage can fail in private-mode Safari; /plan re-prompts if the
+      // sessionStorage can fail in private-mode Safari; /home re-prompts if the
       // draft is missing.
     }
-    router.push("/plan");
+    router.push("/home");
   };
 
   let view: React.ReactNode = null;

@@ -142,12 +142,17 @@ function PersonIntro({ a }: { a: AttendeeView }) {
   );
 }
 
-function CardView({ plan, onAccept }: { plan: PlanResponse; onAccept: () => void }) {
+function CardView({ plan, onAccept, onBack }: { plan: PlanResponse; onAccept: () => void; onBack?: () => void }) {
   const when = formatWhen(plan.dateTime);
   return (
     <>
       <div style={{ position: "relative", minHeight: "100%", background: "var(--aura-bg)", color: "var(--aura-ink)", overflow: "hidden" }}>
         <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", filter: "blur(64px)", background: "var(--bloom-plan)", opacity: 0.55 }} />
+        {onBack && (
+          <button onClick={onBack} style={{ position: "absolute", top: 18, left: 18, zIndex: 2, background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "var(--aura-ink-45)" }}>
+            ← Home
+          </button>
+        )}
         <div style={{ position: "relative", zIndex: 1, padding: "58px 20px 40px", display: "flex", flexDirection: "column", alignItems: "center" }}>
           <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, margin: "0 0 18px", textAlign: "center", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>Your first Plan.</h2>
           <div style={{ background: "var(--aura-bg)", border: "1px solid var(--aura-ink-10)", borderRadius: 22, boxShadow: "var(--shadow-card)", width: "100%", overflow: "hidden" }}>
@@ -211,7 +216,7 @@ function CardView({ plan, onAccept }: { plan: PlanResponse; onAccept: () => void
   );
 }
 
-function AcceptedView({ plan, onBack }: { plan: PlanResponse; onBack: () => void }) {
+function AcceptedView({ plan, onBack, onDone }: { plan: PlanResponse; onBack: () => void; onDone?: () => void }) {
   const when = formatWhen(plan.dateTime);
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -324,6 +329,11 @@ function AcceptedView({ plan, onBack }: { plan: PlanResponse; onBack: () => void
         <p style={{ fontSize: 12.5, color: "var(--aura-ink-45)", textAlign: "center", margin: "16px 0 0", maxWidth: 280, lineHeight: 1.45 }}>
           Once two more say yes, Ora locks the table and sends everyone the details.
         </p>
+        {onDone && (
+          <button onClick={onDone} className="btn btn--ghost" style={{ marginTop: 14, color: "var(--aura-violet)" }}>
+            Done, see it in my plans →
+          </button>
+        )}
       </div>
       <span className="by-ora" style={{ position: "absolute", bottom: 22, right: 20, color: "var(--aura-ink-40)" }}>
         by Ora
@@ -332,7 +342,25 @@ function AcceptedView({ plan, onBack }: { plan: PlanResponse; onBack: () => void
   );
 }
 
-export function LivePlanCard({ plan }: { plan: PlanResponse }) {
+export function LivePlanCard({
+  plan,
+  onAccepted,
+  onDone,
+  onBack,
+}: {
+  plan: PlanResponse;
+  onAccepted?: () => void;
+  onDone?: () => void;
+  onBack?: () => void;
+}) {
   const [accepted, setAccepted] = useState(false);
-  return accepted ? <AcceptedView plan={plan} onBack={() => setAccepted(false)} /> : <CardView plan={plan} onAccept={() => setAccepted(true)} />;
+  const accept = () => {
+    setAccepted(true);
+    onAccepted?.();
+  };
+  return accepted ? (
+    <AcceptedView plan={plan} onBack={() => setAccepted(false)} onDone={onDone} />
+  ) : (
+    <CardView plan={plan} onAccept={accept} onBack={onBack} />
+  );
 }
