@@ -81,4 +81,4 @@ npm run seed:canon         # rewrite drifted tag arrays through lib/canon.ts (id
 
 ## Status
 
-Module 3 build in progress (chip-first onboarding, deterministic matching, no runtime AI). See `PROJECT.md` Next Steps for the slice plan. Done: Slice 1 (auth + OTP + sign-out), Slice 3 (deterministic matching), the `design_handoff_aura` full flow at `/flow`, Slice 2 (onboarding wired to the live pipeline at `/`), Slice 5 (canon replay + `/demo-reset`). Remaining: Slice 6 (Vercel deploy on meetonaura.com).
+Module 3 build complete and **live at https://meetonaura.com** (chip-first onboarding, deterministic matching, no runtime AI). See `PROJECT.md` Next Steps for the slice plan. Done: Slice 1 (auth + OTP + sign-out), Slice 3 (deterministic matching), the `design_handoff_aura` full flow at `/flow`, Slice 2 (onboarding wired to the live pipeline at `/`), Slice 5 (canon replay + `/demo-reset`), Slice 6 (Vercel deploy on meetonaura.com). The in-app Home shell / Plans tab / stretch moment remain the sample-data showcase at `/flow` (Module 4).
