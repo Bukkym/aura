@@ -2,32 +2,24 @@
 
 import { useRouter } from "next/navigation";
 import { PhoneFrame } from "@/components/aura/PhoneFrame";
-import { useLivePlan, setPlanStatus } from "@/components/aura/useLivePlan";
-import { LivePlanCard } from "@/components/aura/screens/live-plan";
+import { useLivePlan } from "@/components/aura/useLivePlan";
+import { LiveHome } from "@/components/aura/screens/live-shell";
 import { FindingMoment, NoDraftState, ErrorState } from "@/components/aura/screens/states";
 import { SignOutButton } from "@/components/SignOutButton";
+import { TodayBadge } from "@/components/TodayBadge";
 
-// The Plan detail screen. Reached from Home (warm cache → instant card); if
-// deep-linked, useLivePlan regenerates from the draft (brief finding beat).
-// Accepting marks the plan confirmed (reflected on Home) and shows the
-// Ora-voiced WhatsApp handoff.
-export function PlanScreen() {
+// Home owns the "finding" beat: it generates the Plan (once) and caches it, so
+// /plan and /plans read the warm cache. Status (ready/confirmed) reflects an
+// accept made on /plan.
+export function HomeScreen() {
   const router = useRouter();
-  const { phase } = useLivePlan(true);
+  const { phase, status } = useLivePlan(true);
 
   let inner: React.ReactNode;
   if (phase.kind === "loading") inner = <FindingMoment />;
   else if (phase.kind === "no-draft") inner = <NoDraftState />;
   else if (phase.kind === "error") inner = <ErrorState message={phase.message} />;
-  else
-    inner = (
-      <LivePlanCard
-        plan={phase.plan}
-        onBack={() => router.push("/home")}
-        onAccepted={() => setPlanStatus("confirmed")}
-        onDone={() => router.push("/home")}
-      />
-    );
+  else inner = <LiveHome plan={phase.plan} status={status} onOpenPlan={() => router.push("/plan")} onPlans={() => router.push("/plans")} />;
 
   return (
     <PhoneFrame
@@ -37,6 +29,7 @@ export function PlanScreen() {
           <SignOutButton />
         </div>
       }
+      footer={<TodayBadge />}
     >
       {inner}
     </PhoneFrame>

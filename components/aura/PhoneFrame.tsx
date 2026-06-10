@@ -10,11 +10,15 @@ export function PhoneFrame({
   children,
   screenKey,
   overlay,
+  footer,
 }: {
   children: ReactNode;
   screenKey: string;
   // Pinned to the column (above the scroll content), e.g. a sign-out control.
   overlay?: ReactNode;
+  // Pinned to the very bottom edge of the column, non-interactive (e.g. a small
+  // date/observability badge). Doesn't block taps on content below it.
+  footer?: ReactNode;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -39,6 +43,11 @@ export function PhoneFrame({
           </div>
         </div>
         {overlay}
+        {footer && (
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, zIndex: 45, pointerEvents: "none" }}>
+            {footer}
+          </div>
+        )}
       </div>
     </main>
   );

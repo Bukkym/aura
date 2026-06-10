@@ -14,6 +14,8 @@ export function DemoResetClient({ error }: { error?: string }) {
     if (error) return;
     try {
       sessionStorage.removeItem("aura:draft");
+      sessionStorage.removeItem("aura:plan");
+      sessionStorage.removeItem("aura:planStatus");
     } catch {
       // ignore
     }
