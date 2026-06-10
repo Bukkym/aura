@@ -123,18 +123,22 @@ Slice B′ landed steps 1 and 2 (the routes themselves). Step 3 is wired up in S
 
 ---
 
-## Vercel (deploy target, not yet provisioned)
+## Vercel (deploy target — Slice 6)
 
-Slice E deploys to Vercel. Env vars to set on the project (same names as `.env.local.example`):
+The step-by-step runbook lives in `technical/07-deployment.md`. The short version:
 
-- `OPENAI_API_KEY`
+**Runtime env vars** (Module 3 is AI-free, so the runtime needs only the three supabase-js vars):
+
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
 - `SUPABASE_SECRET_KEY`
-- `DATABASE_URL` (pooled, port 6543, for app runtime)
-- `DIRECT_URL` (direct, port 5432, for any future Vercel-side migration runs)
 
-After the first deploy, copy the production URL into Supabase → Authentication → URL Configuration → Redirect URLs. Preview deploys get their own URLs per branch; add a wildcard like `https://*.vercel.app/auth/callback` if you want previews to work, or just the named prod domain if you don't.
+**Deliberately NOT in the runtime env:**
+
+- `OPENAI_API_KEY` — only the seed scripts call OpenAI (gated behind `EMBED_ALLOW_RUNTIME`). No app route imports `lib/openai` or `lib/embed`, so the request path never needs it. Keep it in your local `.env.local` for re-seeding only.
+- `DATABASE_URL` / `DIRECT_URL` — migration-only (psql). App code uses `@supabase/supabase-js` (URL + keys), never the connection string. The schema already lives in the shared Supabase project, so no Vercel-side migration is needed.
+
+After the first deploy, add `https://meetonaura.com/auth/callback` to Supabase → Authentication → URL Configuration → Redirect URLs. Preview deploys get per-branch URLs; add `https://*.vercel.app/auth/callback` if you want previews to authenticate, or just the prod domain if you don't.
 
 ---
 
