@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generatePlan } from "@/lib/generatePlan";
+import { persistPlan } from "@/lib/plans";
 import { explain } from "@/lib/match";
 import { userFromRow } from "@/lib/userRow";
 import type {
@@ -163,10 +164,26 @@ export async function POST(request: NextRequest) {
 
   const plan = await generatePlan(sb, host);
 
+  // --- Persist the plan -------------------------------------------------
+  //
+  // Write the generated plan to public.plans and use the stored row id as the
+  // planId, so it can be confirmed and shown in the Plans tab history.
+  // persistPlan dedupes against an existing upcoming plan, so repeat calls
+  // reuse the same row.
+  let persistedPlanId: string;
+  try {
+    persistedPlanId = await persistPlan(sb, plan);
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed to save plan" },
+      { status: 500 },
+    );
+  }
+
   // --- Slim the response ------------------------------------------------
 
   const response: PlanResponse = {
-    planId: plan.planId,
+    planId: persistedPlanId,
     hostUserId: plan.hostUserId,
     hostDisplayName: host.displayName,
     activityType: plan.activityType,

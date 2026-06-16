@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { PhoneFrame } from "@/components/aura/PhoneFrame";
-import { useLivePlan, setPlanStatus } from "@/components/aura/useLivePlan";
+import { useLivePlan, confirmLivePlan } from "@/components/aura/useLivePlan";
 import { LivePlanCard } from "@/components/aura/screens/live-plan";
 import { FindingMoment, NoDraftState, ErrorState } from "@/components/aura/screens/states";
 import { SignOutButton } from "@/components/SignOutButton";
@@ -24,7 +24,7 @@ export function PlanScreen() {
       <LivePlanCard
         plan={phase.plan}
         onBack={() => router.push("/home")}
-        onAccepted={() => setPlanStatus("confirmed")}
+        onAccepted={() => confirmLivePlan(phase.plan.planId)}
         onDone={() => router.push("/home")}
       />
     );

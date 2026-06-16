@@ -76,6 +76,14 @@ export function jaccard(a: string[], b: string[]): number {
   return union === 0 ? 0 : inter / union;
 }
 
+// Returns the canonical tags shared by both arrays.
+// Useful for generating explanation copy: "Both into startups, techno".
+export function commonTags(a: string[], b: string[]): string[] {
+  const ca = canonAll(a);
+  const cb = new Set(canonAll(b));
+  return ca.filter((tag) => cb.has(tag));
+}
+
 // True if the two canonical sets share at least one member.
 export function overlaps(a: string[], b: string[]): boolean {
   if (a.length === 0 || b.length === 0) return false;
