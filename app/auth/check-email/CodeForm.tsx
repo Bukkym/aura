@@ -3,7 +3,7 @@
 import { useFormStatus } from "react-dom";
 import { verifyCode, resendCode } from "./actions";
 
-// Client wrapper for the 6-digit code entry + resend, so we can show a
+// Client wrapper for the sign-in code entry + resend, so we can show a
 // pending state on submit (useFormStatus must run inside a <form>'s
 // descendant). The Server Actions themselves live in actions.ts.
 
@@ -52,11 +52,11 @@ export function CodeForm({
           name="token"
           inputMode="numeric"
           autoComplete="one-time-code"
-          pattern="[0-9]{6}"
-          maxLength={7}
+          pattern="[0-9]{6,10}"
+          maxLength={10}
           required
-          placeholder="123456"
-          aria-label="6-digit code"
+          placeholder="12345678"
+          aria-label="Sign-in code from your email"
           className="h-12 rounded-full border border-aura-ink/15 bg-aura-bg/60 px-5 text-center text-lg tracking-[0.4em] text-aura-ink placeholder-aura-ink/30 transition focus:border-aura-violet/60 focus:outline-none focus:ring-2 focus:ring-aura-violet/30"
         />
         <SubmitButton />

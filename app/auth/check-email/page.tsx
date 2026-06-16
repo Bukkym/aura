@@ -4,7 +4,7 @@ import { CodeForm } from "./CodeForm";
 
 // Step 2 of magic-link sign-in. Two ways forward:
 //   1. Click the link in the email → /auth/callback → next
-//   2. Paste the 6-digit code from the email → verifyCode Server Action → next
+//   2. Paste the code from the email → verifyCode Server Action → next
 //
 // Path 2 exists because email scanners pre-fetch URLs and consume the
 // single-use token before the user clicks. Typing a code can't be
@@ -45,11 +45,11 @@ export default async function CheckEmailPage({ searchParams }: PageProps) {
         <p className="mt-4 max-w-sm text-sm text-aura-ink/60">
           {safeEmail ? (
             <>
-              We sent a sign-in link and a 6-digit code to{" "}
+              We sent a sign-in link and a code to{" "}
               <span className="text-aura-ink/80">{safeEmail}</span>.
             </>
           ) : (
-            <>We sent you a sign-in link and a 6-digit code.</>
+            <>We sent you a sign-in link and a code.</>
           )}
         </p>
         <p className="mt-2 max-w-sm text-sm text-aura-ink/50">

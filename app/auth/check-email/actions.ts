@@ -9,7 +9,7 @@ import { createClient } from "@/lib/supabase/server";
 // verifyCode is the pre-fetch-proof alternative to clicking the magic link:
 // email scanners (Gmail, Outlook Safe Links, security suites) routinely
 // pre-fetch URLs in incoming mail, consuming Supabase's single-use token
-// before the user sees it. Typing a 6-digit code into our form can't be
+// before the user sees it. Typing the code into our form can't be
 // pre-fetched. The token is the same OTP whether the user clicks the link
 // or types the code; Supabase lets clients verify it either way.
 //
@@ -29,8 +29,10 @@ export async function verifyCode(formData: FormData) {
   };
 
   if (!email) back("Your session expired. Start again from sign-in.");
-  if (!/^\d{6}$/.test(token)) {
-    back("That code doesn't look right. Enter the 6 digits from your email.");
+  // Supabase OTP length is a dashboard setting (6 to 10 digits); accept the
+  // full range so the form survives whatever the project is configured to send.
+  if (!/^\d{6,10}$/.test(token)) {
+    back("That code doesn't look right. Enter the digits from your email.");
   }
 
   const supabase = await createClient();
