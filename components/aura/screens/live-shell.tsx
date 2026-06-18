@@ -9,6 +9,7 @@ import { useState } from "react";
 import { Ring, Swatch, Cal, StatusIcon, mono } from "../primitives";
 import { BottomBar } from "./bottom-bar";
 import { OraAsk } from "./app-shell";
+import { RequestAnotherSheet } from "./request-another";
 import type { PlanResponse } from "@/app/api/plan/create/route";
 import type { PlanStatus, PlanSummary } from "@/types";
 
@@ -248,13 +249,18 @@ export function LivePlansTab({
   past,
   onHome,
   onOpenPlan,
+  currentAttendees = [],
+  onRefined,
 }: {
   upcoming: PlanSummary[];
   past: PlanSummary[];
   onHome: () => void;
   onOpenPlan: () => void;
+  currentAttendees?: { userId: string; displayName: string }[];
+  onRefined?: (plan: PlanResponse) => void;
 }) {
   const [ask, setAsk] = useState(false);
+  const [refine, setRefine] = useState(false);
   const comingCount = upcoming.length;
   return (
     <div style={{ position: "relative", height: "100%", background: "var(--aura-bg)", color: "var(--aura-ink)", display: "flex", flexDirection: "column" }}>
@@ -303,13 +309,34 @@ export function LivePlansTab({
           </div>
         )}
 
-        <p style={{ marginTop: 22, textAlign: "center", fontSize: 13, color: "var(--aura-ink-45)", lineHeight: 1.5 }}>
+        {onRefined && (
+          <button
+            onClick={() => setRefine(true)}
+            className="btn"
+            style={{ width: "100%", marginTop: 22, background: "transparent", color: "var(--aura-violet)", border: "1px solid var(--aura-violet-30)", gap: 8 }}
+          >
+            Request another Plan →
+          </button>
+        )}
+
+        <p style={{ marginTop: 16, textAlign: "center", fontSize: 13, color: "var(--aura-ink-45)", lineHeight: 1.5 }}>
           Ora keeps one good Plan in front of you at a time. The rest stays out of the way.
         </p>
       </div>
 
       <BottomBar active="plans" onHome={onHome} onAsk={() => setAsk(true)} onPlans={() => {}} />
       <OraAsk open={ask} onClose={() => setAsk(false)} />
+      {onRefined && (
+        <RequestAnotherSheet
+          open={refine}
+          onClose={() => setRefine(false)}
+          attendees={currentAttendees}
+          onRefined={(plan) => {
+            setRefine(false);
+            onRefined(plan);
+          }}
+        />
+      )}
     </div>
   );
 }

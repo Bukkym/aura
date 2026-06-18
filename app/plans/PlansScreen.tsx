@@ -57,6 +57,8 @@ export function PlansScreen() {
         past={history.past}
         onHome={() => router.push("/home")}
         onOpenPlan={() => router.push("/plan")}
+        currentAttendees={history.upcoming[0]?.attendees ?? []}
+        onRefined={() => router.push("/plan")}
       />
     );
 

@@ -48,16 +48,27 @@ const DEFAULT_TIME = {
 // Public API
 // ----------------------------------------------------------------------------
 
+// Refinement knobs for "request another Plan": keep the same profile, but ask
+// for a different activity, and/or exclude people who didn't fit so a new group
+// is drawn. Both are optional; with neither set this is the original first-plan
+// behavior.
+export interface GeneratePlanOptions {
+  k?: number;
+  activityOverride?: string;
+  excludeUserIds?: string[];
+}
+
 export async function generatePlan(
   sb: SupabaseClient,
   host: User,
-  k: number = TARGET_ATTENDEES,
+  options: GeneratePlanOptions = {},
 ): Promise<Plan> {
-  const activity = pickActivity(host);
+  const { k = TARGET_ATTENDEES, activityOverride, excludeUserIds = [] } = options;
+  const activity = pickActivity(host, activityOverride);
 
   const [venue, attendees] = await Promise.all([
     pickVenue(sb, host, activity),
-    pickAttendees(sb, host, activity, k),
+    pickAttendees(sb, host, activity, k, excludeUserIds),
   ]);
 
   const { dateTime, label: timeLabel } = pickTime(activity);
@@ -89,7 +100,9 @@ export async function generatePlan(
 // Steps
 // ----------------------------------------------------------------------------
 
-function pickActivity(host: User): string {
+function pickActivity(host: User, override?: string): string {
+  const chosen = override?.trim();
+  if (chosen) return chosen;
   const candidates = host.selfExtracted.activityTypes;
   if (candidates.length > 0) return candidates[0];
   const interest = host.selfExtracted.interests[0];
@@ -219,11 +232,15 @@ async function pickAttendees(
   host: User,
   activity: string,
   k: number,
+  excludeUserIds: string[] = [],
 ): Promise<User[]> {
   const ranked = await rankSeedUsersForHost(sb, host, ATTENDEE_CANDIDATE_PAD);
   if (ranked.length === 0) return [];
 
-  const candidates = ranked.map((r) => r.user);
+  // Drop anyone the host asked to exclude (the "these people didn't fit" path),
+  // so a refined Plan draws a different group.
+  const exclude = new Set(excludeUserIds);
+  const candidates = ranked.map((r) => r.user).filter((u) => !exclude.has(u.userId));
 
   const matchesActivity = (u: User) =>
     looseActivityMatch(activity, u.selfExtracted.activityTypes) ||

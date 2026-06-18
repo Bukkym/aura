@@ -31,6 +31,10 @@ describe("statusFromRow()", () => {
   it("is confirmed when confirmed_at is present", () => {
     expect(statusFromRow("2026-06-16T10:00:00.000Z")).toBe("confirmed");
   });
+  it("is declined when declined_at is present, regardless of confirmed_at", () => {
+    expect(statusFromRow(null, "2026-06-17T10:00:00.000Z")).toBe("declined");
+    expect(statusFromRow("2026-06-16T10:00:00.000Z", "2026-06-17T10:00:00.000Z")).toBe("declined");
+  });
 });
 
 describe("planSummaryFromRow()", () => {
@@ -63,6 +67,11 @@ describe("planSummaryFromRow()", () => {
   it("derives confirmed status from confirmed_at", () => {
     const s = planSummaryFromRow(row({ confirmed_at: "2026-06-16T10:00:00.000Z" }), PLACE, names);
     expect(s.status).toBe("confirmed");
+  });
+
+  it("derives declined status from declined_at", () => {
+    const s = planSummaryFromRow(row({ declined_at: "2026-06-17T10:00:00.000Z" }), PLACE, names);
+    expect(s.status).toBe("declined");
   });
 
   it("tolerates a null vibe array", () => {

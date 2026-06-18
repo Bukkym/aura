@@ -2,14 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { generatePlan } from "@/lib/generatePlan";
 import { persistPlan } from "@/lib/plans";
-import { explain } from "@/lib/match";
+import { buildPlanResponse } from "@/lib/planResponse";
 import { userFromRow } from "@/lib/userRow";
-import type {
-  LookingForExtracted,
-  SelfExtracted,
-  User,
-  Match,
-} from "@/types";
+import type { LookingForExtracted, SelfExtracted, User } from "@/types";
+
+// Re-exported for existing importers (live-plan, live-shell, useLivePlan) that
+// reference these from this route. The definitions now live in lib/planResponse.
+export type { AttendeeView, PlanResponse } from "@/lib/planResponse";
 
 // POST /api/plan/create
 //
@@ -30,32 +29,6 @@ import type {
 interface CreatePlanBody {
   selfExtracted?: SelfExtracted;
   lookingForExtracted?: LookingForExtracted;
-}
-
-export interface AttendeeView {
-  userId: string;
-  displayName: string;
-  archetype?: string;
-  selfExtracted: SelfExtracted;
-  explanation: Match["explanations"];
-}
-
-export interface PlanResponse {
-  planId: string;
-  hostUserId: string;
-  hostDisplayName: string;
-  activityType: string;
-  place: {
-    id: string;
-    name: string;
-    type: string;
-    neighborhood: string;
-    description: string;
-  };
-  dateTime: string;
-  vibe: string[];
-  attendees: AttendeeView[];
-  whyThisPlan: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -182,29 +155,7 @@ export async function POST(request: NextRequest) {
 
   // --- Slim the response ------------------------------------------------
 
-  const response: PlanResponse = {
-    planId: persistedPlanId,
-    hostUserId: plan.hostUserId,
-    hostDisplayName: host.displayName,
-    activityType: plan.activityType,
-    place: {
-      id: plan.place.id,
-      name: plan.place.name,
-      type: plan.place.type,
-      neighborhood: plan.place.neighborhood,
-      description: plan.place.description,
-    },
-    dateTime: plan.dateTime,
-    vibe: plan.vibe,
-    attendees: plan.attendees.map((a) => ({
-      userId: a.userId,
-      displayName: a.displayName,
-      archetype: a._archetype,
-      selfExtracted: a.selfExtracted,
-      explanation: explain(host, a),
-    })),
-    whyThisPlan: plan.whyThisPlan,
-  };
+  const response = buildPlanResponse(plan, host, persistedPlanId);
 
   return NextResponse.json({ plan: response });
 }

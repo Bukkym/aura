@@ -20,6 +20,7 @@ import {
   mono,
 } from "../primitives";
 import type { AttendeeView, PlanResponse } from "@/app/api/plan/create/route";
+import type { PlanStatus } from "@/types";
 
 // ── helpers ──
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
@@ -344,22 +345,29 @@ function AcceptedView({ plan, onBack, onDone }: { plan: PlanResponse; onBack: ()
 
 export function LivePlanCard({
   plan,
+  status = "ready",
   onAccepted,
   onDone,
   onBack,
 }: {
   plan: PlanResponse;
+  status?: PlanStatus;
   onAccepted?: () => void;
   onDone?: () => void;
   onBack?: () => void;
 }) {
-  const [accepted, setAccepted] = useState(false);
+  // A plan the user already joined (persisted status) opens straight to the
+  // accepted view, so reopening it never shows the "I'm in" CTA again. Its back
+  // button goes home rather than un-joining; only a fresh accept this session
+  // can toggle back to the card to re-read it.
+  const alreadyJoined = status === "confirmed";
+  const [accepted, setAccepted] = useState(alreadyJoined);
   const accept = () => {
     setAccepted(true);
     onAccepted?.();
   };
   return accepted ? (
-    <AcceptedView plan={plan} onBack={() => setAccepted(false)} onDone={onDone} />
+    <AcceptedView plan={plan} onBack={alreadyJoined ? onBack ?? (() => {}) : () => setAccepted(false)} onDone={onDone} />
   ) : (
     <CardView plan={plan} onAccept={accept} onBack={onBack} />
   );

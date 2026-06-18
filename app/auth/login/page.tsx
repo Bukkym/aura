@@ -38,7 +38,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
 
       <Link
         href="/"
-        className="absolute left-5 top-5 text-sm text-aura-ink/50 transition hover:text-aura-ink"
+        className="absolute left-5 top-5 z-10 text-sm text-aura-ink/50 transition hover:text-aura-ink"
       >
         ← back
       </Link>
