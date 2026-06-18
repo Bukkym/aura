@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { LookingForExtracted, SelfExtracted } from "@/types";
+import type { LookingForExtracted, SelfExtracted, PlanStatus } from "@/types";
 import type { PlanResponse } from "@/app/api/plan/create/route";
+
+export type { PlanStatus };
 
 // Shared client state for the live app shell (/home, /plan, /plans).
 //
@@ -16,8 +18,6 @@ import type { PlanResponse } from "@/app/api/plan/create/route";
 const DRAFT_KEY = "aura:draft";
 const PLAN_KEY = "aura:plan";
 const STATUS_KEY = "aura:planStatus";
-
-export type PlanStatus = "ready" | "confirmed";
 
 export type PlanPhase =
   | { kind: "loading" }
@@ -52,6 +52,23 @@ export function setPlanStatus(status: PlanStatus): void {
     sessionStorage.setItem(STATUS_KEY, status);
   } catch {
     // ignore
+  }
+}
+
+// Accept a plan: flip the local status immediately (instant UI) and persist the
+// confirmation to the DB so it survives refresh and shows in the Plans history.
+// The DB write is best-effort: a failure leaves the optimistic local status in
+// place rather than blocking the handoff.
+export async function confirmLivePlan(planId: string): Promise<void> {
+  setPlanStatus("confirmed");
+  try {
+    await fetch("/api/plan/confirm", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ planId }),
+    });
+  } catch {
+    // ignore; local status already reflects the acceptance
   }
 }
 

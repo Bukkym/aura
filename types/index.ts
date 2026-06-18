@@ -84,6 +84,28 @@ export interface Plan {
   whyThisPlan: string;
 }
 
+/** A plan is "ready" until the host accepts it, then "confirmed". */
+export type PlanStatus = "ready" | "confirmed";
+
+/** Lightweight, card-level view of a persisted plan, used by the Plans tab
+ *  history. Carries enough to render a Ready/Confirmed card (no per-attendee
+ *  detail, no embeddings). */
+export interface PlanSummary {
+  id: string;
+  activityType: string;
+  place: {
+    name: string;
+    neighborhood: string;
+    type: PlaceType;
+  };
+  dateTime: string;
+  vibe: string[];
+  attendeeCount: number;
+  /** First few attendees, enough to render the avatar stack. */
+  attendees: { userId: string; displayName: string }[];
+  status: PlanStatus;
+}
+
 export interface Match {
   queryUserId: string;
   matchedUserId: string;

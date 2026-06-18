@@ -10,7 +10,38 @@ import { Ring, Swatch, Cal, StatusIcon, mono } from "../primitives";
 import { BottomBar } from "./bottom-bar";
 import { OraAsk } from "./app-shell";
 import type { PlanResponse } from "@/app/api/plan/create/route";
-import type { PlanStatus } from "../useLivePlan";
+import type { PlanStatus, PlanSummary } from "@/types";
+
+// The Ready/Confirmed cards render from a small shared shape so both the live
+// current plan (PlanResponse, on Home) and persisted history (PlanSummary, in
+// the Plans tab) can drive them.
+interface CardPlan {
+  activityType: string;
+  place: { name: string; neighborhood: string };
+  dateTime: string;
+  attendeeCount: number;
+  attendees: { userId: string; displayName: string }[];
+}
+
+function cardFromResponse(p: PlanResponse): CardPlan {
+  return {
+    activityType: p.activityType,
+    place: { name: p.place.name, neighborhood: p.place.neighborhood },
+    dateTime: p.dateTime,
+    attendeeCount: p.attendees.length,
+    attendees: p.attendees.map((a) => ({ userId: a.userId, displayName: a.displayName })),
+  };
+}
+
+function cardFromSummary(s: PlanSummary): CardPlan {
+  return {
+    activityType: s.activityType,
+    place: { name: s.place.name, neighborhood: s.place.neighborhood },
+    dateTime: s.dateTime,
+    attendeeCount: s.attendeeCount,
+    attendees: s.attendees,
+  };
+}
 
 function headerWhen(iso: string): { big: string; sub: string } {
   const d = new Date(iso);
@@ -54,7 +85,7 @@ function YouDisc({ size = 26, ring = "var(--aura-bg)" }: { size?: number; ring?:
   );
 }
 
-function AttendeeStack({ plan, ring = "var(--aura-bg)", size = 26 }: { plan: PlanResponse; ring?: string; size?: number }) {
+function AttendeeStack({ plan, ring = "var(--aura-bg)", size = 26 }: { plan: CardPlan; ring?: string; size?: number }) {
   const few = plan.attendees.slice(0, 3);
   return (
     <div style={{ display: "flex" }}>
@@ -68,7 +99,7 @@ function AttendeeStack({ plan, ring = "var(--aura-bg)", size = 26 }: { plan: Pla
   );
 }
 
-function ReadyCard({ plan, onOpen }: { plan: PlanResponse; onOpen: () => void }) {
+function ReadyCard({ plan, onOpen }: { plan: CardPlan; onOpen?: () => void }) {
   return (
     <div
       role="button"
@@ -103,14 +134,14 @@ function ReadyCard({ plan, onOpen }: { plan: PlanResponse; onOpen: () => void })
           {shortWhen(plan.dateTime)}
         </span>
         <span style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13.5, color: "var(--aura-violet)", fontWeight: 500 }}>
-          {plan.attendees.length} people <span style={{ fontSize: 16 }}>→</span>
+          {plan.attendeeCount} people <span style={{ fontSize: 16 }}>→</span>
         </span>
       </div>
     </div>
   );
 }
 
-function ConfirmedCard({ plan, onOpen }: { plan: PlanResponse; onOpen: () => void }) {
+function ConfirmedCard({ plan, onOpen }: { plan: CardPlan; onOpen?: () => void }) {
   return (
     <div
       role="button"
@@ -154,6 +185,7 @@ export function LiveHome({
 }) {
   const [ask, setAsk] = useState(false);
   const when = headerWhen(plan.dateTime);
+  const card = cardFromResponse(plan);
   return (
     <div style={{ position: "relative", height: "100%", background: "var(--aura-bg)", color: "var(--aura-ink)", display: "flex", flexDirection: "column" }}>
       <div aria-hidden style={{ position: "absolute", inset: 0, background: "var(--bloom-welcome)", opacity: 0.4, filter: "blur(70px)", pointerEvents: "none" }} />
@@ -172,7 +204,7 @@ export function LiveHome({
         <div className="aura-label" style={{ marginBottom: 12 }}>
           {status === "confirmed" ? "Upcoming" : "Your Plan"}
         </div>
-        {status === "confirmed" ? <ConfirmedCard plan={plan} onOpen={onOpenPlan} /> : <ReadyCard plan={plan} onOpen={onOpenPlan} />}
+        {status === "confirmed" ? <ConfirmedCard plan={card} onOpen={onOpenPlan} /> : <ReadyCard plan={card} onOpen={onOpenPlan} />}
 
         {status === "confirmed" ? (
           <div style={{ marginTop: 26 }}>
@@ -197,18 +229,33 @@ export function LiveHome({
   );
 }
 
+function SummaryCard({ summary, onOpen }: { summary: PlanSummary; onOpen?: () => void }) {
+  const card = cardFromSummary(summary);
+  return summary.status === "confirmed" ? (
+    <ConfirmedCard plan={card} onOpen={onOpen} />
+  ) : (
+    <ReadyCard plan={card} onOpen={onOpen} />
+  );
+}
+
+// The Plans tab is DB-backed history: upcoming plans (the freshly created one
+// included, since it's persisted on create) and past plans. The current plan's
+// full card lives behind /home's warm cache, so the upcoming card taps through
+// to /plan; past plans render as summary cards (per-plan rehydration is a
+// follow-up).
 export function LivePlansTab({
-  plan,
-  status,
+  upcoming,
+  past,
   onHome,
   onOpenPlan,
 }: {
-  plan: PlanResponse;
-  status: PlanStatus;
+  upcoming: PlanSummary[];
+  past: PlanSummary[];
   onHome: () => void;
   onOpenPlan: () => void;
 }) {
   const [ask, setAsk] = useState(false);
+  const comingCount = upcoming.length;
   return (
     <div style={{ position: "relative", height: "100%", background: "var(--aura-bg)", color: "var(--aura-ink)", display: "flex", flexDirection: "column" }}>
       <div aria-hidden style={{ position: "absolute", inset: 0, background: "var(--bloom-plan)", opacity: 0.34, filter: "blur(72px)", pointerEvents: "none" }} />
@@ -216,7 +263,9 @@ export function LivePlansTab({
       <div style={{ position: "relative", display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "56px 22px 12px" }}>
         <div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 25, letterSpacing: "-0.01em" }}>Your Plans</div>
-          <div style={{ fontSize: 13.5, color: "var(--aura-ink-55)", marginTop: 2 }}>Berlin · 1 coming up</div>
+          <div style={{ fontSize: 13.5, color: "var(--aura-ink-55)", marginTop: 2 }}>
+            Berlin · {comingCount} coming up
+          </div>
         </div>
         <Wordmark />
       </div>
@@ -225,15 +274,34 @@ export function LivePlansTab({
         <div className="aura-label" style={{ marginBottom: 12 }}>
           Coming up
         </div>
-        {status === "confirmed" ? <ConfirmedCard plan={plan} onOpen={onOpenPlan} /> : <ReadyCard plan={plan} onOpen={onOpenPlan} />}
+        {comingCount > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {upcoming.map((s) => (
+              <SummaryCard key={s.id} summary={s} onOpen={onOpenPlan} />
+            ))}
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 11, alignItems: "center", padding: "16px 16px", borderRadius: 18, border: "1px dashed var(--aura-ink-10)" }}>
+            <Ring size={26} state="rest" />
+            <p style={{ margin: 0, fontSize: 14, color: "var(--aura-ink-55)", lineHeight: 1.45 }}>No Plan in front of you right now. Ora is lining up your next one.</p>
+          </div>
+        )}
 
         <div className="aura-label" style={{ margin: "28px 0 12px" }}>
           Earlier
         </div>
-        <div style={{ display: "flex", gap: 11, alignItems: "center", padding: "16px 16px", borderRadius: 18, border: "1px dashed var(--aura-ink-10)" }}>
-          <Ring size={26} state="rest" />
-          <p style={{ margin: 0, fontSize: 14, color: "var(--aura-ink-55)", lineHeight: 1.45 }}>Your past Plans will gather here once you&apos;ve been to a few.</p>
-        </div>
+        {past.length > 0 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            {past.map((s) => (
+              <SummaryCard key={s.id} summary={s} />
+            ))}
+          </div>
+        ) : (
+          <div style={{ display: "flex", gap: 11, alignItems: "center", padding: "16px 16px", borderRadius: 18, border: "1px dashed var(--aura-ink-10)" }}>
+            <Ring size={26} state="rest" />
+            <p style={{ margin: 0, fontSize: 14, color: "var(--aura-ink-55)", lineHeight: 1.45 }}>Your past Plans will gather here once you&apos;ve been to a few.</p>
+          </div>
+        )}
 
         <p style={{ marginTop: 22, textAlign: "center", fontSize: 13, color: "var(--aura-ink-45)", lineHeight: 1.5 }}>
           Ora keeps one good Plan in front of you at a time. The rest stays out of the way.
