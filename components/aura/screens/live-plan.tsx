@@ -327,7 +327,10 @@ function AcceptedView({ plan, onBack, onDone }: { plan: PlanResponse; onBack: ()
           )}
         </button>
 
-        <p style={{ fontSize: 12.5, color: "var(--aura-ink-45)", textAlign: "center", margin: "16px 0 0", maxWidth: 280, lineHeight: 1.45 }}>
+        <p style={{ fontSize: 12, color: "var(--aura-ink-45)", textAlign: "center", margin: "14px 0 0", maxWidth: 280, lineHeight: 1.45 }}>
+          Your number stays private. Ora connects the group through an anonymous line, so no one sees anyone else&apos;s real number.
+        </p>
+        <p style={{ fontSize: 12.5, color: "var(--aura-ink-45)", textAlign: "center", margin: "8px 0 0", maxWidth: 280, lineHeight: 1.45 }}>
           Once two more say yes, Ora locks the table and sends everyone the details.
         </p>
         {onDone && (
