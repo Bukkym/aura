@@ -50,3 +50,15 @@ next-env.d.ts
 # anti-pattern references). Lives on disk so Claude design can read it; not
 # committed to the public repo.
 /screenshots/
+
+# heavy design assets (exported comps, design-system binaries, handoff folders).
+# Kept on disk for reference, too large/binary for the repo (same rationale as
+# screenshots above).
+*.zip
+/design-system/
+/design_handoff_aura/
+
+# private working material, not for the repo
+/yc/
+/research/
+/bootcamp/
