@@ -3,7 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Aura",
+  title: "Aura · Your people are out there",
   description: "Your people are out there. Let's find them.",
 };
 
