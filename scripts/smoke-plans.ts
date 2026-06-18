@@ -1,6 +1,6 @@
 import { createClient } from "../lib/supabase/admin";
 import { generatePlan } from "../lib/generatePlan";
-import { persistPlan, confirmPlan, listPlanSummaries } from "../lib/plans";
+import { persistPlan, confirmPlan, declinePlan, countPlansSince, countAllPlans, loadCurrentPlanContext, listPlanSummaries } from "../lib/plans";
 import { userFromRow } from "../lib/userRow";
 
 // End-to-end check for plan persistence (Module 4 M4.1). Uses the admin client,
@@ -82,6 +82,58 @@ async function main() {
     `Summary: ${s.activityType} @ ${s.place.name} · ${s.attendeeCount} people · ${s.status}`,
   );
 
+  // Refinement engine options: a different activity yields a different plan
+  // (and a new persisted row, since the relaxed dedupe keys on activity+place).
+  const refined = await generatePlan(sb, host, { activityOverride: "techno clubs" });
+  assert(
+    refined.activityType === "techno clubs",
+    `activityOverride takes effect (got ${refined.activityType})`,
+  );
+  const refinedId = await persistPlan(sb, refined, { activityType: "techno clubs" });
+  assert(refinedId !== id1, "a different activity persists as a new row (keep both)");
+  console.log(`Refined plan id=${refinedId} · ${refined.activityType}`);
+
+  // Excluding the first plan's attendees draws a different group.
+  const excludeIds = plan.attendees.map((a) => a.userId);
+  const reseated = await generatePlan(sb, host, { excludeUserIds: excludeIds });
+  assert(
+    reseated.attendees.every((a) => !excludeIds.includes(a.userId)),
+    "excludeUserIds removes the named people from the group",
+  );
+  console.log(`Reseated group: ${reseated.attendees.map((a) => a.displayName).join(", ") || "(none)"}`);
+
+  // Count helper (ready for a future quota): the host now has 2 active plans.
+  const activeCount = await countPlansSince(sb, host.userId, "2000-01-01T00:00:00.000Z");
+  assert(activeCount === 2, `countPlansSince sees both active plans (got ${activeCount})`);
+  console.log(`Active plan count: ${activeCount}`);
+
+  // Current-plan rehydration: the most recently created active plan (the refined
+  // one) is "current", reconstructed full with host + status.
+  assert((await countAllPlans(sb, host.userId)) === 2, "countAllPlans sees both rows");
+  const current = await loadCurrentPlanContext(sb, host.userId);
+  assert(current !== null, "loadCurrentPlanContext returns a plan");
+  assert(current!.plan.planId === refinedId, `current is the newest plan (got ${current!.plan.planId})`);
+  assert(current!.plan.activityType === "techno clubs", "current rehydrates the refined activity");
+  assert(current!.plan.attendees.length > 0, "current rehydrates attendees");
+  assert(current!.status === "ready", `current status ready (got ${current!.status})`);
+  console.log(`Current plan: ${current!.plan.activityType} · ${current!.plan.attendees.length} attendees · ${current!.status}`);
+
+  // Decline the first, assert it drops out of the active list (the row stays).
+  await declinePlan(sb, id1);
+  const afterDecline = host.userId
+    ? await listSummariesForPublicUser(sb, host.userId)
+    : [];
+  assert(
+    afterDecline.length === 1 && afterDecline[0].id === refinedId,
+    `declined plan is hidden, refined one remains (got ${afterDecline.length})`,
+  );
+  const { count: rowCount } = await sb
+    .from("plans")
+    .select("*", { count: "exact", head: true })
+    .eq("host_user_id", host.userId);
+  assert(rowCount === 2, `declined row is kept, not deleted (got ${rowCount})`);
+  console.log("Decline ok: hidden from list, row retained");
+
   // Clean up.
   await sb.from("plans").delete().eq("host_user_id", host.userId);
   console.log("\nCleaned up. smoke:plans OK");
@@ -101,9 +153,10 @@ async function listSummariesForPublicUser(
   const { data: rows, error } = await sb
     .from("plans")
     .select(
-      "id, activity_type, date_time, vibe, attendee_user_ids, confirmed_at, places(name, neighborhood, type)",
+      "id, activity_type, date_time, vibe, attendee_user_ids, confirmed_at, declined_at, places(name, neighborhood, type)",
     )
     .eq("host_user_id", publicUserId)
+    .is("declined_at", null)
     .order("date_time", { ascending: false });
   if (error) throw new Error(error.message);
   if (!rows) return [];
@@ -129,6 +182,7 @@ async function listSummariesForPublicUser(
         vibe: r.vibe,
         attendee_user_ids: r.attendee_user_ids ?? [],
         confirmed_at: r.confirmed_at,
+        declined_at: r.declined_at,
       },
       place,
       names,

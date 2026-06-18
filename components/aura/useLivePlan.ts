@@ -21,9 +21,19 @@ const STATUS_KEY = "aura:planStatus";
 
 export type PlanPhase =
   | { kind: "loading" }
+  | { kind: "forming" }
   | { kind: "no-draft" }
+  | { kind: "empty" }
   | { kind: "error"; message: string }
   | { kind: "ready"; plan: PlanResponse };
+
+// A freshly built Plan is held on the "forming" beat for at least this long, so
+// it never appears instantly (instant reads as canned, not curated). The
+// deterministic engine usually returns well under this, so the beat is mostly
+// deliberate pacing rather than real waiting. A warm cache skips it entirely.
+// When matching depends on other people accepting, this becomes a real async
+// wait with a nudge when the group is set.
+const FORMING_MIN_MS = 6000;
 
 interface Draft {
   selfExtracted: SelfExtracted;
@@ -83,9 +93,60 @@ export function clearLivePlan(): void {
   }
 }
 
-// `generate` controls whether a cache miss triggers a fetch. /home passes true
-// (it owns the "finding" beat); /plan and /plans pass true too as a fallback so
-// a deep link still works, but normally they hit the warm cache.
+// Make a plan the cached "current" one, so Home/plan read it instantly. Used
+// after a refine and when loading the current plan from the DB.
+function cachePlan(plan: PlanResponse, status: PlanStatus): void {
+  try {
+    sessionStorage.setItem(PLAN_KEY, JSON.stringify(plan));
+    sessionStorage.setItem(STATUS_KEY, status);
+  } catch {
+    // ignore
+  }
+}
+
+export interface PlanRefinement {
+  activityType?: string;
+  excludeUserIds?: string[];
+}
+
+// Request another Plan: same profile, a refined activity and/or a different
+// group. On success the new plan becomes the cached current one (ready), so
+// navigating to /plan shows it. Returns the new plan.
+export async function requestAnotherPlan(refinement: PlanRefinement): Promise<PlanResponse> {
+  const res = await fetch("/api/plan/refine", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ refinement }),
+  });
+  if (!res.ok) {
+    const detail = await res.json().catch(() => ({}));
+    throw new Error(detail?.error ?? `Request failed: ${res.status}`);
+  }
+  const { plan } = (await res.json()) as { plan: PlanResponse };
+  cachePlan(plan, "ready");
+  return plan;
+}
+
+// Decline ("Not now") a plan: persist it and drop the cached current plan, so
+// Home/plan re-resolve from the DB (the next active plan, or the empty state)
+// rather than showing the dismissed one.
+export async function declineLivePlan(planId: string): Promise<void> {
+  try {
+    await fetch("/api/plan/decline", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ planId }),
+    });
+  } catch {
+    // ignore; the cache is cleared regardless so the plan stops showing
+  }
+  clearLivePlan();
+}
+
+// `generate` controls whether the first-plan fall-through builds a plan from the
+// onboarding draft. All shell screens pass true. The resolution order is: warm
+// cache → the current plan from the DB → (only for a brand-new user) generate a
+// first plan with the forming beat → empty / no-draft.
 export function useLivePlan(generate: boolean = true): { phase: PlanPhase; status: PlanStatus } {
   const [phase, setPhase] = useState<PlanPhase>(() => {
     return { kind: "loading" };
@@ -94,61 +155,116 @@ export function useLivePlan(generate: boolean = true): { phase: PlanPhase; statu
 
   useEffect(() => {
     let cancelled = false;
+    let revealTimer: ReturnType<typeof setTimeout> | undefined;
 
     const cached = readCachedPlan();
     if (cached) {
+      // Warm cache: the Plan was already resolved earlier this session, so
+      // reveal it immediately.
       setStatus(getPlanStatus());
       setPhase({ kind: "ready", plan: cached });
       return;
     }
 
-    if (!generate) {
-      setPhase({ kind: "no-draft" });
-      return;
-    }
-
-    let draft: Draft | null = null;
-    try {
-      const raw = sessionStorage.getItem(DRAFT_KEY);
-      if (raw) draft = JSON.parse(raw) as Draft;
-    } catch {
-      // ignore
-    }
-    if (!draft) {
-      setPhase({ kind: "no-draft" });
-      return;
-    }
-
-    (async () => {
+    function readDraft(): Draft | null {
       try {
-        const res = await fetch("/api/plan/create", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(draft),
-        });
-        if (!res.ok) {
-          const detail = await res.json().catch(() => ({}));
-          throw new Error(detail?.error ?? `Request failed: ${res.status}`);
-        }
-        const { plan } = (await res.json()) as { plan: PlanResponse };
-        if (cancelled) return;
-        try {
-          sessionStorage.setItem(PLAN_KEY, JSON.stringify(plan));
-          if (!sessionStorage.getItem(STATUS_KEY)) sessionStorage.setItem(STATUS_KEY, "ready");
-        } catch {
-          // ignore cache write failure
-        }
-        setStatus(getPlanStatus());
-        setPhase({ kind: "ready", plan });
-      } catch (err) {
-        if (!cancelled) {
-          setPhase({ kind: "error", message: err instanceof Error ? err.message : "Something went wrong" });
-        }
+        const raw = sessionStorage.getItem(DRAFT_KEY);
+        return raw ? (JSON.parse(raw) as Draft) : null;
+      } catch {
+        return null;
       }
+    }
+
+    // Build the user's first plan from the onboarding draft, behind the
+    // deliberate forming beat (held at least FORMING_MIN_MS so it reads as
+    // curated, not instant). Only used when the DB shows no plan at all.
+    function generateFirstPlan(draft: Draft) {
+      const startedAt = Date.now();
+      setPhase({ kind: "forming" });
+      (async () => {
+        try {
+          const res = await fetch("/api/plan/create", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(draft),
+          });
+          if (!res.ok) {
+            const detail = await res.json().catch(() => ({}));
+            throw new Error(detail?.error ?? `Request failed: ${res.status}`);
+          }
+          const { plan } = (await res.json()) as { plan: PlanResponse };
+          if (cancelled) return;
+          cachePlan(plan, "ready");
+          const remaining = Math.max(0, FORMING_MIN_MS - (Date.now() - startedAt));
+          revealTimer = setTimeout(() => {
+            if (cancelled) return;
+            setStatus("ready");
+            setPhase({ kind: "ready", plan });
+          }, remaining);
+        } catch (err) {
+          if (!cancelled) {
+            setPhase({ kind: "error", message: err instanceof Error ? err.message : "Something went wrong" });
+          }
+        }
+      })();
+    }
+
+    setPhase({ kind: "loading" });
+    (async () => {
+      // DB-backed: prefer the user's current plan, so a declined or
+      // already-built plan is never regenerated from the profile.
+      try {
+        const res = await fetch("/api/plan/current");
+        if (res.ok) {
+          const data = (await res.json()) as {
+            plan: PlanResponse | null;
+            status: PlanStatus | null;
+            hasAnyPlans: boolean;
+          };
+          if (cancelled) return;
+          if (data.plan) {
+            const s = data.status ?? "ready";
+            cachePlan(data.plan, s);
+            setStatus(s);
+            setPhase({ kind: "ready", plan: data.plan });
+            return;
+          }
+          // No active plan: a brand-new user (no plans at all) gets a first plan
+          // generated; anyone who declined or used theirs sees the empty
+          // "request another" state, not a regenerated duplicate.
+          if (!data.hasAnyPlans && generate) {
+            const draft = readDraft();
+            if (draft) {
+              generateFirstPlan(draft);
+              return;
+            }
+            setPhase({ kind: "no-draft" });
+            return;
+          }
+          setPhase({ kind: "empty" });
+          return;
+        }
+      } catch {
+        // fall through to the draft path as a best-effort fallback
+      }
+
+      // /api/plan/current unavailable: fall back to draft-based generation.
+      if (cancelled) return;
+      if (!generate) {
+        setPhase({ kind: "no-draft" });
+        return;
+      }
+      const draft = readDraft();
+      if (draft) {
+        generateFirstPlan(draft);
+        return;
+      }
+      setPhase({ kind: "no-draft" });
     })();
 
     return () => {
       cancelled = true;
+      if (revealTimer) clearTimeout(revealTimer);
     };
   }, [generate]);
 

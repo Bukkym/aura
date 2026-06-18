@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { PhoneFrame } from "@/components/aura/PhoneFrame";
 import { useLivePlan, confirmLivePlan } from "@/components/aura/useLivePlan";
 import { LivePlanCard } from "@/components/aura/screens/live-plan";
-import { FindingMoment, NoDraftState, ErrorState } from "@/components/aura/screens/states";
+import { FindingMoment, FormingMoment, NoDraftState, EmptyPlanState, ErrorState } from "@/components/aura/screens/states";
 import { SignOutButton } from "@/components/SignOutButton";
 
 // The Plan detail screen. Reached from Home (warm cache → instant card); if
@@ -13,16 +13,19 @@ import { SignOutButton } from "@/components/SignOutButton";
 // Ora-voiced WhatsApp handoff.
 export function PlanScreen() {
   const router = useRouter();
-  const { phase } = useLivePlan(true);
+  const { phase, status } = useLivePlan(true);
 
   let inner: React.ReactNode;
   if (phase.kind === "loading") inner = <FindingMoment />;
+  else if (phase.kind === "forming") inner = <FormingMoment />;
   else if (phase.kind === "no-draft") inner = <NoDraftState />;
+  else if (phase.kind === "empty") inner = <EmptyPlanState onSeePlans={() => router.push("/plans")} />;
   else if (phase.kind === "error") inner = <ErrorState message={phase.message} />;
   else
     inner = (
       <LivePlanCard
         plan={phase.plan}
+        status={status}
         onBack={() => router.push("/home")}
         onAccepted={() => confirmLivePlan(phase.plan.planId)}
         onDone={() => router.push("/home")}

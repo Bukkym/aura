@@ -84,8 +84,10 @@ export interface Plan {
   whyThisPlan: string;
 }
 
-/** A plan is "ready" until the host accepts it, then "confirmed". */
-export type PlanStatus = "ready" | "confirmed";
+/** A plan is "ready" until the host accepts it ("confirmed") or dismisses it
+ *  ("declined"). Declined plans are kept on the row but filtered out of the
+ *  user's active lists. */
+export type PlanStatus = "ready" | "confirmed" | "declined";
 
 /** Lightweight, card-level view of a persisted plan, used by the Plans tab
  *  history. Carries enough to render a Ready/Confirmed card (no per-attendee
