@@ -46,12 +46,25 @@ function fitLine(a: AttendeeView): string {
 }
 
 // A light, deterministic matchmaker aside from the strongest shared signal.
+// Phrased as a suggestion, not a certainty: real similarity is only a weak
+// predictor of clicking, and it's the meeting that decides (see
+// technical/08-future-considerations.md), so we hedge rather than assert.
 function oraAside(a: AttendeeView): string | null {
   const e = a.explanation;
-  if (e.sharedInterests?.length) return `You both light up about ${e.sharedInterests[0]}.`;
-  if (e.matchedPersonalityTraits?.length) return `That ${e.matchedPersonalityTraits[0]} energy you asked for.`;
-  if (e.sharedActivityTypes?.length) return `You'd both show up for ${e.sharedActivityTypes[0]}.`;
+  if (e.sharedInterests?.length) return `You might click over ${e.sharedInterests[0]}.`;
+  if (e.matchedPersonalityTraits?.length) return `Close to the ${e.matchedPersonalityTraits[0]} energy you asked for.`;
+  if (e.sharedActivityTypes?.length) return `Something you'd probably both show up for: ${e.sharedActivityTypes[0]}.`;
   return null;
+}
+
+// A light opener Ora suggests for the meeting itself. A real question to ask
+// (structured self-disclosure) does more to turn a meet into a connection than
+// logistics do; grounded in a shared interest when there is one.
+function icebreaker(plan: PlanResponse): string {
+  const interest = plan.attendees.flatMap((a) => a.explanation.sharedInterests ?? [])[0];
+  return interest
+    ? `What first pulled you toward ${interest}?`
+    : `What's something you've been quietly into lately?`;
 }
 
 function PersonIntro({ a }: { a: AttendeeView }) {
@@ -312,6 +325,16 @@ function AcceptedView({ plan, onBack, onDone }: { plan: PlanResponse; onBack: ()
           ) : (
             <p style={{ fontFamily: "var(--font-body)", fontSize: 14.5, lineHeight: 1.55, color: "var(--aura-ink-90)", margin: 0, whiteSpace: "pre-wrap" }}>{invite}</p>
           )}
+        </div>
+
+        <div style={{ width: "100%", display: "flex", gap: 9, alignItems: "flex-start", marginBottom: 18 }}>
+          <span style={{ flex: "none", marginTop: 1 }}>
+            <Ring size={15} state="rest" />
+          </span>
+          <span style={{ fontFamily: "var(--font-body)", fontSize: 13.5, color: "var(--aura-ink-55)", lineHeight: 1.45 }}>
+            To break the ice when you meet, try asking:{" "}
+            <span style={{ fontStyle: "italic", color: "var(--aura-violet)" }}>&ldquo;{icebreaker(plan)}&rdquo;</span>
+          </span>
         </div>
 
         <button className="btn btn--aurora" style={{ width: "100%", marginBottom: 10, gap: 9 }}>

@@ -73,14 +73,14 @@ export function renderWhyTemplate(
 
   if (sharedInterest && sharedVibe) {
     rich.push(
-      `Six people who all lean ${sharedVibe} and are into ${sharedInterest}, meeting for ${activity} at ${venueName} on ${lower}.` +
+      `A small table Ora paired around a ${sharedVibe} leaning and ${sharedInterest}, meeting for ${activity} at ${venueName} on ${lower}.` +
         secondNamesClause(names, secondaryActivity),
     );
   }
   if (sharedVibe) {
     rich.push(
-      `${capitalize(activity)} at ${venueName}, ${lower}. Everyone here leans ${sharedVibe}` +
-        (sharedInterest ? ` and is into ${sharedInterest}.` : ".") +
+      `${capitalize(activity)} at ${venueName}, ${lower}. Ora leaned on a shared ${sharedVibe} thread` +
+        (sharedInterest ? ` and an interest in ${sharedInterest}.` : ".") +
         secondNamesClause(names, secondaryActivity),
     );
   }
@@ -98,7 +98,7 @@ export function renderWhyTemplate(
     return rich[idx];
   }
 
-  return `${capitalize(activity)} at ${venueName}, ${lower}, with ${attendees.length} people Ora picked for how you fit together.`;
+  return `${capitalize(activity)} at ${venueName}, ${lower}, with ${attendees.length} people Ora thought you'd enjoy.`;
 }
 
 function secondNamesClause(
