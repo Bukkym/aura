@@ -5,6 +5,7 @@
 // as a localized bloom centered on the ring during processing, never a flip.
 
 import { ReactNode, useEffect, useState } from "react";
+import Link from "next/link";
 import { Ring, Wordmark, OraBloom, mono } from "../primitives";
 import type { Selections } from "../mapDraft";
 
@@ -42,6 +43,12 @@ export function ScWelcome({ onNext }: { onNext: () => void }) {
         <button onClick={onNext} className="btn btn--aurora" style={{ marginTop: 36, padding: "0 56px" }}>
           Begin
         </button>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--aura-ink-55)", margin: "20px 0 0" }}>
+          Already have an account?{" "}
+          <Link href="/auth/login" style={{ color: "var(--aura-violet)", fontWeight: 500, textDecoration: "none" }}>
+            Sign in
+          </Link>
+        </p>
       </div>
       <span className="by-ora" style={{ position: "absolute", bottom: 26, right: 24, color: "var(--aura-ink-40)" }}>
         by Ora
