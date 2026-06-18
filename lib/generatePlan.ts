@@ -16,7 +16,9 @@ import { parseVector } from "./userRow";
 //                       → top k, with a relaxation cascade so we never return <k.
 //   5. whyThisPlan    — templated copy from real shared tags (no LLM).
 
-const TARGET_ATTENDEES = 6;
+// 5 attendees + the host = a table of 6, sitting in the small-group sweet spot
+// for actual conversation (see technical/08-future-considerations.md).
+const TARGET_ATTENDEES = 5;
 const ATTENDEE_CANDIDATE_PAD = 40;
 
 const TIME_HINTS: ReadonlyArray<{
