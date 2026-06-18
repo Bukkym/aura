@@ -220,3 +220,28 @@ per-city, not the convergence logic.
    the metric to instrument once real users arrive.
 3. Defer the cohort + pairwise-feedback + convergence build until a real pool
    approaches that threshold.
+
+**Liquidity simulation results (seed pool, 2026-06-18, `npm run sim:liquidity`):**
+Simulated a 5-plan journey per host with managed turnover (keep who you click
+with, drop a churn fraction, refill from the cluster who share availability),
+sweeping the available cluster size N. Findings:
+- At **low churn (20%, drop 1 of 5 per round):** need **~20-25 availability-
+  overlapping candidates per cluster** to keep the cohort filled across 5 plans
+  and form a **stable core of ~3**. Below ~12, seats can't be filled (liquidity
+  collapse). Threshold (filled >=80%, core >=3) is reached only at N=25.
+- At **higher churn (40%):** even N=25 doesn't cleanly converge (core ~2.4).
+  Feedback quality matters enormously: lots of down-votes => need a much bigger
+  pool, or it never gels.
+- **Availability is the silent constraint:** the overlap filter cuts the usable
+  pool below the raw cluster size, so even 25 tops out around 83% filled.
+- **Realistic convergence is a core of ~3** plus rotating others (you meet ~7-8
+  distinct people across the journey), not a fixed group of 5.
+
+**Implication / target:** aim for **~20-25 active, availability-overlapping users
+per cluster per city** before the friendship track works, and keep churn low via
+good initial matching. With 7 clusters that's ~150+ active users per city as a
+floor just to make single-cohort journeys viable. Caveat: seed availability is
+synthetic and vibe is modeled as match score, so real-world numbers are likely
+*worse* (sparser availability, noisier vibe = effective higher churn). This
+strongly supports holding the convergence build until acquisition reaches that
+density, and instrumenting cohort-overlap retention once real users arrive.
