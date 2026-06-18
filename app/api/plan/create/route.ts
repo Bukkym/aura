@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { generatePlan } from "@/lib/generatePlan";
 import { persistPlan } from "@/lib/plans";
 import { buildPlanResponse } from "@/lib/planResponse";
+import { assignArchetype, loadArchetypeProfiles } from "@/lib/archetype";
 import { userFromRow } from "@/lib/userRow";
 import type { LookingForExtracted, SelfExtracted, User } from "@/types";
 
@@ -88,6 +89,17 @@ export async function POST(request: NextRequest) {
     lookingFor: "",
   };
 
+  // Assign the user's cluster from their chips, so real users enter the same
+  // archetype system as the seed pool (they were getting NULL). Best-effort: a
+  // failure here must not block plan creation, so we keep any prior value.
+  let archetype: string | null = existing?.archetype ?? null;
+  try {
+    const profiles = await loadArchetypeProfiles(sb);
+    archetype = assignArchetype(body.selfExtracted, profiles) ?? archetype;
+  } catch {
+    // keep prior/null archetype
+  }
+
   let hostRow;
   if (existing) {
     const { data, error } = await sb
@@ -96,6 +108,7 @@ export async function POST(request: NextRequest) {
         display_name: displayName,
         self_extracted: body.selfExtracted,
         looking_for_extracted: body.lookingForExtracted,
+        archetype,
       })
       .eq("id", existing.id)
       .select("*")
@@ -117,7 +130,7 @@ export async function POST(request: NextRequest) {
         raw_inputs: rawInputs,
         self_extracted: body.selfExtracted,
         looking_for_extracted: body.lookingForExtracted,
-        archetype: null,
+        archetype,
         created_at: nowIso,
       })
       .select("*")

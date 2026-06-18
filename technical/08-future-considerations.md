@@ -167,3 +167,56 @@ lacks causal evidence.
 - Optimal group size, evidence brief — https://www.socialconnectionguidelines.org/en/evidence-briefs/what-is-the-ideal-size-of-a-get-together
 - Ambady & Rosenthal, thin-slice meta-analysis — https://www.semanticscholar.org/paper/Thin-slices-of-expressive-behavior-as-predictors-of-Ambady-Rosenthal/df0c9ca7be20ee0b7c5436332c20dcf46b2109d7
 - Social prescribing systematic review (no RCTs/controls) — https://pmc.ncbi.nlm.nih.gov/articles/PMC8295963/
+
+---
+
+## 4. Repeated meetings: dual-track friendship formation (decided 2026-06-18)
+
+**Decision: dual-track.** A friendship track (convergent) plus a spontaneous
+lane (divergent), rather than one engine doing both (which reads as mechanical)
+or a pure replace-only friendship engine (too rigid). The "request another" /
+refine / decline / keep-multiple flow we shipped IS the spontaneous lane; it just
+needs relabeling and to be excluded from friendship-track state.
+
+**Two layers people conflate:**
+- **Cluster / archetype** = the compatibility *pool* (who you could meet). Both
+  lanes draw from it.
+- **Cohort** = the converging *friendship group* within the pool. Repeated
+  meetings live here, not in the cluster.
+
+**Friendship-track mechanics (from the prior app, research-aligned):** the cohort
+is NOT predefined. Start from the cluster; each plan draws overlapping members;
+pairwise vibe feedback (thumbs up/down post-meeting) keeps/prioritizes the
+up-voted and drops the down-voted; vacated seats top up with fresh cluster
+members; by ~plan 5 the group stabilizes. Maps onto the research: humble matching
+up front, vibe as a soft *aggregated* signal refining over time, cadence building
+Hall's dosage.
+
+**Reshuffle consequences:**
+- Managed turnover is the sweet spot. Too much reshuffle = never accumulate hours
+  with anyone (serial blind dates, no friendship); too little = stuck with a bad
+  match that poisons the group. Keep up-voted, drop down-voted, refill only
+  vacated seats.
+- Vibe state is **pairwise** (A down-voting B removes the pair even if B liked A),
+  not per-person.
+- Data-model shift: from "plan = fresh match" to "cohort = evolving member set +
+  pairwise vibe state + journey position (plan N of 5)."
+- **Liquidity is make-or-break:** convergence assumes the same compatible people
+  are *available* plan after plan. Validate this before building the algorithm.
+
+**Liquidity reality (measured 2026-06-18):** 177 users in the DB, but only **2
+real** (auth-linked); 175 are seed across the 7 archetypes (25 each). Real users
+have **no archetype assigned** (clustering isn't wired into chip onboarding). So
+real liquidity is unmeasurable now; the binding constraint is users-per-cluster-
+per-city, not the convergence logic.
+
+**Plan (validate liquidity first):**
+1. Wire **cluster/archetype assignment for real users** (prereq for both lanes;
+   today only seed users have it).
+2. Run a **convergence simulation over the seed clusters** to derive the
+   liquidity *threshold*: the minimum active, availability-overlapping users per
+   cluster per city needed to keep a ~5-person cohort overlapping across ~5
+   plans under managed turnover. That number becomes an acquisition target and
+   the metric to instrument once real users arrive.
+3. Defer the cohort + pairwise-feedback + convergence build until a real pool
+   approaches that threshold.
