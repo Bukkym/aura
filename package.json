@@ -17,6 +17,7 @@
     "smoke:plan": "tsx --env-file=.env.local scripts/smoke-plan.ts",
     "smoke:plans": "tsx --env-file=.env.local scripts/smoke-plans.ts",
     "smoke:archetype": "tsx --env-file=.env.local scripts/smoke-archetype.ts",
+    "sim:liquidity": "tsx --env-file=.env.local scripts/sim-liquidity.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
