@@ -16,6 +16,7 @@
     "smoke:match": "tsx --env-file=.env.local scripts/smoke-match.ts",
     "smoke:plan": "tsx --env-file=.env.local scripts/smoke-plan.ts",
     "smoke:plans": "tsx --env-file=.env.local scripts/smoke-plans.ts",
+    "smoke:archetype": "tsx --env-file=.env.local scripts/smoke-archetype.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },
