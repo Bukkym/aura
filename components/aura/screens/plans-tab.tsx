@@ -57,10 +57,10 @@ function SupperConfirmed({ onOpen }: { onOpen: () => void }) {
     <div
       role="button"
       onClick={onOpen}
-      style={{ cursor: "pointer", borderRadius: 22, padding: "18px 18px", border: "1px solid oklch(0.88 0.05 150)", background: "oklch(0.975 0.02 150)", animation: "flowFade 500ms ease both" }}
+      style={{ cursor: "pointer", borderRadius: 22, padding: "18px 18px", border: "1px solid oklch(0.88 0.05 285)", background: "oklch(0.975 0.02 285)", animation: "flowFade 500ms ease both" }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: mono, fontSize: 10.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "oklch(0.48 0.09 150)" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: mono, fontSize: 10.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "oklch(0.48 0.09 285)" }}>
           <Seal size={14} /> You&apos;re going
         </span>
         <span style={{ fontSize: 12.5, color: "var(--aura-ink-45)" }}>{SUPPER.when}</span>
@@ -70,7 +70,7 @@ function SupperConfirmed({ onOpen }: { onOpen: () => void }) {
         {SUPPER.venue} · {SUPPER.hood}
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
-        <Stack guests={SUPPER_GUESTS.slice(0, 4).map((g) => g.id)} size={26} ring="oklch(0.975 0.02 150)" />
+        <Stack guests={SUPPER_GUESTS.slice(0, 4).map((g) => g.id)} size={26} ring="oklch(0.975 0.02 285)" />
         <span style={{ fontSize: 13, color: "var(--aura-violet)", fontWeight: 500 }}>View Plan →</span>
       </div>
     </div>
@@ -467,12 +467,12 @@ export function StretchPlan({ onBack, onAccept, accepted = false }: { onBack: ()
                 gap: 9,
                 padding: "15px",
                 borderRadius: 9999,
-                background: "oklch(0.95 0.04 150)",
-                color: "oklch(0.4 0.09 150)",
+                background: "oklch(0.95 0.04 285)",
+                color: "oklch(0.4 0.09 285)",
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
                 fontSize: 16,
-                boxShadow: "0 12px 28px rgba(40,120,70,0.18)",
+                boxShadow: "0 12px 28px rgba(119,82,230,0.18)",
               }}
             >
               <Seal size={18} /> You&apos;re in. See it in Plans →

@@ -282,7 +282,7 @@ export function StatusIcon({ status, size = 16 }: { status: "confirmed" | "await
   if (status === "confirmed") {
     return (
       <svg width={size} height={size} viewBox="0 0 16 16" fill="none" style={{ flex: "none" }}>
-        <circle cx="8" cy="8" r="7.2" fill="oklch(0.64 0.13 150)" />
+        <circle cx="8" cy="8" r="7.2" fill="oklch(0.58 0.17 285)" />
         <path d="M4.7 8.3l2.1 2.1 4.4-4.7" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     );
@@ -297,7 +297,7 @@ export function StatusIcon({ status, size = 16 }: { status: "confirmed" | "await
 
 export function StatusTag({ status }: { status: "confirmed" | "awaiting" }) {
   const confirmed = status === "confirmed";
-  const text = confirmed ? "oklch(0.48 0.08 150)" : "oklch(0.5 0.07 70)";
+  const text = confirmed ? "oklch(0.48 0.08 285)" : "oklch(0.5 0.07 70)";
   return (
     <span
       style={{
@@ -321,7 +321,7 @@ export function StatusTag({ status }: { status: "confirmed" | "awaiting" }) {
 export function Seal({ size = 16 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 16 16" fill="none" style={{ flex: "none" }}>
-      <circle cx="8" cy="8" r="7.2" fill="oklch(0.64 0.13 150)" />
+      <circle cx="8" cy="8" r="7.2" fill="oklch(0.58 0.17 285)" />
       <path d="M4.7 8.3l2.1 2.1 4.4-4.7" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
@@ -330,7 +330,7 @@ export function Seal({ size = 16 }: { size?: number }) {
 export function CheckSeal({ size = 22 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ flex: "none" }}>
-      <circle cx="12" cy="12" r="11" fill="oklch(0.64 0.13 150)" />
+      <circle cx="12" cy="12" r="11" fill="oklch(0.58 0.17 285)" />
       <path d="M7 12.3l3.2 3.2L17 8.4" stroke="#fff" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );

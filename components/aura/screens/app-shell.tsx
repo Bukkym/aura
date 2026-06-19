@@ -232,13 +232,13 @@ function ConfirmedCard({ onOpen }: { onOpen: () => void }) {
         cursor: "pointer",
         borderRadius: 22,
         padding: "18px 18px",
-        border: "1px solid oklch(0.88 0.05 150)",
-        background: "oklch(0.975 0.02 150)",
+        border: "1px solid oklch(0.88 0.05 285)",
+        background: "oklch(0.975 0.02 285)",
         animation: "flowFade 500ms ease both",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: mono, fontSize: 10.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "oklch(0.48 0.09 150)" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: mono, fontSize: 10.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "oklch(0.48 0.09 285)" }}>
           <StatusIcon status="confirmed" size={14} /> You&apos;re going
         </span>
         <span style={{ fontSize: 12.5, color: "var(--aura-ink-45)" }}>{PLAN.when}</span>
@@ -250,7 +250,7 @@ function ConfirmedCard({ onOpen }: { onOpen: () => void }) {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
         <div style={{ display: "flex" }}>
           {["you", "jonas-b", "mira-k", "yara-s"].map((id, i) => (
-            <span key={id} style={{ marginLeft: i === 0 ? 0 : -8, borderRadius: "50%", border: "2px solid oklch(0.975 0.02 150)" }}>
+            <span key={id} style={{ marginLeft: i === 0 ? 0 : -8, borderRadius: "50%", border: "2px solid oklch(0.975 0.02 285)" }}>
               {id === "you" ? (
                 <span
                   style={{

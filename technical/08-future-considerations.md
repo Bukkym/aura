@@ -245,3 +245,73 @@ synthetic and vibe is modeled as match score, so real-world numbers are likely
 *worse* (sparser availability, noisier vibe = effective higher churn). This
 strongly supports holding the convergence build until acquisition reaches that
 density, and instrumenting cohort-overlap retention once real users arrive.
+
+---
+
+## 5. Cancel / leave a plan (from feedback session 2026-06-19)
+
+**Feedback:** there should be a way to cancel a plan, or for a member to leave a
+plan if they can no longer make it.
+
+**Why this is bigger than a UI button:** the current model is **host-only**. A
+host creates a plan, attendees are deterministically assigned into the plan's
+`attendee_user_ids` array (no per-member membership record), and only the host
+can act on the plan via `confirmed_at` / `declined_at`. There is no concept of
+an attendee accepting, joining, or leaving. So the feedback splits into two
+features:
+
+- **Host cancel (small).** The capability mostly exists: `declinePlan()` in
+  [lib/plans.ts](../lib/plans.ts) sets `declined_at`, and
+  [app/api/plan/decline/route.ts](../app/api/plan/decline/route.ts) exposes it.
+  What is missing is surfacing it as an explicit "Cancel plan" action in the UI
+  (today decline is framed as "Not now" on the forming/ready beat, not as
+  cancelling a confirmed plan). Also decide what cancel means for a *confirmed*
+  plan vs. an un-acted one, and whether attendees get notified.
+
+- **Attendee leave (real work).** Does not exist at any layer. Needs:
+  - A new API route (e.g. `POST /api/plan/leave`) plus a `lib` function.
+  - A way to remove a user from `attendee_user_ids` (array mutation) and an RLS
+    policy that lets an attendee modify only their own membership, not the host's
+    plan. The current RLS only lets the host touch the row.
+  - A product decision on cohort impact: does leaving trigger a **backfill** from
+    the cluster (ties into the liquidity work in section 4), drop the seat, or
+    re-form the group? And how/whether the rest of the group is told.
+  - Possibly migrating membership from the `attendee_user_ids` array to a proper
+    join table if per-member state (joined / left / can't-make-it) becomes real.
+
+**Scope:** ship host-cancel surfacing first (small, self-contained). Treat
+attendee-leave as its own piece, designed alongside the dual-track / backfill
+work, not as a quick add.
+
+---
+
+## 6. Real plan addresses, not just neighborhoods (from feedback session 2026-06-19)
+
+**Feedback:** plans show a vague location like "Berlin, Kreuzberg" instead of an
+actual address of the venue. Worth a real street address. (Could be sourced via
+LLM or a places API later, but preseeded addresses on the existing venues would
+already cover the seed pool.)
+
+**Current state:** there is no address anywhere in the stack. The `places` table
+([supabase migration init_schema.sql](../supabase/migrations/20260513105207_init_schema.sql))
+has only a `neighborhood` column; the same is true of the `Place` type in
+[types/index.ts](../types/index.ts), the seed file
+[data/places.json](../data/places.json) (33 venues), and the `PlanResponse`
+shape in [lib/planResponse.ts](../lib/planResponse.ts). The UI renders
+`{plan.place.name} · {plan.place.neighborhood}` in
+[live-plan.tsx](../components/aura/screens/live-plan.tsx).
+
+**Cleanest near-term version (no LLM / no external API yet):** add an `address`
+field and fill in the 33 seed venues by hand. This touches five layers:
+1. Migration: add `address text` (nullable, or not-null with a backfill) to
+   `places`.
+2. Seed: add an `address` to each entry in `data/places.json` and re-run the
+   migrate script.
+3. Type: add `address` to `Place` in `types/index.ts`.
+4. API: include `address` in `PlanResponse`.
+5. UI: show the street address on the plan / accepted views (and consider a
+   maps link).
+
+**Later:** for venues we don't preseed (LLM-generated or user-suggested places),
+resolve the address via a places API (Google Places, Mapbox) at plan-generation
+time and cache it on the `places` row.
