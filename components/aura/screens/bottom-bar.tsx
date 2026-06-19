@@ -21,7 +21,7 @@ export function BottomBar({
     fontSize: 12.5,
     cursor: "pointer",
     fontWeight: on ? 600 : 400,
-    color: on ? "var(--aura-ink)" : "var(--aura-ink-45)",
+    color: on ? "var(--aura-ink)" : "var(--aura-ink-70)",
     background: "none",
     border: "none",
     padding: "6px 4px",

@@ -147,10 +147,10 @@ function ConfirmedCard({ plan, onOpen }: { plan: CardPlan; onOpen?: () => void }
     <div
       role="button"
       onClick={onOpen}
-      style={{ cursor: "pointer", borderRadius: 22, padding: "18px 18px", border: "1px solid oklch(0.88 0.05 150)", background: "oklch(0.975 0.02 150)", animation: "flowFade 500ms ease both" }}
+      style={{ cursor: "pointer", borderRadius: 22, padding: "18px 18px", border: "1px solid oklch(0.88 0.05 285)", background: "oklch(0.975 0.02 285)", animation: "flowFade 500ms ease both" }}
     >
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: mono, fontSize: 10.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "oklch(0.48 0.09 150)" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: mono, fontSize: 10.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "oklch(0.48 0.09 285)" }}>
           <StatusIcon status="confirmed" size={14} /> You&apos;re going
         </span>
         <span style={{ fontSize: 12.5, color: "var(--aura-ink-45)" }}>{shortWhen(plan.dateTime)}</span>
@@ -160,7 +160,7 @@ function ConfirmedCard({ plan, onOpen }: { plan: CardPlan; onOpen?: () => void }
         {plan.place.name} · {plan.place.neighborhood}
       </div>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 14 }}>
-        <AttendeeStack plan={plan} ring="oklch(0.975 0.02 150)" />
+        <AttendeeStack plan={plan} ring="oklch(0.975 0.02 285)" />
         <span style={{ fontSize: 13, color: "var(--aura-violet)", fontWeight: 500 }}>View invite →</span>
       </div>
     </div>

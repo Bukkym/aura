@@ -171,8 +171,8 @@ function YouRow() {
         padding: "14px 15px",
         marginBottom: 10,
         borderRadius: 18,
-        background: "oklch(0.965 0.03 150)",
-        border: "1px solid oklch(0.88 0.05 150)",
+        background: "oklch(0.965 0.03 285)",
+        border: "1px solid oklch(0.88 0.05 285)",
       }}
     >
       <span
@@ -226,12 +226,12 @@ function FloatingAccept({ accepted, onToggle }: { accepted: boolean; onToggle: (
               gap: 9,
               padding: "15px",
               borderRadius: 9999,
-              background: "oklch(0.95 0.04 150)",
-              color: "oklch(0.4 0.09 150)",
+              background: "oklch(0.95 0.04 285)",
+              color: "oklch(0.4 0.09 285)",
               fontFamily: "var(--font-display)",
               fontWeight: 600,
               fontSize: 16,
-              boxShadow: "0 12px 28px rgba(40,120,70,0.18)",
+              boxShadow: "0 12px 28px rgba(119,82,230,0.18)",
             }}
           >
             <StatusIcon status="confirmed" size={18} /> You&apos;re in
