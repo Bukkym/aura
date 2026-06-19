@@ -44,3 +44,14 @@ export function parseVector(v: string | number[] | null | undefined): number[] {
   if (Array.isArray(v)) return v;
   return JSON.parse(v);
 }
+
+// Derive a display name from the caller's email: the local part with the first
+// letter capitalized ("alice.smith@example.com" -> "Alice.smith"). Falls back
+// to "Friend" when the email is missing or has an empty local part. Pure logic,
+// kept here (not in the route) so it is reusable and unit-testable.
+export function deriveDisplayNameFromEmail(email: string | undefined): string {
+  if (!email) return "Friend";
+  const local = email.split("@")[0] ?? "Friend";
+  if (!local) return "Friend";
+  return local.charAt(0).toUpperCase() + local.slice(1);
+}

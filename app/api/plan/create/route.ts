@@ -4,7 +4,7 @@ import { generatePlan } from "@/lib/generatePlan";
 import { persistPlan } from "@/lib/plans";
 import { buildPlanResponse } from "@/lib/planResponse";
 import { assignArchetype, loadArchetypeProfiles } from "@/lib/archetype";
-import { userFromRow } from "@/lib/userRow";
+import { userFromRow, deriveDisplayNameFromEmail } from "@/lib/userRow";
 import type { LookingForExtracted, SelfExtracted, User } from "@/types";
 
 // Re-exported for existing importers (live-plan, live-shell, useLivePlan) that
@@ -171,11 +171,4 @@ export async function POST(request: NextRequest) {
   const response = buildPlanResponse(plan, host, persistedPlanId);
 
   return NextResponse.json({ plan: response });
-}
-
-function deriveDisplayNameFromEmail(email: string | undefined): string {
-  if (!email) return "Friend";
-  const local = email.split("@")[0] ?? "Friend";
-  if (!local) return "Friend";
-  return local.charAt(0).toUpperCase() + local.slice(1);
 }
