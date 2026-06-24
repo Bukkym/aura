@@ -19,7 +19,7 @@ export type { AttendeeView, PlanResponse } from "@/lib/planResponse";
 //               calls so refinement reuses the same row).
 // Returns: { plan: PlanResponse } with embeddings stripped.
 //
-// Module 3: NO OpenAI calls. The host row is written with NULL embeddings
+// Module 3: NO OpenAI calls. The requester row is written with NULL embeddings
 // (the columns are nullable as of the chip-onboarding migration); matching is
 // deterministic structured overlap (see lib/match.ts + lib/generatePlan.ts).
 // Module 4 will lazily backfill real embeddings for chip-onboarded users.
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // --- Upsert the host's public.users row --------------------------------
+  // --- Upsert the requester's public.users row --------------------------------
   //
   // displayName defaults to the email's local part with the first letter
   // capitalized ("alice.smith@example.com" → "Alice.smith"). User can rename
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     // keep prior/null archetype
   }
 
-  let hostRow;
+  let requesterRow;
   if (existing) {
     const { data, error } = await sb
       .from("users")
@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       );
     }
-    hostRow = data;
+    requesterRow = data;
   } else {
     const { data, error } = await sb
       .from("users")
@@ -141,14 +141,14 @@ export async function POST(request: NextRequest) {
         { status: 500 },
       );
     }
-    hostRow = data;
+    requesterRow = data;
   }
 
-  const host: User = userFromRow(hostRow);
+  const requester: User = userFromRow(requesterRow);
 
   // --- Run the Plan pipeline --------------------------------------------
 
-  const plan = await generatePlan(sb, host);
+  const plan = await generatePlan(sb, requester);
 
   // --- Persist the plan -------------------------------------------------
   //
@@ -168,7 +168,7 @@ export async function POST(request: NextRequest) {
 
   // --- Slim the response ------------------------------------------------
 
-  const response = buildPlanResponse(plan, host, persistedPlanId);
+  const response = buildPlanResponse(plan, requester, persistedPlanId);
 
   return NextResponse.json({ plan: response });
 }

@@ -3,7 +3,7 @@ import { generatePlan } from "../lib/generatePlan";
 import { userFromRow } from "../lib/userRow";
 
 // End-to-end check for the Plan generation pipeline. Picks Sofia as the
-// host, runs generatePlan, and prints the result.
+// requester, runs generatePlan, and prints the result.
 //
 // Hits OpenAI for one embedding (venue query) + one chat completion
 // (whyThisPlan) per run, so it costs real money. Don't loop it.
@@ -11,7 +11,7 @@ import { userFromRow } from "../lib/userRow";
 // Run with: npm run smoke:plan
 //   (which wraps `tsx --env-file=.env.local scripts/smoke-plan.ts`)
 
-const HOST_DISPLAY_NAME = "Sofia";
+const REQUESTER_DISPLAY_NAME = "Sofia";
 
 async function main() {
   const sb = createClient();
@@ -19,19 +19,19 @@ async function main() {
   const { data: row, error } = await sb
     .from("users")
     .select("*")
-    .eq("display_name", HOST_DISPLAY_NAME)
+    .eq("display_name", REQUESTER_DISPLAY_NAME)
     .limit(1)
     .maybeSingle();
-  if (error) throw new Error(`Failed to load host: ${error.message}`);
-  if (!row) throw new Error(`No seed user with display_name=${HOST_DISPLAY_NAME}`);
+  if (error) throw new Error(`Failed to load requester: ${error.message}`);
+  if (!row) throw new Error(`No seed user with display_name=${REQUESTER_DISPLAY_NAME}`);
 
-  const host = userFromRow(row);
+  const requester = userFromRow(row);
   console.log(
-    `Host: ${host.displayName} [${host._archetype}] (id=${host.userId})\n`,
+    `Requester: ${requester.displayName} [${requester._archetype}] (id=${requester.userId})\n`,
   );
 
   const t0 = Date.now();
-  const plan = await generatePlan(sb, host);
+  const plan = await generatePlan(sb, requester);
   const ms = Date.now() - t0;
 
   const when = new Date(plan.dateTime);

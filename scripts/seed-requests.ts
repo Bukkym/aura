@@ -17,7 +17,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // section 2).
 //
 // Idempotent: a seed user who already has an upcoming, non-declined plan is
-// skipped. generatePlan is deterministic per host, so persistPlan would dedupe
+// skipped. generatePlan is deterministic per requester, so persistPlan would dedupe
 // anyway; skipping just avoids the work.
 //
 // Real authed users (auth_user_id NOT NULL) are never touched. Note: re-running
@@ -32,12 +32,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // hammering the connection pool.
 const CONCURRENCY = 8;
 
-async function hasActivePlan(sb: SupabaseClient, hostUserId: string): Promise<boolean> {
+async function hasActivePlan(sb: SupabaseClient, createdForUserId: string): Promise<boolean> {
   const nowIso = new Date().toISOString();
   const { data, error } = await sb
     .from("plans")
     .select("id")
-    .eq("host_user_id", hostUserId)
+    .eq("created_for_user_id", createdForUserId)
     .is("declined_at", null)
     .gte("date_time", nowIso)
     .limit(1)
@@ -72,19 +72,19 @@ async function main() {
   for (let i = 0; i < seedUsers.length; i += CONCURRENCY) {
     const chunk = seedUsers.slice(i, i + CONCURRENCY);
     await Promise.all(
-      chunk.map(async (host) => {
+      chunk.map(async (requester) => {
         try {
-          if (await hasActivePlan(sb, host.userId)) {
+          if (await hasActivePlan(sb, requester.userId)) {
             skipped++;
             return;
           }
-          const plan = await generatePlan(sb, host);
+          const plan = await generatePlan(sb, requester);
           await persistPlan(sb, plan);
           created++;
         } catch (err) {
           failed++;
           console.error(
-            `  ✗ ${host.displayName} (${host.userId}): ${err instanceof Error ? err.message : String(err)}`,
+            `  ✗ ${requester.displayName} (${requester.userId}): ${err instanceof Error ? err.message : String(err)}`,
           );
         }
       }),

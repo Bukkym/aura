@@ -47,7 +47,7 @@ export async function GET() {
     ]);
 
     const body: CurrentPlanResponse = {
-      plan: context ? buildPlanResponse(context.plan, context.host, context.plan.planId) : null,
+      plan: context ? buildPlanResponse(context.plan, context.requester, context.plan.planId) : null,
       status: context ? context.status : null,
       hasAnyPlans: total > 0,
     };

@@ -4,7 +4,7 @@ import { canonAll, jaccard } from "./canon";
 
 // Deterministic mutual-fit matching. No runtime AI (Module 3).
 //
-// We rank the seed pool against the host by weighted Jaccard overlap on the
+// We rank the seed pool against the requester by weighted Jaccard overlap on the
 // structured chip arrays. At 175 users this runs in-process in a few ms, and
 // keeping it in TS lets us canonicalize tag drift on read via lib/canon.ts.
 // The numeric score is interpretable and feeds the "why this plan" copy.
@@ -12,7 +12,7 @@ import { canonAll, jaccard } from "./canon";
 // (The earlier embedding-based path via the match_users RPC is retired for
 // Module 3; pgvector still backs match_places-style use if we want it later.)
 
-// Weights for the mutual-fit score. Host's "looking for" against the
+// Weights for the mutual-fit score. Requester's "looking for" against the
 // candidate's "self", with activity + vibe + social + connection + locale as
 // supporting signal. Tuned so personality + interests dominate.
 const W = {
@@ -68,21 +68,21 @@ function userFromLiteRow(row: LiteRow): User {
   };
 }
 
-// Mutual-fit score in [0,1]. Host perspective: what the host is looking for
-// against who the candidate is, plus supporting overlaps. Host fields fall
+// Mutual-fit score in [0,1]. Requester perspective: what the requester is looking for
+// against who the candidate is, plus supporting overlaps. Requester fields fall
 // back sensibly when an optional field is absent (e.g. lookingFor.activityTypes
 // → self.activityTypes; neighborhoods → ["any"]).
-export function scorePair(host: User, cand: User): number {
-  const hp = canonAll(host.lookingForExtracted.personality);
-  const hi = canonAll(host.lookingForExtracted.interests);
+export function scorePair(requester: User, cand: User): number {
+  const hp = canonAll(requester.lookingForExtracted.personality);
+  const hi = canonAll(requester.lookingForExtracted.interests);
   const ha = canonAll(
-    host.lookingForExtracted.activityTypes ?? host.selfExtracted.activityTypes,
+    requester.lookingForExtracted.activityTypes ?? requester.selfExtracted.activityTypes,
   );
-  const hv = canonAll(host.lookingForExtracted.vibeKeywords);
-  const hs = canonAll(host.lookingForExtracted.socialPreferences);
-  const hc = canonAll(host.lookingForExtracted.connectionType);
+  const hv = canonAll(requester.lookingForExtracted.vibeKeywords);
+  const hs = canonAll(requester.lookingForExtracted.socialPreferences);
+  const hc = canonAll(requester.lookingForExtracted.connectionType);
   const hn = canonAll(
-    host.lookingForExtracted.neighborhoods ?? host.selfExtracted.neighborhoods,
+    requester.lookingForExtracted.neighborhoods ?? requester.selfExtracted.neighborhoods,
   );
 
   const cp = canonAll(cand.selfExtracted.personality);
@@ -115,17 +115,17 @@ export function scorePair(host: User, cand: User): number {
   );
 }
 
-// Rank the whole pool (everyone but the host) by mutual-fit score, return the
+// Rank the whole pool (everyone but the requester) by mutual-fit score, return the
 // top k. Pass a large k from pickAttendees so downstream filters have room.
-export async function rankSeedUsersForHost(
+export async function rankSeedUsersForRequester(
   sb: SupabaseClient,
-  host: User,
+  requester: User,
   k: number,
 ): Promise<RankedCandidate[]> {
   const { data: rows, error } = await sb
     .from("users")
     .select(LITE_COLUMNS)
-    .neq("id", host.userId);
+    .neq("id", requester.userId);
 
   if (error) {
     throw new Error(`Failed to load candidate pool: ${error.message}`);
@@ -134,7 +134,7 @@ export async function rankSeedUsersForHost(
   return (rows ?? [])
     .map((r) => {
       const user = userFromLiteRow(r as LiteRow);
-      return { user, score: scorePair(host, user) };
+      return { user, score: scorePair(requester, user) };
     })
     .sort((a, b) => b.score - a.score)
     .slice(0, k);

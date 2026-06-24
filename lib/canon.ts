@@ -2,7 +2,7 @@
 // drift: easy-going / easygoing, settled / settled in Berlin, exploratory /
 // explorative, etc. Deterministic matching compares tag strings directly, so
 // un-canonicalized drift scores as zero overlap and the demo looks worse than
-// it is. We canonicalize on read (both the host's chip picks and the seed
+// it is. We canonicalize on read (both the requester's chip picks and the seed
 // candidates) so they meet in one vocabulary.
 //
 // Slice 5 will replay the seed users through this same map so the stored tags

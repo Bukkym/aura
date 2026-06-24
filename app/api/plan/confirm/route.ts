@@ -5,8 +5,8 @@ import { confirmPlan } from "@/lib/plans";
 // POST /api/plan/confirm
 //
 // Body: { planId }
-// Marks the plan confirmed (the host accepted it with "I'm in"). RLS restricts
-// the update to the plan's host, and getUser() verifies the session first.
+// Marks the plan confirmed (the requester accepted it with "I'm in"). RLS restricts
+// the update to the plan's requester, and getUser() verifies the session first.
 
 interface ConfirmBody {
   planId?: unknown;
