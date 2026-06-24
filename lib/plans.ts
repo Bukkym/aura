@@ -268,6 +268,24 @@ export async function loadCurrentPlanContext(
   return { plan, host, status: statusFromRow(row.confirmed_at, row.declined_at) };
 }
 
+/** Whether the signed-in auth user has completed onboarding, i.e. a public.users
+ *  profile row keyed on their auth id exists. This, not plan count, is the
+ *  onboarding-complete signal: a user whose only plan was declined (or whose
+ *  first plan never generated) still has a profile but no *active* plans, and
+ *  must not be bounced back into onboarding. Keyed on auth_user_id (indexed). */
+export async function profileExists(
+  sb: SupabaseClient,
+  authUserId: string,
+): Promise<boolean> {
+  const { data, error } = await sb
+    .from("users")
+    .select("id")
+    .eq("auth_user_id", authUserId)
+    .maybeSingle();
+  if (error) throw new Error(`Profile lookup failed: ${error.message}`);
+  return Boolean(data);
+}
+
 /** List the plans hosted by the user behind `authUserId`, newest first, mapped
  *  to PlanSummary. Resolves the place and a few attendee names per plan. */
 export async function listPlanSummaries(
