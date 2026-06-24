@@ -239,10 +239,12 @@ function CardView({ plan, onAccept, onBack }: { plan: PlanResponse; onAccept: ()
   );
 }
 
-function AcceptedView({ plan, onBack, onDone }: { plan: PlanResponse; onBack: () => void; onDone?: () => void }) {
+function AcceptedView({ plan, onBack, onDone, onCancel }: { plan: PlanResponse; onBack: () => void; onDone?: () => void; onCancel?: () => void }) {
   const when = formatWhen(plan.dateTime);
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
   const [invite, setInvite] = useState(
     `Hey, Ora here. You've all been picked for a Plan because of how you click. ${cap(plan.activityType)} ${when.replace(" · ", ", ")}, ${plan.place.name}${plan.place.address ? `, ${plan.place.address}` : ` in ${plan.place.neighborhood}`}. No prep needed, just show up. See you there.`,
   );
@@ -375,6 +377,46 @@ function AcceptedView({ plan, onBack, onDone }: { plan: PlanResponse; onBack: ()
             Done, see it in my plans →
           </button>
         )}
+
+        {onCancel && (
+          <div style={{ width: "100%", marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--aura-ink-10)", display: "flex", flexDirection: "column", alignItems: "center" }}>
+            {confirmingCancel ? (
+              <>
+                <p style={{ fontSize: 13, color: "var(--aura-ink-55)", textAlign: "center", margin: "0 0 12px", maxWidth: 290, lineHeight: 1.45 }}>
+                  Cancel this Plan? It leaves your list. If you already shared the invite, let the group know yourself.
+                </p>
+                <div style={{ display: "flex", gap: 10, width: "100%" }}>
+                  <button
+                    onClick={() => setConfirmingCancel(false)}
+                    disabled={cancelling}
+                    className="btn"
+                    style={{ flex: 1, background: "transparent", color: "var(--aura-ink)", border: "1px solid var(--aura-violet-30)" }}
+                  >
+                    Keep it
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCancelling(true);
+                      onCancel();
+                    }}
+                    disabled={cancelling}
+                    className="btn"
+                    style={{ flex: 1, background: "transparent", color: "var(--aura-ink-55)", border: "1px solid var(--aura-ink-10)" }}
+                  >
+                    {cancelling ? "Cancelling" : "Yes, cancel"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button
+                onClick={() => setConfirmingCancel(true)}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0, fontFamily: "var(--font-body)", fontSize: 13, color: "var(--aura-ink-45)" }}
+              >
+                Cancel this Plan
+              </button>
+            )}
+          </div>
+        )}
       </div>
       <span className="by-ora" style={{ position: "absolute", bottom: 22, right: 20, color: "var(--aura-ink-40)" }}>
         by Ora
@@ -389,12 +431,14 @@ export function LivePlanCard({
   onAccepted,
   onDone,
   onBack,
+  onCancel,
 }: {
   plan: PlanResponse;
   status?: PlanStatus;
   onAccepted?: () => void;
   onDone?: () => void;
   onBack?: () => void;
+  onCancel?: () => void;
 }) {
   // A plan the user already joined (persisted status) opens straight to the
   // accepted view, so reopening it never shows the "I'm in" CTA again. Its back
@@ -407,7 +451,7 @@ export function LivePlanCard({
     onAccepted?.();
   };
   return accepted ? (
-    <AcceptedView plan={plan} onBack={alreadyJoined ? onBack ?? (() => {}) : () => setAccepted(false)} onDone={onDone} />
+    <AcceptedView plan={plan} onBack={alreadyJoined ? onBack ?? (() => {}) : () => setAccepted(false)} onDone={onDone} onCancel={onCancel} />
   ) : (
     <CardView plan={plan} onAccept={accept} onBack={onBack} />
   );

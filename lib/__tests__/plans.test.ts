@@ -1,6 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { statusFromRow, planSummaryFromRow, splitByTime, type PlanRow, type PlaceLite } from "../plans";
+import { statusFromRow, planSummaryFromRow, splitByTime, profileExists, type PlanRow, type PlaceLite } from "../plans";
 import type { PlanSummary } from "@/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+// Minimal stub of the supabase query chain profileExists walks:
+// from("users").select("id").eq("auth_user_id", id).maybeSingle()
+function stubSb(result: { data: unknown; error: unknown }): SupabaseClient {
+  const maybeSingle = () => Promise.resolve(result);
+  const eq = () => ({ maybeSingle });
+  const select = () => ({ eq });
+  const from = () => ({ select });
+  return { from } as unknown as SupabaseClient;
+}
 
 const PLACE: PlaceLite = { name: "Otto", neighborhood: "Neukölln", type: "cafe" };
 
@@ -77,6 +88,23 @@ describe("planSummaryFromRow()", () => {
   it("tolerates a null vibe array", () => {
     const s = planSummaryFromRow(row({ vibe: null as unknown as string[] }), PLACE, names);
     expect(s.vibe).toEqual([]);
+  });
+});
+
+describe("profileExists()", () => {
+  it("is true when a profile row is found", async () => {
+    const sb = stubSb({ data: { id: "u1" }, error: null });
+    expect(await profileExists(sb, "auth-1")).toBe(true);
+  });
+
+  it("is false when no profile row exists", async () => {
+    const sb = stubSb({ data: null, error: null });
+    expect(await profileExists(sb, "auth-1")).toBe(false);
+  });
+
+  it("throws when the lookup errors, so the caller can decide the fallback", async () => {
+    const sb = stubSb({ data: null, error: { message: "boom" } });
+    await expect(profileExists(sb, "auth-1")).rejects.toThrow("Profile lookup failed: boom");
   });
 });
 
