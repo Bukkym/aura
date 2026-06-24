@@ -193,6 +193,7 @@ async function pickVenue(
     name: data.name,
     type: data.type,
     neighborhood: data.neighborhood,
+    address: data.address ?? "",
     activityTypeTags: data.activity_type_tags,
     vibeTags: data.vibe_tags,
     description: data.description,

@@ -78,6 +78,10 @@ async function main() {
     name: p.name,
     type: p.type,
     neighborhood: p.neighborhood,
+    // Generated venues carry no street address; the 33 committed seed venues
+    // are backfilled by hand in data/places.json. A places API can resolve
+    // addresses for generated venues later (see technical/08-future-considerations.md).
+    address: "",
     activityTypeTags: p.activityTypeTags,
     vibeTags: p.vibeTags,
     description: p.description,

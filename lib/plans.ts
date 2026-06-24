@@ -235,12 +235,13 @@ export async function loadCurrentPlanContext(
         name: placeRow.name,
         type: placeRow.type,
         neighborhood: placeRow.neighborhood,
+        address: placeRow.address ?? "",
         activityTypeTags: placeRow.activity_type_tags ?? [],
         vibeTags: placeRow.vibe_tags ?? [],
         description: placeRow.description ?? "",
         embedding: [],
       }
-    : { id: row.place_id, name: "A spot in Berlin", type: "venue", neighborhood: "Berlin", activityTypeTags: [], vibeTags: [], description: "", embedding: [] };
+    : { id: row.place_id, name: "A spot in Berlin", type: "venue", neighborhood: "Berlin", address: "", activityTypeTags: [], vibeTags: [], description: "", embedding: [] };
 
   const ids: string[] = row.attendee_user_ids ?? [];
   let attendees: User[] = [];

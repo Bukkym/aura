@@ -57,6 +57,7 @@ async function main() {
     name: p.name,
     type: p.type,
     neighborhood: p.neighborhood,
+    address: p.address,
     activity_type_tags: p.activityTypeTags,
     vibe_tags: p.vibeTags,
     description: p.description,

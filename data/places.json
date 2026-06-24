@@ -4,6 +4,7 @@
     "name": "Boulderhalle Frieda",
     "type": "gym",
     "neighborhood": "Friedrichshain",
+    "address": "Boxhagener Str. 106, 10245 Berlin",
     "activityTypeTags": [
       "boulder gym"
     ],
@@ -1557,6 +1558,7 @@
     "name": "Clärchens Ballhaus",
     "type": "venue",
     "neighborhood": "Mitte",
+    "address": "Auguststraße 24, 10117 Berlin",
     "activityTypeTags": [
       "dinner party",
       "live music"
@@ -3111,6 +3113,7 @@
     "name": "Berghain",
     "type": "club",
     "neighborhood": "Friedrichshain",
+    "address": "Am Wriezener Bahnhof, 10243 Berlin",
     "activityTypeTags": [
       "techno club",
       "electronic music"
@@ -4665,6 +4668,7 @@
     "name": "Görlitzer Park",
     "type": "park",
     "neighborhood": "Kreuzberg",
+    "address": "Görlitzer Str. 1, 10997 Berlin",
     "activityTypeTags": [
       "park",
       "outdoor"
@@ -6219,6 +6223,7 @@
     "name": "Bonanza Coffee Roasters",
     "type": "cafe",
     "neighborhood": "Prenzlauer Berg",
+    "address": "Oderberger Str. 35, 10435 Berlin",
     "activityTypeTags": [
       "cafe-with-laptop",
       "coworking"
@@ -7773,6 +7778,7 @@
     "name": "Roses",
     "type": "bar",
     "neighborhood": "Kreuzberg",
+    "address": "Oranienstraße 187, 10999 Berlin",
     "activityTypeTags": [
       "bar",
       "pub"
@@ -9327,6 +9333,7 @@
     "name": "Neue Nationalgalerie",
     "type": "gallery",
     "neighborhood": "Mitte",
+    "address": "Potsdamer Str. 50, 10785 Berlin",
     "activityTypeTags": [
       "gallery",
       "art opening"
@@ -10881,6 +10888,7 @@
     "name": "House of Small Wonder",
     "type": "cafe",
     "neighborhood": "Mitte",
+    "address": "Johannisstraße 20, 10117 Berlin",
     "activityTypeTags": [
       "brunch spot",
       "cafe"
@@ -12435,6 +12443,7 @@
     "name": "Buck & Breck",
     "type": "bar",
     "neighborhood": "Mitte",
+    "address": "Brunnenstraße 177, 10119 Berlin",
     "activityTypeTags": [
       "bar",
       "pub"
@@ -13989,6 +13998,7 @@
     "name": "Prater Garten",
     "type": "bar",
     "neighborhood": "Prenzlauer Berg",
+    "address": "Kastanienallee 7-9, 10435 Berlin",
     "activityTypeTags": [
       "sports bar",
       "pub"
@@ -15543,6 +15553,7 @@
     "name": "Mauerpark Flea Market",
     "type": "venue",
     "neighborhood": "Prenzlauer Berg",
+    "address": "Bernauer Str. 63-64, 13355 Berlin",
     "activityTypeTags": [
       "park",
       "outdoor"
@@ -17097,6 +17108,7 @@
     "name": "Vabali Spa",
     "type": "venue",
     "neighborhood": "Moabit",
+    "address": "Seydlitzstraße 6, 10557 Berlin",
     "activityTypeTags": [
       "yoga",
       "wellness studio"
@@ -18651,6 +18663,7 @@
     "name": "Tempelhofer Feld",
     "type": "park",
     "neighborhood": "Tempelhof",
+    "address": "Tempelhofer Damm 1, 12101 Berlin",
     "activityTypeTags": [
       "park",
       "outdoor"
@@ -20205,6 +20218,7 @@
     "name": "Zionskirche Yoga Collective",
     "type": "venue",
     "neighborhood": "Prenzlauer Berg",
+    "address": "Zionskirchplatz 1, 10119 Berlin",
     "activityTypeTags": [
       "yoga",
       "wellness studio"
@@ -21759,6 +21773,7 @@
     "name": "Kara Kas Bar",
     "type": "bar",
     "neighborhood": "Neukölln",
+    "address": "Weserstraße 33, 12045 Berlin",
     "activityTypeTags": [
       "jazz bar",
       "live music"
@@ -23313,6 +23328,7 @@
     "name": "Himmelbeet",
     "type": "venue",
     "neighborhood": "Wedding",
+    "address": "Schwedenstraße 14, 13357 Berlin",
     "activityTypeTags": [
       "park",
       "outdoor"
@@ -24867,6 +24883,7 @@
     "name": "August Fengler",
     "type": "bar",
     "neighborhood": "Prenzlauer Berg",
+    "address": "Lychener Str. 11, 10437 Berlin",
     "activityTypeTags": [
       "sports bar",
       "pub"
@@ -26421,6 +26438,7 @@
     "name": "Klunkerkranich",
     "type": "venue",
     "neighborhood": "Neukölln",
+    "address": "Karl-Marx-Straße 66, 12043 Berlin",
     "activityTypeTags": [
       "bar",
       "outdoor"
@@ -27975,6 +27993,7 @@
     "name": "Cafe am Neuen See",
     "type": "cafe",
     "neighborhood": "Tiergarten",
+    "address": "Lichtensteinallee 2, 10787 Berlin",
     "activityTypeTags": [
       "cafe",
       "outdoor"
@@ -29529,6 +29548,7 @@
     "name": "Markthalle Neun",
     "type": "venue",
     "neighborhood": "Kreuzberg",
+    "address": "Eisenbahnstraße 42-43, 10997 Berlin",
     "activityTypeTags": [
       "dinner party",
       "brunch spot"
@@ -31083,6 +31103,7 @@
     "name": "Stattbad Wedding",
     "type": "venue",
     "neighborhood": "Wedding",
+    "address": "Gerichtstraße 65, 13347 Berlin",
     "activityTypeTags": [
       "gallery",
       "art opening"
@@ -32637,6 +32658,7 @@
     "name": "Bite Club",
     "type": "venue",
     "neighborhood": "Kreuzberg",
+    "address": "Vor dem Schlesischen Tor 2a, 10997 Berlin",
     "activityTypeTags": [
       "dinner party",
       "techno club"
@@ -34191,6 +34213,7 @@
     "name": "Kino Intimes",
     "type": "venue",
     "neighborhood": "Friedrichshain",
+    "address": "Boxhagener Str. 107, 10245 Berlin",
     "activityTypeTags": [
       "live music"
     ],
@@ -35744,6 +35767,7 @@
     "name": "Silent Green Kulturquartier",
     "type": "venue",
     "neighborhood": "Wedding",
+    "address": "Gerichtstraße 35, 13347 Berlin",
     "activityTypeTags": [
       "gallery",
       "art opening"
@@ -37298,6 +37322,7 @@
     "name": "Flink & Trash",
     "type": "gym",
     "neighborhood": "Charlottenburg",
+    "address": "Kantstraße 79, 10627 Berlin",
     "activityTypeTags": [
       "boulder gym",
       "climbing crag"
@@ -38852,6 +38877,7 @@
     "name": "Freiluftkino Kreuzberg",
     "type": "venue",
     "neighborhood": "Kreuzberg",
+    "address": "Mariannenplatz 2, 10997 Berlin",
     "activityTypeTags": [
       "outdoor",
       "live music"
@@ -40406,6 +40432,7 @@
     "name": "Sage Beach",
     "type": "bar",
     "neighborhood": "Kreuzberg",
+    "address": "Schlesische Str. 38, 10997 Berlin",
     "activityTypeTags": [
       "bar",
       "techno club"
@@ -41960,6 +41987,7 @@
     "name": "House of Weekend",
     "type": "club",
     "neighborhood": "Mitte",
+    "address": "Alexanderstraße 7, 10178 Berlin",
     "activityTypeTags": [
       "techno club",
       "electronic music"
@@ -43514,6 +43542,7 @@
     "name": "Spreewaldplatz",
     "type": "gym",
     "neighborhood": "Kreuzberg",
+    "address": "Wiener Str. 59h, 10999 Berlin",
     "activityTypeTags": [
       "climbing crag",
       "boulder gym"
@@ -45068,6 +45097,7 @@
     "name": "Sisyphos",
     "type": "club",
     "neighborhood": "Rummelsburg",
+    "address": "Hauptstraße 15, 10317 Berlin",
     "activityTypeTags": [
       "techno club",
       "electronic music"
@@ -46622,6 +46652,7 @@
     "name": "Lucy’s Sky",
     "type": "cafe",
     "neighborhood": "Schöneberg",
+    "address": "Akazienstraße 27, 10823 Berlin",
     "activityTypeTags": [
       "cafe",
       "brunch spot"
@@ -48176,6 +48207,7 @@
     "name": "Jungle Jazz Bar",
     "type": "bar",
     "neighborhood": "Mitte",
+    "address": "Torstraße 140, 10119 Berlin",
     "activityTypeTags": [
       "jazz bar",
       "live music"
@@ -49730,6 +49762,7 @@
     "name": "Café Pförtner",
     "type": "cafe",
     "neighborhood": "Wedding",
+    "address": "Uferstraße 8-11, 13357 Berlin",
     "activityTypeTags": [
       "cafe",
       "dinner party"

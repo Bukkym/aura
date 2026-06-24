@@ -25,6 +25,7 @@ export interface PlanResponse {
     name: string;
     type: string;
     neighborhood: string;
+    address: string;
     description: string;
   };
   dateTime: string;
@@ -45,6 +46,7 @@ export function buildPlanResponse(plan: Plan, host: User, planId: string): PlanR
       name: plan.place.name,
       type: plan.place.type,
       neighborhood: plan.place.neighborhood,
+      address: plan.place.address,
       description: plan.place.description,
     },
     dateTime: plan.dateTime,
