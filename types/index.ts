@@ -67,6 +67,9 @@ export interface Place {
   name: string;
   type: PlaceType;
   neighborhood: string;
+  /** Street address, e.g. "Oranienstraße 187, 10999 Berlin". Empty string when
+   *  a venue has no resolved address yet (non-seed places). */
+  address: string;
   activityTypeTags: string[];
   vibeTags: string[];
   description: string;

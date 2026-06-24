@@ -51,6 +51,7 @@ export default async function PlanDemoPage() {
       name: plan.place.name,
       type: plan.place.type,
       neighborhood: plan.place.neighborhood,
+      address: plan.place.address,
       description: plan.place.description,
     },
     dateTime: plan.dateTime,

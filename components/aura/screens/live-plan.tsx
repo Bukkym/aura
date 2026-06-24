@@ -180,10 +180,19 @@ function CardView({ plan, onAccept, onBack }: { plan: PlanResponse; onAccept: ()
               <div style={{ position: "relative", marginTop: 14, borderRadius: 16, overflow: "hidden", border: "1px solid var(--aura-ink-10)" }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src="/otto-ambience.png" alt={plan.place.name} style={{ display: "block", width: "100%", height: 140, objectFit: "cover" }} />
-                <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "20px 14px 10px", background: "linear-gradient(to top, rgba(22,13,34,0.72), transparent)", display: "flex", alignItems: "center", gap: 6 }}>
-                  <Pin c="rgba(250,247,242,0.95)" />
-                  <span style={{ fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(250,247,242,0.96)" }}>
-                    {plan.place.name} · {plan.place.neighborhood}
+                <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "20px 14px 10px", background: "linear-gradient(to top, rgba(22,13,34,0.72), transparent)", display: "flex", alignItems: "flex-start", gap: 6 }}>
+                  <span style={{ marginTop: 1, flex: "none" }}>
+                    <Pin c="rgba(250,247,242,0.95)" />
+                  </span>
+                  <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
+                    <span style={{ fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(250,247,242,0.96)" }}>
+                      {plan.place.name} · {plan.place.neighborhood}
+                    </span>
+                    {plan.place.address && (
+                      <span style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "rgba(250,247,242,0.82)" }}>
+                        {plan.place.address}
+                      </span>
+                    )}
                   </span>
                 </div>
               </div>
@@ -237,7 +246,7 @@ function AcceptedView({ plan, onBack, onDone, onCancel }: { plan: PlanResponse; 
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [invite, setInvite] = useState(
-    `Hey, Ora here. You've all been picked for a Plan because of how you click. ${cap(plan.activityType)} ${when.replace(" · ", ", ")}, ${plan.place.name} in ${plan.place.neighborhood}. No prep needed, just show up. See you there.`,
+    `Hey, Ora here. You've all been picked for a Plan because of how you click. ${cap(plan.activityType)} ${when.replace(" · ", ", ")}, ${plan.place.name}${plan.place.address ? `, ${plan.place.address}` : ` in ${plan.place.neighborhood}`}. No prep needed, just show up. See you there.`,
   );
   const doCopy = () => {
     try {
@@ -280,6 +289,11 @@ function AcceptedView({ plan, onBack, onDone, onCancel }: { plan: PlanResponse; 
               <div style={{ marginTop: 4, fontSize: 12.5, color: "rgba(250,247,242,0.9)" }}>
                 {plan.place.name} · {plan.place.neighborhood}
               </div>
+              {plan.place.address && (
+                <div style={{ marginTop: 2, fontSize: 12, color: "rgba(250,247,242,0.8)" }}>
+                  {plan.place.address}
+                </div>
+              )}
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "13px 16px" }}>
