@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Place, Plan, User } from "@/types";
-import { rankSeedUsersForHost } from "./match";
+import { rankSeedUsersForRequester } from "./match";
 import { renderWhyTemplate } from "./whyTemplates";
 import { canon, canonAll, overlaps } from "./canon";
 import { parseVector } from "./userRow";
@@ -8,15 +8,15 @@ import { parseVector } from "./userRow";
 // Plan generation pipeline. Deterministic, no runtime AI (Module 3). See
 // /technical/06-deterministic-matching.md.
 //
-//   1. pickActivity   — first entry from host.selfExtracted.activityTypes.
+//   1. pickActivity   — first entry from requester.selfExtracted.activityTypes.
 //   2. pickVenue      — score all places by activity-token + vibe + locale
 //                       overlap, pick the best (random among ties).
 //   3. pickTime       — activity-class → next occurrence.
-//   4. pickAttendees  — rankSeedUsersForHost → filter by activity + availability
+//   4. pickAttendees  — rankSeedUsersForRequester → filter by activity + availability
 //                       → top k, with a relaxation cascade so we never return <k.
 //   5. whyThisPlan    — templated copy from real shared tags (no LLM).
 
-// 5 attendees + the host = a table of 6, sitting in the small-group sweet spot
+// 5 attendees + the requester = a table of 6, sitting in the small-group sweet spot
 // for actual conversation (see technical/08-future-considerations.md).
 const TARGET_ATTENDEES = 5;
 const ATTENDEE_CANDIDATE_PAD = 40;
@@ -62,21 +62,21 @@ export interface GeneratePlanOptions {
 
 export async function generatePlan(
   sb: SupabaseClient,
-  host: User,
+  requester: User,
   options: GeneratePlanOptions = {},
 ): Promise<Plan> {
   const { k = TARGET_ATTENDEES, activityOverride, excludeUserIds = [] } = options;
-  const activity = pickActivity(host, activityOverride);
+  const activity = pickActivity(requester, activityOverride);
 
   const [venue, attendees] = await Promise.all([
-    pickVenue(sb, host, activity),
-    pickAttendees(sb, host, activity, k, excludeUserIds),
+    pickVenue(sb, requester, activity),
+    pickAttendees(sb, requester, activity, k, excludeUserIds),
   ]);
 
   const { dateTime, label: timeLabel } = pickTime(activity);
 
   const whyThisPlan = renderWhyTemplate(
-    host,
+    requester,
     attendees,
     activity,
     venue,
@@ -85,13 +85,13 @@ export async function generatePlan(
 
   return {
     planId: crypto.randomUUID(),
-    hostUserId: host.userId,
+    createdForUserId: requester.userId,
     activityType: activity,
     place: venue,
     dateTime,
     vibe: canonAll([
-      ...host.selfExtracted.vibeKeywords,
-      ...host.lookingForExtracted.vibeKeywords,
+      ...requester.selfExtracted.vibeKeywords,
+      ...requester.lookingForExtracted.vibeKeywords,
     ]).slice(0, 4),
     attendees,
     whyThisPlan,
@@ -102,12 +102,12 @@ export async function generatePlan(
 // Steps
 // ----------------------------------------------------------------------------
 
-function pickActivity(host: User, override?: string): string {
+function pickActivity(requester: User, override?: string): string {
   const chosen = override?.trim();
   if (chosen) return chosen;
-  const candidates = host.selfExtracted.activityTypes;
+  const candidates = requester.selfExtracted.activityTypes;
   if (candidates.length > 0) return candidates[0];
-  const interest = host.selfExtracted.interests[0];
+  const interest = requester.selfExtracted.interests[0];
   if (interest) return `${interest} meetup`;
   return "casual hangout";
 }
@@ -133,7 +133,7 @@ function looseActivityMatch(activity: string, tags: string[]): boolean {
 
 async function pickVenue(
   sb: SupabaseClient,
-  host: User,
+  requester: User,
   activity: string,
 ): Promise<Place> {
   const { data: rows, error } = await sb.from("places").select("*");
@@ -141,12 +141,12 @@ async function pickVenue(
     throw new Error(`Failed to load places: ${error?.message ?? "no places"}`);
   }
 
-  const hostVibe = canonAll([
-    ...host.selfExtracted.vibeKeywords,
-    ...host.lookingForExtracted.vibeKeywords,
+  const requesterVibe = canonAll([
+    ...requester.selfExtracted.vibeKeywords,
+    ...requester.lookingForExtracted.vibeKeywords,
   ]);
-  const hostNeighborhoods = canonAll(
-    host.selfExtracted.neighborhoods ?? host.lookingForExtracted.neighborhoods,
+  const requesterNeighborhoods = canonAll(
+    requester.selfExtracted.neighborhoods ?? requester.lookingForExtracted.neighborhoods,
   );
 
   type Scored = { row: (typeof rows)[number]; score: number };
@@ -160,13 +160,13 @@ async function pickVenue(
 
     // vibe overlap
     const vibeSet = new Set(vibeTags);
-    const vibeHits = hostVibe.filter((v) => vibeSet.has(v)).length;
+    const vibeHits = requesterVibe.filter((v) => vibeSet.has(v)).length;
     score += vibeHits * 1.0;
 
     // neighborhood preference
-    if (hostNeighborhoods.length === 0 || hostNeighborhoods.includes("any")) {
+    if (requesterNeighborhoods.length === 0 || requesterNeighborhoods.includes("any")) {
       score += 0.5;
-    } else if (hostNeighborhoods.includes(canon(row.neighborhood))) {
+    } else if (requesterNeighborhoods.includes(canon(row.neighborhood))) {
       score += 1.5;
     }
 
@@ -183,9 +183,9 @@ async function pickVenue(
       ? scored.filter((s) => s.score === topScore)
       : scored.slice(0, 5);
 
-  // Deterministic-ish pick among ties by host id hash, so demos vary by user
+  // Deterministic-ish pick among ties by requester id hash, so demos vary by user
   // but stay stable per user.
-  const pickIdx = hashStr(host.userId) % top.length;
+  const pickIdx = hashStr(requester.userId) % top.length;
   const data = top[pickIdx].row;
 
   return {
@@ -221,8 +221,8 @@ function nextOccurrence(targetDay: number, hour: number): Date {
 }
 
 // "anytime" / "flexible" matches everything; otherwise require a shared window.
-function availabilityOk(host: User, cand: User): boolean {
-  const h = canonAll(host.selfExtracted.availability);
+function availabilityOk(requester: User, cand: User): boolean {
+  const h = canonAll(requester.selfExtracted.availability);
   const c = canonAll(cand.selfExtracted.availability);
   if (h.length === 0 || c.length === 0) return true;
   if (h.includes("anytime") || c.includes("anytime")) return true;
@@ -232,15 +232,15 @@ function availabilityOk(host: User, cand: User): boolean {
 
 async function pickAttendees(
   sb: SupabaseClient,
-  host: User,
+  requester: User,
   activity: string,
   k: number,
   excludeUserIds: string[] = [],
 ): Promise<User[]> {
-  const ranked = await rankSeedUsersForHost(sb, host, ATTENDEE_CANDIDATE_PAD);
+  const ranked = await rankSeedUsersForRequester(sb, requester, ATTENDEE_CANDIDATE_PAD);
   if (ranked.length === 0) return [];
 
-  // Drop anyone the host asked to exclude (the "these people didn't fit" path),
+  // Drop anyone the requester asked to exclude (the "these people didn't fit" path),
   // so a refined Plan draws a different group.
   const exclude = new Set(excludeUserIds);
   const candidates = ranked.map((r) => r.user).filter((u) => !exclude.has(u.userId));
@@ -251,13 +251,13 @@ async function pickAttendees(
 
   const sharesInterest = (u: User) =>
     overlaps(
-      canonAll(host.selfExtracted.interests),
+      canonAll(requester.selfExtracted.interests),
       canonAll(u.selfExtracted.interests),
     );
 
   // Tier 1: activity match AND availability overlap (the ideal group).
   let pool = candidates.filter(
-    (u) => matchesActivity(u) && availabilityOk(host, u),
+    (u) => matchesActivity(u) && availabilityOk(requester, u),
   );
 
   // Tier 2: activity OR shared-interest, ignore availability.

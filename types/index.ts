@@ -78,7 +78,7 @@ export interface Place {
 
 export interface Plan {
   planId: string;
-  hostUserId: string;
+  createdForUserId: string;
   activityType: string;
   place: Place;
   dateTime: string;
@@ -87,7 +87,7 @@ export interface Plan {
   whyThisPlan: string;
 }
 
-/** A plan is "ready" until the host accepts it ("confirmed") or dismisses it
+/** A plan is "ready" until the requester accepts it ("confirmed") or dismisses it
  *  ("declined"). Declined plans are kept on the row but filtered out of the
  *  user's active lists. */
 export type PlanStatus = "ready" | "confirmed" | "declined";

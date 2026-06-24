@@ -2,8 +2,8 @@ import type { Place, User } from "@/types";
 import { canonAll } from "./canon";
 
 // Deterministic "why this plan" copy. No LLM (Module 3). We pull the real
-// shared tags across the host + attendees and slot them into one of a few
-// templates, chosen by a stable hash of (host id, plan date) so a given user
+// shared tags across the requester + attendees and slot them into one of a few
+// templates, chosen by a stable hash of (requester id, plan date) so a given user
 // sees a consistent reason across refreshes. Empty slots drop their clause
 // rather than print a placeholder.
 //
@@ -47,13 +47,13 @@ function hashString(s: string): number {
 }
 
 export function renderWhyTemplate(
-  host: User,
+  requester: User,
   attendees: User[],
   activity: string,
   venue: Place,
   timeLabel: string,
 ): string {
-  const members = [host, ...attendees];
+  const members = [requester, ...attendees];
   const sharedInterest = topShared(members, (u) => u.selfExtracted.interests);
   const sharedVibe = topShared(members, (u) => u.selfExtracted.vibeKeywords);
   const names = attendees.slice(0, 3).map((a) => firstName(a.displayName));
@@ -85,16 +85,16 @@ export function renderWhyTemplate(
     );
   }
   if (sharedInterest) {
-    const hostVibe = canonAll(host.selfExtracted.vibeKeywords)[0];
+    const requesterVibe = canonAll(requester.selfExtracted.vibeKeywords)[0];
     rich.push(
-      `You picked ${hostVibe ? `${hostVibe} and ` : ""}${sharedInterest}. So did ${joinNames(names)}. Meeting at ${venueName} for ${activity}, ${lower}.`,
+      `You picked ${requesterVibe ? `${requesterVibe} and ` : ""}${sharedInterest}. So did ${joinNames(names)}. Meeting at ${venueName} for ${activity}, ${lower}.`,
     );
   }
 
   // Prefer a rich template (chosen by stable hash for per-user variety). Only
   // fall back to the tagless sentence when there's no shared signal at all.
   if (rich.length > 0) {
-    const idx = hashString(`${host.userId}:${activity}`) % rich.length;
+    const idx = hashString(`${requester.userId}:${activity}`) % rich.length;
     return rich[idx];
   }
 

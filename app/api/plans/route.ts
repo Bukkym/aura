@@ -4,7 +4,7 @@ import { listPlanSummaries, splitByTime } from "@/lib/plans";
 
 // GET /api/plans
 //
-// Returns the signed-in user's hosted plans, split into { upcoming, past } for
+// Returns the signed-in user's plans, split into { upcoming, past } for
 // the Plans tab history. RLS scopes reads to the caller; getUser() verifies the
 // session first.
 

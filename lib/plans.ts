@@ -4,7 +4,7 @@ import { userFromRow } from "./userRow";
 
 // Plan persistence + history. The deterministic engine generates a Plan in
 // memory (lib/generatePlan.ts); these helpers write it to public.plans, mark it
-// confirmed when the host accepts, and read a user's plans back for the Plans
+// confirmed when the requester accepts, and read a user's plans back for the Plans
 // tab history. No AI here.
 //
 // Split: the pure mappers (planSummaryFromRow, splitByTime) are unit-tested;
@@ -96,7 +96,7 @@ export function splitByTime(
 // ----------------------------------------------------------------------------
 
 /** Persist a generated Plan and return the stored plan id. Dedupes on the
- *  identity of the plan (same host + activity + place, still upcoming and not
+ *  identity of the plan (same requester + activity + place, still upcoming and not
  *  declined): a repeat of the *same* request (cleared cache, deep links) reuses
  *  the existing row, but a different activity or place (a refined "request
  *  another Plan") inserts a new row, so users can hold more than one plan. A
@@ -111,7 +111,7 @@ export async function persistPlan(
   const { data: existing, error: lookupErr } = await sb
     .from("plans")
     .select("id")
-    .eq("host_user_id", plan.hostUserId)
+    .eq("created_for_user_id", plan.createdForUserId)
     .eq("activity_type", plan.activityType)
     .eq("place_id", plan.place.id)
     .is("declined_at", null)
@@ -125,7 +125,7 @@ export async function persistPlan(
   const { data, error } = await sb
     .from("plans")
     .insert({
-      host_user_id: plan.hostUserId,
+      created_for_user_id: plan.createdForUserId,
       activity_type: plan.activityType,
       place_id: plan.place.id,
       date_time: plan.dateTime,
@@ -140,25 +140,25 @@ export async function persistPlan(
   return data.id as string;
 }
 
-/** Count a host's non-declined plans created on or after `sinceIso` (host id is
+/** Count a requester's non-declined plans created on or after `sinceIso` (requester id is
  *  the public.users id). Ready for a future per-period quota, e.g. one free Plan
  *  a week before a subscription is required; not enforced yet. */
 export async function countPlansSince(
   sb: SupabaseClient,
-  hostUserId: string,
+  createdForUserId: string,
   sinceIso: string,
 ): Promise<number> {
   const { count, error } = await sb
     .from("plans")
     .select("*", { count: "exact", head: true })
-    .eq("host_user_id", hostUserId)
+    .eq("created_for_user_id", createdForUserId)
     .is("declined_at", null)
     .gte("created_at", sinceIso);
   if (error) throw new Error(`Plan count failed: ${error.message}`);
   return count ?? 0;
 }
 
-/** Mark a plan confirmed. RLS restricts the update to the plan's host. */
+/** Mark a plan confirmed. RLS restricts the update to the plan's requester. */
 export async function confirmPlan(sb: SupabaseClient, planId: string): Promise<void> {
   const { error } = await sb
     .from("plans")
@@ -168,7 +168,7 @@ export async function confirmPlan(sb: SupabaseClient, planId: string): Promise<v
 }
 
 /** Mark a plan declined ("Not now"). It drops out of the user's active lists
- *  but stays on the row. RLS restricts the update to the plan's host. */
+ *  but stays on the row. RLS restricts the update to the plan's requester. */
 export async function declinePlan(sb: SupabaseClient, planId: string): Promise<void> {
   const { error } = await sb
     .from("plans")
@@ -177,35 +177,35 @@ export async function declinePlan(sb: SupabaseClient, planId: string): Promise<v
   if (error) throw new Error(`Plan decline failed: ${error.message}`);
 }
 
-/** Count all plans for a host (public.users id), including declined, so Home can
+/** Count all plans for a requester (public.users id), including declined, so Home can
  *  tell a brand-new user (generate a first plan) from one who has declined or
  *  used up their plans (show the empty "request another" state instead of
  *  regenerating the same one). */
-export async function countAllPlans(sb: SupabaseClient, hostUserId: string): Promise<number> {
+export async function countAllPlans(sb: SupabaseClient, createdForUserId: string): Promise<number> {
   const { count, error } = await sb
     .from("plans")
     .select("*", { count: "exact", head: true })
-    .eq("host_user_id", hostUserId);
+    .eq("created_for_user_id", createdForUserId);
   if (error) throw new Error(`Plan count failed: ${error.message}`);
   return count ?? 0;
 }
 
-/** Rehydrate the host's current plan (the most recently created, non-declined,
- *  upcoming one) into a full in-memory Plan + its host + status, so Home can
+/** Rehydrate the requester's current plan (the most recently created, non-declined,
+ *  upcoming one) into a full in-memory Plan + its requester + status, so Home can
  *  show the real current plan from the DB instead of regenerating from the
  *  profile. Keyed on the public.users id. Returns null when there is no active
  *  plan. The route maps this through buildPlanResponse. */
 export async function loadCurrentPlanContext(
   sb: SupabaseClient,
-  hostUserId: string,
-): Promise<{ plan: Plan; host: User; status: PlanStatus } | null> {
+  createdForUserId: string,
+): Promise<{ plan: Plan; requester: User; status: PlanStatus } | null> {
   const nowIso = new Date().toISOString();
   const { data: row, error } = await sb
     .from("plans")
     .select(
-      "id, host_user_id, activity_type, place_id, date_time, vibe, attendee_user_ids, why_this_plan, confirmed_at, declined_at",
+      "id, created_for_user_id, activity_type, place_id, date_time, vibe, attendee_user_ids, why_this_plan, confirmed_at, declined_at",
     )
-    .eq("host_user_id", hostUserId)
+    .eq("created_for_user_id", createdForUserId)
     .is("declined_at", null)
     .gte("date_time", nowIso)
     .order("created_at", { ascending: false })
@@ -214,14 +214,14 @@ export async function loadCurrentPlanContext(
   if (error) throw new Error(`Current plan lookup failed: ${error.message}`);
   if (!row) return null;
 
-  const { data: hostRow, error: hostErr } = await sb
+  const { data: requesterRow, error: requesterErr } = await sb
     .from("users")
     .select("*")
-    .eq("id", hostUserId)
+    .eq("id", createdForUserId)
     .maybeSingle();
-  if (hostErr) throw new Error(`Host lookup failed: ${hostErr.message}`);
-  if (!hostRow) return null;
-  const host = userFromRow(hostRow);
+  if (requesterErr) throw new Error(`Requester lookup failed: ${requesterErr.message}`);
+  if (!requesterRow) return null;
+  const requester = userFromRow(requesterRow);
 
   const { data: placeRow, error: placeErr } = await sb
     .from("places")
@@ -257,7 +257,7 @@ export async function loadCurrentPlanContext(
 
   const plan: Plan = {
     planId: row.id,
-    hostUserId: row.host_user_id,
+    createdForUserId: row.created_for_user_id,
     activityType: row.activity_type,
     place,
     dateTime: row.date_time,
@@ -266,7 +266,7 @@ export async function loadCurrentPlanContext(
     whyThisPlan: row.why_this_plan,
   };
 
-  return { plan, host, status: statusFromRow(row.confirmed_at, row.declined_at) };
+  return { plan, requester, status: statusFromRow(row.confirmed_at, row.declined_at) };
 }
 
 /** Whether the signed-in auth user has completed onboarding, i.e. a public.users
@@ -287,7 +287,7 @@ export async function profileExists(
   return Boolean(data);
 }
 
-/** List the plans hosted by the user behind `authUserId`, newest first, mapped
+/** List the plans created for the user behind `authUserId`, newest first, mapped
  *  to PlanSummary. Resolves the place and a few attendee names per plan. */
 export async function listPlanSummaries(
   sb: SupabaseClient,
@@ -307,7 +307,7 @@ export async function listPlanSummaries(
     .select(
       "id, activity_type, date_time, vibe, attendee_user_ids, confirmed_at, declined_at, places(name, neighborhood, type)",
     )
-    .eq("host_user_id", me.id)
+    .eq("created_for_user_id", me.id)
     .is("declined_at", null)
     .order("date_time", { ascending: false });
   if (plansErr) throw new Error(`Plans query failed: ${plansErr.message}`);

@@ -1,15 +1,15 @@
 import { createClient } from "../lib/supabase/admin";
-import { rankSeedUsersForHost, explain } from "../lib/match";
+import { rankSeedUsersForRequester, explain } from "../lib/match";
 import { userFromRow } from "../lib/userRow";
 
 // Deterministic matching smoke test (Module 3, no AI). Picks a known seed
-// user (Sofia) as the host and ranks the pool by structured-overlap score,
+// user (Sofia) as the requester and ranks the pool by structured-overlap score,
 // printing the shared-tag explanation per match.
 //
 // Run with: npm run smoke:match
 //   (tsx --env-file=.env.local scripts/smoke-match.ts)
 
-const HOST_DISPLAY_NAME = "Sofia";
+const REQUESTER_DISPLAY_NAME = "Sofia";
 const K = 6;
 
 async function main() {
@@ -18,24 +18,24 @@ async function main() {
   const { data: row, error } = await sb
     .from("users")
     .select("*")
-    .eq("display_name", HOST_DISPLAY_NAME)
+    .eq("display_name", REQUESTER_DISPLAY_NAME)
     .limit(1)
     .maybeSingle();
-  if (error) throw new Error(`Failed to load host: ${error.message}`);
-  if (!row) throw new Error(`No seed user with display_name=${HOST_DISPLAY_NAME}`);
+  if (error) throw new Error(`Failed to load requester: ${error.message}`);
+  if (!row) throw new Error(`No seed user with display_name=${REQUESTER_DISPLAY_NAME}`);
 
-  const host = userFromRow(row);
+  const requester = userFromRow(row);
   console.log(
-    `Host: ${host.displayName} [${host._archetype}] (id=${host.userId})\n`,
+    `Requester: ${requester.displayName} [${requester._archetype}] (id=${requester.userId})\n`,
   );
 
   const t0 = Date.now();
-  const ranked = await rankSeedUsersForHost(sb, host, K);
+  const ranked = await rankSeedUsersForRequester(sb, requester, K);
   const ms = Date.now() - t0;
 
   console.log(`Top ${K} matches (deterministic, ${ms}ms, no AI):`);
   for (const { user, score } of ranked) {
-    const exp = explain(host, user);
+    const exp = explain(requester, user);
     const tags = [
       exp.sharedInterests.length && `interests: ${exp.sharedInterests.join(", ")}`,
       exp.sharedActivityTypes.length &&

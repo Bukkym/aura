@@ -20,7 +20,7 @@ import { LivePlanCard } from "@/components/aura/screens/live-plan";
 
 export const dynamic = "force-dynamic";
 
-const HOST_DISPLAY_NAME = "Sofia";
+const REQUESTER_DISPLAY_NAME = "Sofia";
 
 export default async function PlanDemoPage() {
   const sb = createClient();
@@ -28,23 +28,23 @@ export default async function PlanDemoPage() {
   const { data: row, error } = await sb
     .from("users")
     .select("*")
-    .eq("display_name", HOST_DISPLAY_NAME)
+    .eq("display_name", REQUESTER_DISPLAY_NAME)
     .limit(1)
     .maybeSingle();
 
   if (error || !row) {
     throw new Error(
-      `Demo host '${HOST_DISPLAY_NAME}' not found in users table. Did the seed migration run? (${error?.message ?? "no row returned"})`,
+      `Demo requester '${REQUESTER_DISPLAY_NAME}' not found in users table. Did the seed migration run? (${error?.message ?? "no row returned"})`,
     );
   }
 
-  const host = userFromRow(row);
-  const plan = await generatePlan(sb, host);
+  const requester = userFromRow(row);
+  const plan = await generatePlan(sb, requester);
 
   const response: PlanResponse = {
     planId: plan.planId,
-    hostUserId: plan.hostUserId,
-    hostDisplayName: host.displayName,
+    createdForUserId: plan.createdForUserId,
+    createdForDisplayName: requester.displayName,
     activityType: plan.activityType,
     place: {
       id: plan.place.id,
@@ -61,7 +61,7 @@ export default async function PlanDemoPage() {
       displayName: a.displayName,
       archetype: a._archetype,
       selfExtracted: a.selfExtracted,
-      explanation: explain(host, a),
+      explanation: explain(requester, a),
     })),
     whyThisPlan: plan.whyThisPlan,
   };

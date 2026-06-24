@@ -6,7 +6,7 @@ import { declinePlan } from "@/lib/plans";
 //
 // Body: { planId }
 // Marks the plan declined ("Not now"): it drops out of the user's active lists
-// but stays on the row. RLS restricts the update to the plan's host, and
+// but stays on the row. RLS restricts the update to the plan's requester, and
 // getUser() verifies the session first.
 
 interface DeclineBody {

@@ -4,13 +4,13 @@ import { persistPlan, confirmPlan, declinePlan, countPlansSince, countAllPlans, 
 import { userFromRow } from "../lib/userRow";
 
 // End-to-end check for plan persistence (Module 4 M4.1). Uses the admin client,
-// which bypasses RLS, so it can stand in for a host without a real auth session.
+// which bypasses RLS, so it can stand in for a requester without a real auth session.
 //
-//   1. generate a plan for a seed host
+//   1. generate a plan for a seed requester
 //   2. persist it, assert a row id comes back
 //   3. persist again, assert the dedupe returns the same id (no duplicate)
 //   4. confirm it, assert confirmed_at is set
-//   5. list summaries by the host's auth id, assert the plan is present + confirmed
+//   5. list summaries by the requester's auth id, assert the plan is present + confirmed
 //   6. clean up the test row
 //
 // Run with: npm run smoke:plans
@@ -18,7 +18,7 @@ import { userFromRow } from "../lib/userRow";
 // Note: generatePlan still hits OpenAI in some paths only if EMBED_ALLOW_RUNTIME
 // is set; here it does not, so this is a pure deterministic + DB round-trip.
 
-const HOST_DISPLAY_NAME = "Sofia";
+const REQUESTER_DISPLAY_NAME = "Sofia";
 
 function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(`ASSERT FAILED: ${msg}`);
@@ -30,19 +30,19 @@ async function main() {
   const { data: row, error } = await sb
     .from("users")
     .select("*")
-    .eq("display_name", HOST_DISPLAY_NAME)
+    .eq("display_name", REQUESTER_DISPLAY_NAME)
     .limit(1)
     .maybeSingle();
-  if (error) throw new Error(`Failed to load host: ${error.message}`);
-  if (!row) throw new Error(`No seed user with display_name=${HOST_DISPLAY_NAME}`);
+  if (error) throw new Error(`Failed to load requester: ${error.message}`);
+  if (!row) throw new Error(`No seed user with display_name=${REQUESTER_DISPLAY_NAME}`);
 
-  const host = userFromRow(row);
-  console.log(`Host: ${host.displayName} (id=${host.userId})\n`);
+  const requester = userFromRow(row);
+  console.log(`Requester: ${requester.displayName} (id=${requester.userId})\n`);
 
-  // Clear any leftover plans for this host so the run is deterministic.
-  await sb.from("plans").delete().eq("host_user_id", host.userId);
+  // Clear any leftover plans for this requester so the run is deterministic.
+  await sb.from("plans").delete().eq("created_for_user_id", requester.userId);
 
-  const plan = await generatePlan(sb, host);
+  const plan = await generatePlan(sb, requester);
 
   const id1 = await persistPlan(sb, plan);
   assert(typeof id1 === "string" && id1.length > 0, "persistPlan returns an id");
@@ -55,8 +55,8 @@ async function main() {
   const { count } = await sb
     .from("plans")
     .select("*", { count: "exact", head: true })
-    .eq("host_user_id", host.userId);
-  assert(count === 1, `exactly one row for the host (got ${count})`);
+    .eq("created_for_user_id", requester.userId);
+  assert(count === 1, `exactly one row for the requester (got ${count})`);
 
   await confirmPlan(sb, id1);
   const { data: confirmed } = await sb
@@ -67,12 +67,12 @@ async function main() {
   assert(confirmed?.confirmed_at, "confirmed_at is set after confirmPlan");
   console.log(`Confirmed at ${confirmed?.confirmed_at}`);
 
-  // Resolve the host's auth id to exercise listPlanSummaries. Seed users have
+  // Resolve the requester's auth id to exercise listPlanSummaries. Seed users have
   // auth_user_id = null, so fall back to faking the join via the public id.
-  const summaries = host.userId
-    ? await listSummariesForPublicUser(sb, host.userId)
+  const summaries = requester.userId
+    ? await listSummariesForPublicUser(sb, requester.userId)
     : [];
-  assert(summaries.length === 1, `one summary for the host (got ${summaries.length})`);
+  assert(summaries.length === 1, `one summary for the requester (got ${summaries.length})`);
   const s = summaries[0];
   assert(s.id === id1, "summary id matches");
   assert(s.status === "confirmed", `summary status confirmed (got ${s.status})`);
@@ -84,7 +84,7 @@ async function main() {
 
   // Refinement engine options: a different activity yields a different plan
   // (and a new persisted row, since the relaxed dedupe keys on activity+place).
-  const refined = await generatePlan(sb, host, { activityOverride: "techno clubs" });
+  const refined = await generatePlan(sb, requester, { activityOverride: "techno clubs" });
   assert(
     refined.activityType === "techno clubs",
     `activityOverride takes effect (got ${refined.activityType})`,
@@ -95,22 +95,22 @@ async function main() {
 
   // Excluding the first plan's attendees draws a different group.
   const excludeIds = plan.attendees.map((a) => a.userId);
-  const reseated = await generatePlan(sb, host, { excludeUserIds: excludeIds });
+  const reseated = await generatePlan(sb, requester, { excludeUserIds: excludeIds });
   assert(
     reseated.attendees.every((a) => !excludeIds.includes(a.userId)),
     "excludeUserIds removes the named people from the group",
   );
   console.log(`Reseated group: ${reseated.attendees.map((a) => a.displayName).join(", ") || "(none)"}`);
 
-  // Count helper (ready for a future quota): the host now has 2 active plans.
-  const activeCount = await countPlansSince(sb, host.userId, "2000-01-01T00:00:00.000Z");
+  // Count helper (ready for a future quota): the requester now has 2 active plans.
+  const activeCount = await countPlansSince(sb, requester.userId, "2000-01-01T00:00:00.000Z");
   assert(activeCount === 2, `countPlansSince sees both active plans (got ${activeCount})`);
   console.log(`Active plan count: ${activeCount}`);
 
   // Current-plan rehydration: the most recently created active plan (the refined
-  // one) is "current", reconstructed full with host + status.
-  assert((await countAllPlans(sb, host.userId)) === 2, "countAllPlans sees both rows");
-  const current = await loadCurrentPlanContext(sb, host.userId);
+  // one) is "current", reconstructed full with requester + status.
+  assert((await countAllPlans(sb, requester.userId)) === 2, "countAllPlans sees both rows");
+  const current = await loadCurrentPlanContext(sb, requester.userId);
   assert(current !== null, "loadCurrentPlanContext returns a plan");
   assert(current!.plan.planId === refinedId, `current is the newest plan (got ${current!.plan.planId})`);
   assert(current!.plan.activityType === "techno clubs", "current rehydrates the refined activity");
@@ -120,8 +120,8 @@ async function main() {
 
   // Decline the first, assert it drops out of the active list (the row stays).
   await declinePlan(sb, id1);
-  const afterDecline = host.userId
-    ? await listSummariesForPublicUser(sb, host.userId)
+  const afterDecline = requester.userId
+    ? await listSummariesForPublicUser(sb, requester.userId)
     : [];
   assert(
     afterDecline.length === 1 && afterDecline[0].id === refinedId,
@@ -130,12 +130,12 @@ async function main() {
   const { count: rowCount } = await sb
     .from("plans")
     .select("*", { count: "exact", head: true })
-    .eq("host_user_id", host.userId);
+    .eq("created_for_user_id", requester.userId);
   assert(rowCount === 2, `declined row is kept, not deleted (got ${rowCount})`);
   console.log("Decline ok: hidden from list, row retained");
 
   // Clean up.
-  await sb.from("plans").delete().eq("host_user_id", host.userId);
+  await sb.from("plans").delete().eq("created_for_user_id", requester.userId);
   console.log("\nCleaned up. smoke:plans OK");
 }
 
@@ -155,7 +155,7 @@ async function listSummariesForPublicUser(
     .select(
       "id, activity_type, date_time, vibe, attendee_user_ids, confirmed_at, declined_at, places(name, neighborhood, type)",
     )
-    .eq("host_user_id", publicUserId)
+    .eq("created_for_user_id", publicUserId)
     .is("declined_at", null)
     .order("date_time", { ascending: false });
   if (error) throw new Error(error.message);

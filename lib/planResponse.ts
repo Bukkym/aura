@@ -17,8 +17,8 @@ export interface AttendeeView {
 
 export interface PlanResponse {
   planId: string;
-  hostUserId: string;
-  hostDisplayName: string;
+  createdForUserId: string;
+  createdForDisplayName: string;
   activityType: string;
   place: {
     id: string;
@@ -35,11 +35,11 @@ export interface PlanResponse {
 }
 
 // `planId` is the persisted row id, not the in-memory plan.planId.
-export function buildPlanResponse(plan: Plan, host: User, planId: string): PlanResponse {
+export function buildPlanResponse(plan: Plan, requester: User, planId: string): PlanResponse {
   return {
     planId,
-    hostUserId: plan.hostUserId,
-    hostDisplayName: host.displayName,
+    createdForUserId: plan.createdForUserId,
+    createdForDisplayName: requester.displayName,
     activityType: plan.activityType,
     place: {
       id: plan.place.id,
@@ -56,7 +56,7 @@ export function buildPlanResponse(plan: Plan, host: User, planId: string): PlanR
       displayName: a.displayName,
       archetype: a._archetype,
       selfExtracted: a.selfExtracted,
-      explanation: explain(host, a),
+      explanation: explain(requester, a),
     })),
     whyThisPlan: plan.whyThisPlan,
   };

@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
 
   // Refine reuses the existing profile; it never re-onboards. If there's no
   // user row yet, the caller hasn't built a first plan.
-  const { data: hostRow, error: lookupErr } = await sb
+  const { data: requesterRow, error: lookupErr } = await sb
     .from("users")
     .select("*")
     .eq("auth_user_id", authUser.id)
@@ -81,19 +81,19 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-  if (!hostRow) {
+  if (!requesterRow) {
     return NextResponse.json(
       { error: "Build your first Plan before requesting another" },
       { status: 400 },
     );
   }
 
-  const host = userFromRow(hostRow);
+  const requester = userFromRow(requesterRow);
 
   try {
-    const plan = await generatePlan(sb, host, { activityOverride: activityType, excludeUserIds });
+    const plan = await generatePlan(sb, requester, { activityOverride: activityType, excludeUserIds });
     const persistedPlanId = await persistPlan(sb, plan, refinement);
-    const response = buildPlanResponse(plan, host, persistedPlanId);
+    const response = buildPlanResponse(plan, requester, persistedPlanId);
     return NextResponse.json({ plan: response });
   } catch (err) {
     return NextResponse.json(

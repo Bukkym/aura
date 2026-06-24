@@ -5,7 +5,7 @@ import { DemoResetClient } from "./DemoResetClient";
 
 // Auth-gated demo reset (Slice 5). Clears the signed-in user's profile so the
 // onboarding → Plan walkthrough can be rehearsed from scratch. Deletes the
-// caller's public.users row (chip data + the host record the Plan pipeline
+// caller's public.users row (chip data + the requester record the Plan pipeline
 // reads); the next onboarding run re-inserts a fresh row. The client half then
 // clears the aura:draft sessionStorage and returns to /.
 //

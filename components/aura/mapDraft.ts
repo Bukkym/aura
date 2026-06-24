@@ -2,7 +2,7 @@
 // deterministic matcher consumes (SelfExtracted + LookingForExtracted, the
 // `aura:draft` contract that /plan POSTs to /api/plan/create).
 //
-// Why the mirroring matters: lib/match.ts scores host.lookingFor.* against
+// Why the mirroring matters: lib/match.ts scores requester.lookingFor.* against
 // cand.self.*, weighting personality .35 / interests .20 / activity .15 /
 // vibe .10 / social .10 / connection .05 / hood .05. The onboarding flow only
 // asks "your vibe" and "how you'd hang" once (about you), so we mirror those
