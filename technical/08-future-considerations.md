@@ -248,7 +248,7 @@ density, and instrumenting cohort-overlap retention once real users arrive.
 
 ---
 
-## 5. Cancel / leave a plan (from feedback session 2026-06-19)
+## 5. Cancel / leave a plan (from feedback session 2026-06-19) — ✅ SHIPPED 2026-06-24 (see §8)
 
 **Feedback:** there should be a way to cancel a plan, or for a member to leave a
 plan if they can no longer make it.
@@ -285,7 +285,7 @@ work, not as a quick add.
 
 ---
 
-## 6. Real plan addresses, not just neighborhoods (from feedback session 2026-06-19)
+## 6. Real plan addresses, not just neighborhoods (from feedback session 2026-06-19) — ✅ SHIPPED 2026-06-24 (see §8)
 
 **Feedback:** plans show a vague location like "Berlin, Kreuzberg" instead of an
 actual address of the venue. Worth a real street address. (Could be sourced via
@@ -315,3 +315,113 @@ field and fill in the 33 seed venues by hand. This touches five layers:
 **Later:** for venues we don't preseed (LLM-generated or user-suggested places),
 resolve the address via a places API (Google Places, Mapbox) at plan-generation
 time and cache it on the `places` row.
+
+---
+
+## 7. BUG: signed-in user is sent back to onboarding (from feedback session 2026-06-19) — ✅ FIXED 2026-06-24 (see §8)
+
+**Observed:** after signing in, the app drops the user back into the onboarding
+flow instead of their signed-in home. Not expected behavior. Logged for the next
+session, not fixed yet.
+
+**Root cause (identified, not fixed):** in [app/page.tsx](../app/page.tsx) the
+only "returning user" signal is **whether the user already has a plan**:
+
+```
+hasPlans = (await listPlanSummaries(sb, user.id)).length > 0
+if (hasPlans) redirect("/home")
+return <OnboardingFlow />   // signed-in but no plans -> onboarding again
+```
+
+So a signed-in user with **zero plans** is re-shown onboarding, even though they
+already completed it. This happens whenever a user has onboarded but has no live
+plan: their only plan was declined/expired, a plan was never generated, or the
+`listPlanSummaries` lookup throws (the catch falls through to onboarding by
+design).
+
+**Fix direction (for next time):** gate the onboarding-vs-home decision on
+**onboarding completion / profile existence**, not on plan count. Options:
+- Check for a persisted profile (e.g. a `users` row with `display_name` /
+  chip-derived profile) and route completed users to `/home` regardless of plan
+  count; only un-onboarded signed-in users should see `OnboardingFlow`.
+- Distinguish "no profile yet" from "profile but no active plan" so the second
+  case lands on `/home` (which can show the forming/empty state) rather than
+  restarting onboarding.
+- Revisit the `catch` fallthrough so a transient lookup failure doesn't bounce a
+  real user into onboarding.
+
+**Start here next session.** ✅ Fixed 2026-06-24 (see §8).
+
+---
+
+## 8. Status & next steps (updated 2026-06-24)
+
+The clarified product model and the post-launch backlog. Start here in a new
+session. Companion notes live in agent memory ([[plan-model-pool-based]],
+[[feedback-batch-next-steps]]) but this doc is the canonical, in-repo record.
+
+### Product model (locked)
+
+Aura is **pool-based**. Everyone who enters does so by making a **request** (their
+activity intent + availability + who they want to meet, captured at onboarding).
+The **system** turns requests into **plans**. There is **no "host"**: the person a
+plan is generated for is the **requester** (universal role, everyone is one), and
+everyone in a plan is an **attendee**. Vocabulary is locked in code as of the
+rename below: `requester` (role) + `created_for_user_id` (plan column) +
+`attendee` (everyone in a plan).
+
+### Shipped to production (2026-06-24)
+
+- **§7 onboarding bounce-back bug** — routed returning users on profile
+  existence, not plan count (`profileExists` in lib/plans.ts). PR #47.
+- **§5 cancel/withdraw** — "Cancel this Plan" on the accepted view →
+  `declineLivePlan`. Under the pool model this IS "leave" for a requester. PR #48.
+- **§6 real plan addresses** — `places.address` + migration backfilling the 33
+  seed venues; shown on the plan/accepted views + WhatsApp invite. PR #49.
+- **Seed pool as active requesters** — `scripts/seed-requests.ts` gave all 175
+  seed users an active plan request, so a fresh real user matches against a
+  populated pool. PR #50.
+- **host → requester/created_for rename** — removed the "host" concept across
+  DB/code/API; migration renamed `host_user_id` → `created_for_user_id`. PR #51.
+
+### Open / next (not built; pick these up next)
+
+1. **Shared-plan pool model (the cohort milestone) — the big one.** Today each
+   requester gets their *own* plan row and `attendee_user_ids` are matched
+   references (mostly seed users), not real people who joined; there is no logic
+   to add a new requester to an existing plan. Target: when a request comes in,
+   the system either slots the requester into an existing upcoming plan that fits
+   (activity + availability + compatibility + capacity) or creates a new one and
+   invites others, so a single plan holds multiple real requesters who each
+   joined. Likely needs a `plan_members` join table with per-member state
+   (joined / left / declined), with `created_for_user_id` meaning "who this plan
+   was originated for" while membership holds all participants. **Gate:** liquidity
+   (§4 sim: ~20-25 active availability-overlapping users per cluster per city,
+   ~150+ active/city) before convergence works. Hold the build until acquisition
+   approaches that.
+2. **Real attendee-leave** — depends on (1). A participant leaving a *shared*
+   plan: safe `leave_plan` SECURITY DEFINER RPC removing only the caller from a
+   plan they're in, per-member membership state, and an attendee-facing plan view
+   (none exists today). Until (1) lands, "leave" = withdraw your own request =
+   the cancel/decline already shipped (§5).
+3. **Synthetic-users testing (§2)** — turn the now-active seed requesters into
+   agents that also accept/decline/refine, to exercise matching and generate
+   behavioral signal. Natural next initiative now that the pool is populated.
+4. **Spontaneous lane (timing urgency)** — factor in *how soon* someone wants to
+   meet (tomorrow vs. in two weeks), vs. today's friendship mode that matches on
+   general availability to the next fitting plan. Pairs with the dual-track
+   design (§4). Future.
+5. **Skippable activity-request / onboarding split** — let a user finish
+   personality onboarding but skip the activity request; they land on an empty
+   home and request their first plan when ready (today onboarding flows straight
+   into a generated plan).
+6. **Seed display-name polish (launch believability, low effort)** — some seed
+   users have auto-generated names (e.g. "Sojen30353") that read as fake; clean
+   them up so a matched group feels real to early users.
+
+### Still-deferred from earlier sections
+
+- **§1 WhatsApp anonymous-number relay** — reassurance copy shipped; the relay
+  + where-to-collect-numbers is unbuilt.
+- **§4 dual-track convergence build** (cohort + pairwise vibe + backfill) —
+  deferred behind the same liquidity gate as open item (1).
