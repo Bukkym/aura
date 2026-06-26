@@ -23,6 +23,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lib test guardrail
+        # Fails the build if a pure-logic /lib module has no unit test.
+        # Enforces .claude/rules/project-quality.md so an AI agent cannot ship
+        # untested matching, scoring, or template logic.
+        run: npm run check:lib-tests
+
       - name: Test
         run: npm run test
 

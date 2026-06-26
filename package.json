@@ -20,7 +20,8 @@
     "smoke:archetype": "tsx --env-file=.env.local scripts/smoke-archetype.ts",
     "sim:liquidity": "tsx --env-file=.env.local scripts/sim-liquidity.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "check:lib-tests": "tsx scripts/check-lib-tests.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.10.3",

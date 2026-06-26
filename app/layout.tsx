@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
+import FeedbackWidget from "@/components/FeedbackWidget";
 
 export const metadata: Metadata = {
   title: "Aura · Your people are out there",
@@ -38,6 +39,7 @@ export default function RootLayout({
       */}
       <body className="font-sans antialiased" suppressHydrationWarning>
         {children}
+        <FeedbackWidget />
       </body>
     </html>
   );

@@ -1,0 +1,198 @@
+{
+  "name": "Aura Feedback Classifier",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "aura-feedback",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "webhook-node",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [-160, 300],
+      "webhookId": "aura-feedback"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a support triage classifier for Aura, a social matching app where an AI named Ora builds plans that introduce people. Classify the user's message into exactly one category: bug_report, feature_request, match_feedback, question, praise, or other. match_feedback means the user is commenting on the quality of a match or plan Ora made. Reply with ONLY minified JSON and nothing else: {\"category\":\"<one of the six>\",\"reply\":\"<one short friendly sentence acknowledging them, no em dashes>\"}"
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.body.message }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "id": "openai-node",
+      "name": "AI Classify",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [80, 300],
+      "credentials": {
+        "openAiApi": {
+          "id": "REPLACE_WITH_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.content.category }}",
+                    "rightValue": "bug_report",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "bug_report"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.content.category }}",
+                    "rightValue": "feature_request",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "feature_request"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.content.category }}",
+                    "rightValue": "match_feedback",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "match_feedback"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.content.category }}",
+                    "rightValue": "praise",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "praise"
+            },
+            {
+              "conditions": {
+                "options": { "caseSensitive": true, "typeValidation": "loose" },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.message.content.category }}",
+                    "rightValue": "question",
+                    "operator": { "type": "string", "operation": "equals" }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "outputKey": "question"
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "id": "switch-node",
+      "name": "Route by Category",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [400, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "category",
+              "value": "={{ $json.message.content.category }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "reply",
+              "value": "={{ $json.message.content.reply }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "shape-node",
+      "name": "Shape Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [700, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"category\": $json.category, \"reply\": $json.reply } }}",
+        "options": {}
+      },
+      "id": "respond-node",
+      "name": "Respond to Widget",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [960, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [[{ "node": "AI Classify", "type": "main", "index": 0 }]]
+    },
+    "AI Classify": {
+      "main": [[{ "node": "Route by Category", "type": "main", "index": 0 }]]
+    },
+    "Route by Category": {
+      "main": [
+        [{ "node": "Shape Response", "type": "main", "index": 0 }],
+        [{ "node": "Shape Response", "type": "main", "index": 0 }],
+        [{ "node": "Shape Response", "type": "main", "index": 0 }],
+        [{ "node": "Shape Response", "type": "main", "index": 0 }],
+        [{ "node": "Shape Response", "type": "main", "index": 0 }],
+        [{ "node": "Shape Response", "type": "main", "index": 0 }]
+      ]
+    },
+    "Shape Response": {
+      "main": [[{ "node": "Respond to Widget", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": { "executionOrder": "v1" },
+  "pinData": {}
+}
