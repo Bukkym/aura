@@ -153,9 +153,22 @@ LLM orchestrates, it does not invent matches).
   "outdoorsy" -> hiking, knowledge Qs answer grounded with no tool, and
   "cancel my plan" confirms before withdrawing. Voice in Phase 3; live DB
   execution of the tools is pending a real signed-in session (auth-gated).
-- [ ] **Phase 3 — Voice pipeline.** Real `lib/transcribe.ts` + `/api/transcribe`
-  (Whisper), real `lib/extract.ts` (Claude -> chip taxonomy) + tests, runtime
-  embedding for real users (relax the guard on this path only).
+- [x] **Phase 3 — Voice pipeline.** DONE. Real `lib/transcribe.ts` (OpenAI
+  Whisper, `MODELS.whisper`) behind a thin, un-auth'd `app/api/transcribe/route.ts`
+  (multipart `audio`, validates type + 25MB cap, try/catch). Real `lib/extract.ts`
+  (Claude `generateText` -> JSON) whose deterministic half is the pure, unit-tested
+  `lib/extractNormalize.ts`: parses the reply (fence/prose tolerant), clamps every
+  tag to the closed taxonomy in 05-onboarding-spec §3 via `lib/canon.ts` (keyed by
+  canonical root so chip-plural forms like "dinner parties" survive), maps friendly
+  connection labels, collapses "anywhere" -> ["any"]. It deliberately does NOT
+  inject skip-defaults, so Phase 4's missing-field checker can see real gaps.
+  Runtime embedding for real users: `lib/embed.embedProfile` (same opt-in as
+  `embedQuery`, `text-embedding-3-small`), wired best-effort into
+  `/api/plan/create` (backfills `self_embedding`/`looking_for_embedding`, never
+  blocks plan creation). Tests 96 passing (+16); guardrail 11/11; tsc clean.
+  Smoke (`npm run smoke:extract`) verified real Claude extraction lands entirely
+  in-taxonomy. Pending live check: `/api/transcribe` against real audio (no
+  fixture yet) and the `/voice` UI wiring, which lands with Phase 4.
 - [ ] **Phase 4 — Onboarding agent.** `lib/onboarding/missing.ts` (tested),
   conversational extraction loop, `/api/onboarding/converse`, wire `/voice` ->
   loop -> prefilled chips -> create profile + embed.

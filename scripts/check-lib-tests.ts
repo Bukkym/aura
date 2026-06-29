@@ -22,8 +22,8 @@ const TESTS_DIR = join(LIB_DIR, "__tests__");
 const IO_EXEMPT = new Set<string>([
   "openai", // thin OpenAI client factory
   "embed", // OpenAI embeddings call
-  "transcribe", // OpenAI audio transcription call
-  "extract", // OpenAI extraction call
+  "transcribe", // OpenAI Whisper audio transcription call
+  "extract", // Claude extraction call; pure logic is in extractNormalize (tested)
   "findSimilar", // pgvector RPC wrapper
   "generatePlan", // orchestrates Supabase reads + the matcher
   "planResponse", // shapes a persisted plan row for the API

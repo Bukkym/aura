@@ -1,7 +1,13 @@
-// Stub for Whisper transcription. Real implementation posts the audio blob
-// to /api/transcribe, which calls OpenAI Whisper. For the scaffold we mock.
+import { getOpenAI, MODELS } from "./openai";
 
-export async function transcribe(_audio: Blob): Promise<string> {
-  await new Promise((r) => setTimeout(r, 800));
-  return "I just moved to Berlin from Lisbon. I'm working on a side project and like climbing on weekends. Looking for chill, ambitious people who actually do stuff.";
+// Real speech-to-text via OpenAI Whisper (MODELS.whisper). I/O wrapper, so it
+// lives outside the lib-test guardrail (exercised through /api/transcribe and
+// the smoke scripts). The route validates the upload before this is reached;
+// here we just send the audio and return the transcript text.
+export async function transcribe(audio: File): Promise<string> {
+  const res = await getOpenAI().audio.transcriptions.create({
+    file: audio,
+    model: MODELS.whisper,
+  });
+  return res.text.trim();
 }
