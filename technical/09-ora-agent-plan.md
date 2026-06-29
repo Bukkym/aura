@@ -159,9 +159,13 @@ LLM orchestrates, it does not invent matches).
 - [ ] **Phase 4 — Onboarding agent.** `lib/onboarding/missing.ts` (tested),
   conversational extraction loop, `/api/onboarding/converse`, wire `/voice` ->
   loop -> prefilled chips -> create profile + embed.
-- [ ] **Phase 5 — Ex deliverables.** `.claude/agents/` sub-agent (Ex 20 artifact),
-  all Miro board answers, screenshots of working chat + agent definition, tests
-  green, guardrail green.
+- [~] **Phase 5 — Ex deliverables.** MOSTLY DONE.
+  `.claude/agents/aura-context-mapper.md` (Ex 20 read-only sub-agent) created.
+  All Miro answers written: `exercise-screenshots/MIRO-ANSWERS-19-20-21.md`.
+  Working evidence saved: `exercise-screenshots/19-21-ora-agent-run.txt` (real
+  Claude + embedding runs) and `21-knowledge-tree.txt`. Remaining: PNG
+  screenshots for the Miro boards (capture from the evidence files / the
+  sub-agent file), and re-run once voice/onboarding (Phases 3-4) land.
 
 Resume rule: pick the first unchecked phase. Each phase ends with tests green
 (`npm run test`) and the lib-test guardrail green (`npm run check:lib-tests`).
