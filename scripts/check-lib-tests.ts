@@ -27,6 +27,7 @@ const IO_EXEMPT = new Set<string>([
   "findSimilar", // pgvector RPC wrapper
   "generatePlan", // orchestrates Supabase reads + the matcher
   "planResponse", // shapes a persisted plan row for the API
+  "aiProvider", // thin Anthropic client wrapper (Ora agent)
 ]);
 
 function libModules(): string[] {
