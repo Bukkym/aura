@@ -12,9 +12,19 @@ What got built for these three exercises:
 - `lib/aiProvider.ts` (Claude, provider-swappable), `lib/ragChunk.ts` +
   `lib/ragRetrieve.ts` (in-memory vector RAG), `knowledge/*.md` +
   `data/knowledge-embeddings.json`, `lib/oraTools.ts` + `lib/oraAgent.ts`
-  (the agent), `app/api/ora/chat/route.ts`, `components/AskOra.tsx` +
-  `app/ora/page.tsx`, and the read-only sub-agent above. 80 tests passing,
-  lib-test guardrail 10/10.
+  (the in-app agent), `app/api/ora/chat/route.ts`, `components/AskOra.tsx` +
+  `app/ora/page.tsx`, and the read-only sub-agent above.
+- Voice pipeline (Phase 3): real `lib/transcribe.ts` (Whisper) +
+  `app/api/transcribe`, real `lib/extract.ts` (Claude) with the pure, tested
+  `lib/extractNormalize.ts` clamping to the closed chip taxonomy, and runtime
+  user embedding (`lib/embed.embedProfile`) backfilled in `/api/plan/create`.
+- Onboarding voice agent (Phase 4): pure `lib/onboardingMissing.ts` +
+  DI orchestrator `lib/onboardingAgent.ts`, `app/api/onboarding/converse`, and
+  the `/voice` screen wired to record -> transcribe -> extract -> follow-up loop
+  -> prefilled chips.
+- 106 tests passing, lib-test guardrail 13/13, tsc clean. Smokes:
+  `smoke:ora`, `smoke:ora-agent`, `smoke:extract`, `smoke:onboarding` (see
+  [19-21-ora-agent-run.txt](19-21-ora-agent-run.txt)).
 
 ---
 
@@ -31,7 +41,9 @@ is Ora.
    how Aura works. Built: `components/AskOra.tsx`.
 2. **Onboarding** (voice or text). The user describes themselves and Ora
    extracts a structured profile, asking follow-ups until it can make a first
-   match. Designed in `technical/05-onboarding-spec.md`, build is Phase 4.
+   match. Built: `lib/onboardingAgent.ts` + `app/api/onboarding/converse`, wired
+   into the `/voice` screen (records -> transcribes -> extracts -> follow-up loop
+   -> prefilled chips). Spec: `technical/05-onboarding-spec.md`.
 3. **(Future) landing-page helper** answering "what is Aura" before sign-in.
    Lower impact, not built now.
 
@@ -52,8 +64,8 @@ Supporting tools: `request_new_plan`, `withdraw_current_plan`, `get_current_plan
 - **The user's own profile + plans** via the existing lib
   (`loadCurrentPlanContext`, `persistPlan`, `declinePlan`): scoped to the
   authenticated user only.
-- **OpenAI** for query embeddings (and Whisper transcription, Phase 3);
-  **Anthropic Claude** for generation.
+- **OpenAI** for query embeddings, runtime user embeddings, and Whisper
+  transcription; **Anthropic Claude** for generation and extraction.
 - **Must NOT** touch other users' rows, raw contact details, or write outside
   the signed-in user's data.
 

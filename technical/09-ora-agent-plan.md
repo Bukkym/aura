@@ -193,11 +193,13 @@ LLM orchestrates, it does not invent matches).
   preview server's network sandbox, proven working via the smoke).
 - [~] **Phase 5 — Ex deliverables.** MOSTLY DONE.
   `.claude/agents/aura-context-mapper.md` (Ex 20 read-only sub-agent) created.
-  All Miro answers written: `exercise-screenshots/MIRO-ANSWERS-19-20-21.md`.
-  Working evidence saved: `exercise-screenshots/19-21-ora-agent-run.txt` (real
-  Claude + embedding runs) and `21-knowledge-tree.txt`. Remaining: PNG
-  screenshots for the Miro boards (capture from the evidence files / the
-  sub-agent file), and re-run once voice/onboarding (Phases 3-4) land.
+  Miro answers updated for Phases 3-4: `exercise-screenshots/MIRO-ANSWERS-19-20-21.md`
+  (now 106 tests / 13/13 guardrail, onboarding + voice marked built). Evidence
+  refreshed: `exercise-screenshots/19-21-ora-agent-run.txt` re-run with all four
+  smokes (ora, ora-agent, extract, onboarding) on real Claude + embeddings.
+  Remaining (manual): save PNG screenshots into `exercise-screenshots/` and drag
+  them onto the Miro boards. The live `/voice` screen renders in the dev preview
+  (Ora ring + "tap to speak"); capture it plus the smoke-evidence text.
 
 Resume rule: pick the first unchecked phase. Each phase ends with tests green
 (`npm run test`) and the lib-test guardrail green (`npm run check:lib-tests`).
