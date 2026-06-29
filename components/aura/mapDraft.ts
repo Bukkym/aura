@@ -45,6 +45,42 @@ function budget(b: string[] | undefined): Budget {
   return v && (BUDGETS as string[]).includes(v) ? (v as Budget) : "any";
 }
 
+// Inverse of CONNECTION_MAP, for prefilling chips from an extracted draft.
+const CONNECTION_LABEL: Record<ConnectionType, string> = {
+  "activity-buddies": "people to do things with",
+  "close-friendships": "deep connections",
+  "social-circle": "a friend group",
+  "new-city-support": "help finding my footing here",
+};
+
+// Voice onboarding (Phase 4) produces a Draft from free speech; the chip flow is
+// the confirm/edit surface, so we seed its Selections from that Draft. This is
+// the rough inverse of mapSelectionsToDraft: we read the self side for the
+// shared groups (vibe v1, social s1, activities ac1) because those chips are
+// asked once and mirrored into lookingFor at submit. Values outside the chip
+// VOCAB simply won't render as a selected chip, but they stay in the selection
+// bag, so nothing the voice agent captured is lost on submit.
+export function draftToSelections(draft: Draft): Selections {
+  const { selfExtracted: s, lookingForExtracted: l } = draft;
+  const hoods = (s.neighborhoods ?? []).includes("any")
+    ? ["Anywhere in Berlin"]
+    : s.neighborhoods ?? [];
+
+  return {
+    p1: s.personality ?? [],
+    v1: s.vibeKeywords ?? [],
+    in1: s.interests ?? [],
+    ac1: s.activityTypes ?? [],
+    h1: hoods,
+    av1: s.availability ?? [],
+    b1: [s.budget ?? "any"],
+    c1: (l.connectionType ?? []).map((c) => CONNECTION_LABEL[c]).filter(Boolean),
+    p2: l.personality ?? [],
+    in2: l.interests ?? [],
+    s1: s.socialPreferences ?? [],
+  };
+}
+
 export function mapSelectionsToDraft(sel: Selections): Draft {
   const hoods = neighborhoods(sel.h1);
 

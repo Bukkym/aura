@@ -23,6 +23,7 @@
     "smoke:ora": "EMBED_ALLOW_RUNTIME=true tsx --env-file=.env.local scripts/smoke-ora.ts",
     "smoke:ora-agent": "tsx --env-file=.env.local scripts/smoke-ora-agent.ts",
     "smoke:extract": "tsx --env-file=.env.local scripts/smoke-extract.ts",
+    "smoke:onboarding": "tsx --env-file=.env.local scripts/smoke-onboarding.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "check:lib-tests": "tsx scripts/check-lib-tests.ts"

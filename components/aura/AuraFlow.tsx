@@ -24,8 +24,25 @@ export function AuraFlow() {
   let view: React.ReactNode = null;
   if (screen === "welcome") view = <ScWelcome onNext={() => go("entry")} />;
   else if (screen === "entry") view = <ScEntry onVoice={() => go("voice")} onChips={() => go("chips")} />;
-  else if (screen === "voice") view = <ScVoice onDone={() => go("followup")} onSkip={() => go("entry")} />;
-  else if (screen === "followup") view = <ScFollowup onDone={() => go("chips")} onSkip={() => go("chips")} />;
+  // /flow is a click-through prototype: advance on a real transcript or the
+  // no-mic fallback alike, so the demo never stalls.
+  else if (screen === "voice")
+    view = (
+      <ScVoice
+        onTranscript={async () => go("followup")}
+        onUnavailable={() => go("followup")}
+        onSkip={() => go("entry")}
+      />
+    );
+  else if (screen === "followup")
+    view = (
+      <ScFollowup
+        prompt="What kind of energy do you want from the people around you?"
+        onTranscript={async () => go("chips")}
+        onUnavailable={() => go("chips")}
+        onSkip={() => go("chips")}
+      />
+    );
   else if (screen === "chips")
     view = (
       <ScChips

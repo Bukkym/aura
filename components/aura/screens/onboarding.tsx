@@ -4,7 +4,7 @@
 // → 6-step chip capture. Everything lives on the cream surface; Ora "visits" only
 // as a localized bloom centered on the ring during processing, never a flip.
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Ring, Wordmark, OraBloom, mono } from "../primitives";
 import type { Selections } from "../mapDraft";
@@ -167,39 +167,97 @@ export function ScEntry({ onVoice, onChips }: { onVoice: () => void; onChips: ()
 }
 
 // ── Shared voice template (used by Voice + Follow-up) ──
+// Records real audio, posts it to /api/transcribe (Whisper), and hands the
+// transcript up via onTranscript; the parent runs the extraction loop and
+// navigates. If the mic is unavailable or anything fails, onUnavailable falls
+// the user through to the chip flow, keeping the honest "still learning to
+// listen" framing rather than hard-breaking.
 type VoiceState = "idle" | "recording" | "processing";
 
 function VoiceTemplate({
-  onDone,
+  onTranscript,
   onSkip,
+  onUnavailable,
   skipLabel,
   eyebrow,
   prompt,
   ringSize,
   idleHint,
   processingHint,
-  doneDelay,
 }: {
-  onDone: () => void;
+  onTranscript: (text: string) => Promise<void>;
   onSkip: () => void;
+  onUnavailable: () => void;
   skipLabel: string;
   eyebrow?: string;
   prompt: string;
   ringSize: number;
   idleHint: string;
   processingHint: string;
-  doneDelay: number;
 }) {
   const [state, setState] = useState<VoiceState>("idle");
-  useEffect(() => {
-    if (state === "processing") {
-      const t = setTimeout(onDone, doneDelay);
-      return () => clearTimeout(t);
+  const recorderRef = useRef<MediaRecorder | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+
+  const releaseMic = () => {
+    streamRef.current?.getTracks().forEach((t) => t.stop());
+    streamRef.current = null;
+  };
+  // Release the mic if the screen unmounts mid-recording.
+  useEffect(() => releaseMic, []);
+
+  const handleStop = async () => {
+    releaseMic();
+    const type = recorderRef.current?.mimeType || "audio/webm";
+    const blob = new Blob(chunksRef.current, { type });
+    try {
+      if (blob.size === 0) throw new Error("empty recording");
+      const form = new FormData();
+      form.append("audio", new File([blob], "audio.webm", { type }));
+      const res = await fetch("/api/transcribe", { method: "POST", body: form });
+      if (!res.ok) throw new Error("transcription failed");
+      const { text } = (await res.json()) as { text?: string };
+      if (!text || !text.trim()) throw new Error("empty transcript");
+      await onTranscript(text.trim());
+    } catch {
+      onUnavailable();
     }
-  }, [state, onDone, doneDelay]);
+  };
+
+  const startRecording = async () => {
+    const md = typeof navigator !== "undefined" ? navigator.mediaDevices : undefined;
+    if (!md?.getUserMedia || typeof MediaRecorder === "undefined") {
+      onUnavailable();
+      return;
+    }
+    try {
+      const stream = await md.getUserMedia({ audio: true });
+      streamRef.current = stream;
+      chunksRef.current = [];
+      const mr = new MediaRecorder(stream);
+      mr.ondataavailable = (e) => {
+        if (e.data.size > 0) chunksRef.current.push(e.data);
+      };
+      mr.onstop = handleStop;
+      recorderRef.current = mr;
+      mr.start();
+      setState("recording");
+    } catch {
+      releaseMic();
+      onUnavailable();
+    }
+  };
+
   const tap = () => {
-    if (state === "idle") setState("recording");
-    else if (state === "recording") setState("processing");
+    if (state === "idle") {
+      void startRecording();
+    } else if (state === "recording") {
+      setState("processing");
+      const mr = recorderRef.current;
+      if (mr && mr.state !== "inactive") mr.stop();
+      else onUnavailable();
+    }
   };
   return (
     <div
@@ -297,34 +355,53 @@ function VoiceTemplate({
 }
 
 // ── Screen 3 · Voice ──
-export function ScVoice({ onDone, onSkip }: { onDone: () => void; onSkip: () => void }) {
+export function ScVoice({
+  onTranscript,
+  onSkip,
+  onUnavailable,
+}: {
+  onTranscript: (text: string) => Promise<void>;
+  onSkip: () => void;
+  onUnavailable: () => void;
+}) {
   return (
     <VoiceTemplate
-      onDone={onDone}
+      onTranscript={onTranscript}
       onSkip={onSkip}
+      onUnavailable={onUnavailable}
       skipLabel="← back"
       prompt="Tell me about yourself, what you're into, and the kind of people you'd like to meet."
       ringSize={132}
       idleHint="tap to speak"
       processingHint="Reading your aura…"
-      doneDelay={2600}
     />
   );
 }
 
 // ── Screen 3.5 · Follow-up loop ──
-export function ScFollowup({ onDone, onSkip }: { onDone: () => void; onSkip: () => void }) {
+export function ScFollowup({
+  onTranscript,
+  onSkip,
+  onUnavailable,
+  prompt,
+}: {
+  onTranscript: (text: string) => Promise<void>;
+  onSkip: () => void;
+  onUnavailable: () => void;
+  /** The follow-up question Ora asked for this turn. */
+  prompt: string;
+}) {
   return (
     <VoiceTemplate
-      onDone={onDone}
+      onTranscript={onTranscript}
       onSkip={onSkip}
+      onUnavailable={onUnavailable}
       skipLabel="skip"
       eyebrow="One more thing."
-      prompt="What kind of energy do you want from the people around you?"
+      prompt={prompt}
       ringSize={120}
       idleHint="tap to answer"
       processingHint="Got it…"
-      doneDelay={2200}
     />
   );
 }
@@ -404,10 +481,25 @@ function StepChip({ on, children, onClick }: { on: boolean; children: ReactNode;
 }
 
 // ── Screen 4 · Chip flow (data-driven, 6 steps, empty start + min-gating) ──
-export function ScChips({ onDone, onBack }: { onDone: (sel: Selections) => void; onBack: () => void }) {
+export function ScChips({
+  onDone,
+  onBack,
+  initial,
+}: {
+  onDone: (sel: Selections) => void;
+  onBack: () => void;
+  /** Prefilled selections from the voice agent (Phase 4). Seeds the chips so the
+   *  flow becomes a confirm/edit surface; falls back to empty + budget defaults. */
+  initial?: Selections;
+}) {
   const initSel = () => {
     const s: Selections = {};
-    STEPS.forEach((st) => st.groups.forEach((g) => (s[g.key] = g.def ? [g.def] : [])));
+    STEPS.forEach((st) =>
+      st.groups.forEach((g) => {
+        const seeded = initial?.[g.key];
+        s[g.key] = seeded && seeded.length > 0 ? seeded : g.def ? [g.def] : [];
+      }),
+    );
     return s;
   };
   const [step, setStep] = useState(0);

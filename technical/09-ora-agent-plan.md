@@ -169,9 +169,28 @@ LLM orchestrates, it does not invent matches).
   Smoke (`npm run smoke:extract`) verified real Claude extraction lands entirely
   in-taxonomy. Pending live check: `/api/transcribe` against real audio (no
   fixture yet) and the `/voice` UI wiring, which lands with Phase 4.
-- [ ] **Phase 4 — Onboarding agent.** `lib/onboarding/missing.ts` (tested),
-  conversational extraction loop, `/api/onboarding/converse`, wire `/voice` ->
-  loop -> prefilled chips -> create profile + embed.
+- [x] **Phase 4 — Onboarding agent.** DONE. Pure, tested `lib/onboardingMissing.ts`
+  (which required chips are still below their minimum, aligned to the chip-flow
+  gate, not the prose spec, so the loop asks for exactly what the chips will
+  demand; mirrored lookingFor fields are not asked separately). DI orchestrator
+  `lib/onboardingAgent.ts` (`onboardingConverseTurn`: re-extract the whole
+  conversation, decide ask-one-more vs hand-off, capped at maxAsk follow-ups so
+  the prefilled chips are the safety net) with injected extract/ask fns, tested
+  with stubs. Thin `app/api/onboarding/converse/route.ts` (un-auth'd, validates
+  utterances, Claude phrases the follow-up with the canned question as fallback).
+  `/voice` wired: `VoiceTemplate` now records real audio (MediaRecorder) ->
+  `/api/transcribe` -> `onboardingConverseTurn`, looping through `ScFollowup`
+  until done, then `draftToSelections` prefills `ScChips` (the confirm/edit
+  surface). Every voice step degrades to the chip flow if mic/transcription/
+  converse fails. Profile + first plan + embedding reuse the existing
+  `aura:draft` -> `/api/plan/create` path (Phase 3 added the embedding there).
+  Tests 106 passing (+10 from onboardingMissing + onboardingAgent);
+  guardrail 13/13; tsc clean. Smoke
+  (`npm run smoke:onboarding`) verified: thin opening draws a follow-up, rich
+  description + one answer completes. Live preview verified the screens render
+  and the no-mic fallback drops cleanly into the chips; the converse route's
+  validation returns 400s correctly (the live Claude call is blocked only by the
+  preview server's network sandbox, proven working via the smoke).
 - [~] **Phase 5 — Ex deliverables.** MOSTLY DONE.
   `.claude/agents/aura-context-mapper.md` (Ex 20 read-only sub-agent) created.
   All Miro answers written: `exercise-screenshots/MIRO-ANSWERS-19-20-21.md`.
