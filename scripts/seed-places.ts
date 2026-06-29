@@ -1,6 +1,6 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { openai, MODELS } from "../lib/openai";
+import { getOpenAI, MODELS } from "../lib/openai";
 import { embedBatch } from "../lib/embed";
 import type { Place } from "../types";
 
@@ -46,7 +46,7 @@ interface RawPlace {
 
 async function main() {
   console.log("→ generating Berlin venues via LLM...");
-  const r = await openai.chat.completions.create({
+  const r = await getOpenAI().chat.completions.create({
     model: MODELS.chatLarge,
     response_format: { type: "json_object" },
     messages: [
