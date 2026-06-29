@@ -197,9 +197,9 @@ LLM orchestrates, it does not invent matches).
   (now 106 tests / 13/13 guardrail, onboarding + voice marked built). Evidence
   refreshed: `exercise-screenshots/19-21-ora-agent-run.txt` re-run with all four
   smokes (ora, ora-agent, extract, onboarding) on real Claude + embeddings.
-  Remaining (manual): save PNG screenshots into `exercise-screenshots/` and drag
-  them onto the Miro boards. The live `/voice` screen renders in the dev preview
-  (Ora ring + "tap to speak"); capture it plus the smoke-evidence text.
+  PNG screenshots captured: `19-21-onboarding-{entry,voice,chips}.png` via a
+  Playwright script (`npm run shot:onboarding`, points at a running dev server).
+  Remaining (manual): drag the PNGs + smoke-evidence text onto the Miro boards.
 
 Resume rule: pick the first unchecked phase. Each phase ends with tests green
 (`npm run test`) and the lib-test guardrail green (`npm run check:lib-tests`).
