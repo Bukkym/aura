@@ -41,6 +41,19 @@ export async function embed(text: string): Promise<number[]> {
   return r.data[0].embedding;
 }
 
+// Intentional runtime embedding for the Ora agent's RAG queries. The Module-3
+// guard above blocks ACCIDENTAL request-path embedding; this is the explicit,
+// reviewed opt-in for the one place we now embed live: the user's question, so
+// it can be cosine-matched against the prebuilt knowledge vectors. The knowledge
+// base itself is embedded at build time, never here.
+export async function embedQuery(text: string): Promise<number[]> {
+  const r = await openai.embeddings.create({
+    model: MODELS.embedding,
+    input: text,
+  });
+  return r.data[0].embedding;
+}
+
 export async function embedBatch(texts: string[]): Promise<number[][]> {
   assertEmbedAllowed();
   if (texts.length === 0) return [];

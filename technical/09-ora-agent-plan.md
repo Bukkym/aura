@@ -141,10 +141,18 @@ LLM orchestrates, it does not invent matches).
   (1536-dim, OpenAI). Tests: 71 passing. Smoke: grounded answers + correct
   out-of-scope fallback. Flat module layout keeps the lib-test guardrail
   covering them (now 8/8).
-- [ ] **Phase 2 — In-app agent.** `lib/ai/oraAgent.ts` + tools. Hero tool
-  `refine_plan` (natural language -> structured refinement -> `/api/plan/refine`);
-  supporting tools `request_new_plan`, `withdraw_current_plan`, `list_my_plans`.
-  `/api/ora/chat`, guardrails, minimal "Ask Ora" UI, tests. Text first, then voice.
+- [x] **Phase 2 — In-app agent.** DONE (text). `lib/oraTools.ts` (pure
+  `ORA_TOOLS` + `executeOraTool`): hero `refine_plan` (NL -> activity +
+  fresh_group, calls generatePlan/persistPlan), plus `request_new_plan`,
+  `withdraw_current_plan`, `get_current_plan` (all scoped to the auth'd user via
+  the existing lib). `lib/oraAgent.ts` runs the tool-calling loop with an
+  injected runner. Thin `app/api/ora/chat/route.ts` (auth + RAG grounding +
+  agent). UI `components/AskOra.tsx` + `app/ora/page.tsx`. `lib/embed.embedQuery`
+  is the explicit runtime-embedding opt-in for RAG queries. Tests 80 passing;
+  guardrail 10/10. Smoke (`npm run smoke:ora-agent`) verified: refinement maps
+  "outdoorsy" -> hiking, knowledge Qs answer grounded with no tool, and
+  "cancel my plan" confirms before withdrawing. Voice in Phase 3; live DB
+  execution of the tools is pending a real signed-in session (auth-gated).
 - [ ] **Phase 3 — Voice pipeline.** Real `lib/transcribe.ts` + `/api/transcribe`
   (Whisper), real `lib/extract.ts` (Claude -> chip taxonomy) + tests, runtime
   embedding for real users (relax the guard on this path only).
