@@ -1,6 +1,6 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { openai, MODELS } from "../lib/openai";
+import { getOpenAI, MODELS } from "../lib/openai";
 import { embedBatch, stringifyExtractedForEmbed } from "../lib/embed";
 import type {
   User,
@@ -212,7 +212,7 @@ async function generateBatch(
   archetype: ArchetypeSpec,
   count: number
 ): Promise<RawUser[]> {
-  const r = await openai.chat.completions.create({
+  const r = await getOpenAI().chat.completions.create({
     model: MODELS.chatLarge,
     response_format: { type: "json_object" },
     messages: [
