@@ -6,6 +6,7 @@ import { buildPlanResponse } from "@/lib/planResponse";
 import { assignArchetype, loadArchetypeProfiles } from "@/lib/archetype";
 import { userFromRow, deriveDisplayNameFromEmail } from "@/lib/userRow";
 import { embedProfile, stringifyExtractedForEmbed } from "@/lib/embed";
+import { narrateWhy } from "@/lib/whyNarrate";
 import type { LookingForExtracted, SelfExtracted, User } from "@/types";
 
 // Re-exported for existing importers (live-plan, live-shell, useLivePlan) that
@@ -174,6 +175,14 @@ export async function POST(request: NextRequest) {
   // --- Run the Plan pipeline --------------------------------------------
 
   const plan = await generatePlan(sb, requester);
+
+  // --- Narrate "why this plan" (Module 4 M4.2) --------------------------
+  //
+  // generatePlan already filled plan.whyThisPlan with the deterministic
+  // template. Best-effort, upgrade it to an LLM-narrated line on the same
+  // shared-signal payload; narrateWhy falls back to that template on any
+  // error or timeout, so this never blocks or breaks plan creation.
+  plan.whyThisPlan = await narrateWhy(plan, requester);
 
   // --- Persist the plan -------------------------------------------------
   //
