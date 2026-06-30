@@ -1,6 +1,7 @@
 import type { Plan, User } from "@/types";
 import { generateText } from "./aiProvider";
 import { topShared, firstName } from "./whyTemplates";
+import type { StretchAngle } from "./stretchPlan";
 
 // Module 4 M4.2: an LLM-narrated "why this plan" that warms up the deterministic
 // template. It runs on the SAME shared-signal payload lib/whyTemplates.ts uses,
@@ -47,16 +48,88 @@ export function buildWhyPrompt(plan: Plan, requester: User): string {
   return `Facts:\n${facts.join("\n")}\n\nRewrite the baseline as one warmer, more natural sentence, using only the facts above.`;
 }
 
-/** Clean an LLM line into card-ready copy, or return the fallback if unusable. */
-export function sanitizeNarration(raw: string | null | undefined, fallback: string): string {
+/**
+ * Clean an LLM line into card-ready copy, or return the fallback if unusable.
+ * maxLen guards against a rambling model; it varies by surface (the one-line
+ * "why" is tight, the multi-sentence stretch note gets more room).
+ */
+export function sanitizeNarration(
+  raw: string | null | undefined,
+  fallback: string,
+  maxLen = 320,
+): string {
   if (!raw) return fallback;
   let s = raw.trim();
   s = s.replace(/^["'“”]+|["'“”]+$/g, "").trim(); // strip wrapping quotes
   s = s.replace(/\s*[—–]\s*/g, ", "); // project rule: no em/en dashes
   s = s.replace(/\s+/g, " ").trim(); // collapse newlines/whitespace
   if (s.length === 0) return fallback;
-  if (s.length > 320) return fallback; // model rambled; trust the template
+  if (s.length > maxLen) return fallback; // model rambled; trust the template
   return s;
+}
+
+// ── Stretch narration (M4.5) ────────────────────────────────────────────────
+
+export const STRETCH_SYSTEM = `You are Ora, writing a short, warm note for Aura that offers someone a plan which gently stretches past their usual comfort zone in Berlin.
+
+Strict honesty rules:
+- Base this ONLY on what the person TOLD you (their stated preference, e.g. they like small groups). You have NOT watched their behavior; never claim you noticed, learned, or saw anything about how they act.
+- Frame it as a suggestion, not a fact: "Ora thinks", "might", "could". Never assert they will like it.
+- Two or three warm sentences. Acknowledge their stated preference, then offer the bigger plan and why it might fit, using only the facts given.
+- No quotes around the note. No em dashes. No lists.`;
+
+/** Build the stretch prompt from the angle + plan facts. Pure, testable. */
+export function buildStretchPrompt(
+  plan: Plan,
+  requester: User,
+  angle: StretchAngle,
+): string {
+  const sharedInterest = topShared(
+    [requester, ...plan.attendees],
+    (u) => u.selfExtracted.interests,
+  );
+  const facts = [
+    `Their stated preference: ${angle.reason}`,
+    `What this plan stretches: ${angle.usualLabel} -> ${angle.thisLabel}`,
+    `Activity: ${plan.activityType}`,
+    `Venue: ${plan.place.name}${plan.place.neighborhood ? ` in ${plan.place.neighborhood}` : ""}`,
+    `Seats at the table: ${angle.k + 1}`,
+    sharedInterest ? `A shared interest in the group: ${sharedInterest}` : "",
+    `Name to address: ${firstName(requester.displayName)}`,
+  ].filter(Boolean);
+
+  return `Facts:\n${facts.join("\n")}\n\nWrite the stretch note now, following the rules.`;
+}
+
+/**
+ * LLM-narrated stretch note, or the deterministic `fallback` on any error or
+ * timeout. Never throws. Mirrors narrateWhy's best-effort contract.
+ */
+export async function narrateStretch(
+  plan: Plan,
+  requester: User,
+  angle: StretchAngle,
+  fallback: string,
+  deps: NarrateDeps = {},
+): Promise<string> {
+  const generate = deps.generate ?? generateText;
+  const timeoutMs = deps.timeoutMs ?? 1500;
+  try {
+    const raw = await withTimeout(
+      generate({
+        system: STRETCH_SYSTEM,
+        messages: [{ role: "user", content: buildStretchPrompt(plan, requester, angle) }],
+        maxTokens: 220,
+        model: deps.model,
+      }),
+      timeoutMs,
+    );
+    // The stretch note is intentionally 2-3 sentences, so allow more room than
+    // the one-line "why" before deciding the model rambled.
+    return sanitizeNarration(raw, fallback, 500);
+  } catch {
+    return fallback;
+  }
 }
 
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {

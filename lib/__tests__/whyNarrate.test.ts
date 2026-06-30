@@ -1,5 +1,12 @@
 import { describe, it, expect, vi } from "vitest";
-import { buildWhyPrompt, sanitizeNarration, narrateWhy } from "../whyNarrate";
+import {
+  buildWhyPrompt,
+  sanitizeNarration,
+  narrateWhy,
+  buildStretchPrompt,
+  narrateStretch,
+} from "../whyNarrate";
+import type { StretchAngle } from "../stretchPlan";
 import type { Place, Plan, User } from "@/types";
 
 function user(id: string, name: string, interests: string[], vibe: string[]): User {
@@ -123,5 +130,48 @@ describe("narrateWhy()", () => {
     const generate = vi.fn(async () => "   ");
     const p = plan();
     expect(await narrateWhy(p, requester, { generate })).toBe(p.whyThisPlan);
+  });
+});
+
+const angle: StretchAngle = {
+  axis: "group-size",
+  k: 8,
+  activityOverride: "dinner parties",
+  usualLabel: "Small tables, just a few faces.",
+  thisLabel: "A bigger table, 9 seats.",
+  reason: "you told me you like it small",
+};
+
+describe("buildStretchPrompt()", () => {
+  it("includes the stated preference, the stretch, plan facts and seat count", () => {
+    const prompt = buildStretchPrompt(plan(), requester, angle);
+    expect(prompt).toContain("you told me you like it small");
+    expect(prompt).toContain("9"); // seats = k + 1
+    expect(prompt).toContain("boulder gym");
+    expect(prompt).toContain("Ostbloc");
+    expect(prompt).toContain("Maya");
+  });
+});
+
+describe("narrateStretch()", () => {
+  it("returns the sanitized narration on success", async () => {
+    const generate = vi.fn(async () => "You keep it small, so I hesitated. Ora thinks this bigger table could surprise you.");
+    const out = await narrateStretch(plan(), requester, angle, "FALLBACK", { generate });
+    expect(out).toContain("Ora thinks");
+    expect(generate).toHaveBeenCalledOnce();
+  });
+
+  it("returns the given fallback on error", async () => {
+    const generate = vi.fn(async () => {
+      throw new Error("down");
+    });
+    expect(await narrateStretch(plan(), requester, angle, "FALLBACK", { generate })).toBe("FALLBACK");
+  });
+
+  it("returns the given fallback on timeout", async () => {
+    const generate = vi.fn(() => new Promise<string>((r) => setTimeout(() => r("late"), 50)));
+    expect(
+      await narrateStretch(plan(), requester, angle, "FALLBACK", { generate, timeoutMs: 5 }),
+    ).toBe("FALLBACK");
   });
 });

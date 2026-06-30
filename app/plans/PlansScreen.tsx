@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PhoneFrame } from "@/components/aura/PhoneFrame";
 import { useLivePlan } from "@/components/aura/useLivePlan";
-import { LivePlansTab } from "@/components/aura/screens/live-shell";
+import { LivePlansTab, type LiveStretch } from "@/components/aura/screens/live-shell";
 import { FindingMoment, NoDraftState, ErrorState } from "@/components/aura/screens/states";
 import { SignOutButton } from "@/components/SignOutButton";
 import type { PlanSummary } from "@/types";
@@ -23,6 +23,7 @@ export function PlansScreen() {
   const planId = phase.kind === "ready" ? phase.plan.planId : null;
 
   const [history, setHistory] = useState<History | null>(null);
+  const [stretch, setStretch] = useState<LiveStretch | null>(null);
 
   useEffect(() => {
     // Wait until generation settles so a just-created plan is in the history.
@@ -32,8 +33,24 @@ export function PlansScreen() {
       try {
         const res = await fetch("/api/plans");
         const data = (await res.json()) as Partial<History>;
-        if (!cancelled) {
-          setHistory({ upcoming: data.upcoming ?? [], past: data.past ?? [] });
+        const upcoming = data.upcoming ?? [];
+        const past = data.past ?? [];
+        if (cancelled) return;
+        setHistory({ upcoming, past });
+
+        // Once the user has a plan, ask Ora for a stretch offer (M4.5). Returns
+        // { stretch: null } when the user's stated preferences don't warrant one.
+        if (upcoming.length + past.length > 0) {
+          const sres = await fetch("/api/plan/stretch", { method: "POST" });
+          if (!cancelled && sres.ok) {
+            const sdata = (await sres.json()) as {
+              plan?: LiveStretch["plan"] | null;
+              stretch?: { usualLabel: string; thisLabel: string } | null;
+            };
+            if (!cancelled && sdata.plan && sdata.stretch) {
+              setStretch({ plan: sdata.plan, usualLabel: sdata.stretch.usualLabel, thisLabel: sdata.stretch.thisLabel });
+            }
+          }
         }
       } catch {
         if (!cancelled) setHistory({ upcoming: [], past: [] });
@@ -53,12 +70,15 @@ export function PlansScreen() {
   else
     inner = (
       <LivePlansTab
-        upcoming={history.upcoming}
-        past={history.past}
+        // The stretch plan is persisted too, so keep it out of the normal list;
+        // it shows in its own teaser instead.
+        upcoming={history.upcoming.filter((s) => s.id !== stretch?.plan.planId)}
+        past={history.past.filter((s) => s.id !== stretch?.plan.planId)}
         onHome={() => router.push("/home")}
         onOpenPlan={() => router.push("/plan")}
         currentAttendees={history.upcoming[0]?.attendees ?? []}
         onRefined={() => router.push("/plan")}
+        stretch={stretch}
       />
     );
 

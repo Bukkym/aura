@@ -33,6 +33,9 @@ export interface PlaceLite {
 export interface PlanRefinement {
   activityType?: string;
   excludeUserIds?: string[];
+  /** Set when this row is an Ora-offered stretch plan (M4.5). Stored in the
+   *  refinement jsonb; no schema migration needed. */
+  stretch?: boolean;
 }
 
 // ----------------------------------------------------------------------------

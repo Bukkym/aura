@@ -230,6 +230,122 @@ export function LiveHome({
   );
 }
 
+// ── Stretch moment (M4.5) ────────────────────────────────────────────────────
+// Ora offers ONE plan that gently stretches the user's stated comfort zone (a
+// bigger, more communal table for a small-group person). Honest by design: the
+// copy is built from what the user TOLD Ora, framed as a suggestion. Rendered as
+// a distinct aurora-bordered teaser at the top of the Plans tab.
+
+export interface LiveStretch {
+  plan: PlanResponse;
+  usualLabel: string;
+  thisLabel: string;
+}
+
+function StretchTeaser({ stretch, onResolved }: { stretch: LiveStretch; onResolved?: () => void }) {
+  const [state, setState] = useState<"idle" | "busy" | "confirmed" | "dismissed">("idle");
+  const card = cardFromResponse(stretch.plan);
+
+  if (state === "dismissed") return null;
+
+  const act = async (path: string, next: "confirmed" | "dismissed") => {
+    setState("busy");
+    try {
+      const res = await fetch(path, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ planId: stretch.plan.planId }),
+      });
+      if (!res.ok) throw new Error("request failed");
+      setState(next);
+      onResolved?.();
+    } catch {
+      setState("idle"); // let them try again
+    }
+  };
+
+  return (
+    <div
+      style={{
+        position: "relative",
+        borderRadius: 22,
+        padding: 2,
+        marginBottom: 18,
+        background: "linear-gradient(120deg, #7752E6, #FF5C9C)",
+        boxShadow: "0 12px 34px rgba(120,50,170,0.22)",
+        animation: "flowFade 600ms ease both",
+      }}
+    >
+      <div style={{ borderRadius: 20, background: "var(--aura-bg)", padding: "18px 18px 16px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+          <Ring size={22} state="rest" />
+          <span style={{ fontFamily: mono, fontSize: 10.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--aura-violet)", fontWeight: 600 }}>
+            A nudge from Ora
+          </span>
+        </div>
+
+        {state === "confirmed" ? (
+          <p style={{ margin: "4px 0", fontSize: 14.5, color: "var(--aura-ink-90)", lineHeight: 1.5 }}>
+            You&apos;re in. It&apos;s waiting in your Plans.
+          </p>
+        ) : (
+          <>
+            <p style={{ margin: "0 0 14px", fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 16.5, lineHeight: 1.4, color: "var(--aura-ink)" }}>
+              {stretch.plan.whyThisPlan}
+            </p>
+
+            {/* usual -> this contrast */}
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14 }}>
+              <span style={{ flex: 1, fontSize: 12, color: "var(--aura-ink-55)", lineHeight: 1.35 }}>
+                <span className="aura-label" style={{ display: "block", marginBottom: 3 }}>Your usual</span>
+                {stretch.usualLabel}
+              </span>
+              <span style={{ color: "var(--aura-violet)", fontSize: 16 }}>→</span>
+              <span style={{ flex: 1, fontSize: 12, color: "var(--aura-ink-90)", lineHeight: 1.35, fontWeight: 500 }}>
+                <span className="aura-label" style={{ display: "block", marginBottom: 3, color: "var(--aura-violet)" }}>This one</span>
+                {stretch.thisLabel}
+              </span>
+            </div>
+
+            {/* compact plan facts */}
+            <div style={{ borderTop: "1px solid var(--aura-ink-10)", paddingTop: 12 }}>
+              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 16, letterSpacing: "0.01em", textTransform: "uppercase" }}>
+                {card.activityType}
+              </div>
+              <div style={{ fontSize: 13, color: "var(--aura-ink-55)", marginTop: 3 }}>
+                {card.place.name} · {card.place.neighborhood} · {shortWhen(card.dateTime)}
+              </div>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
+                <AttendeeStack plan={card} />
+                <span style={{ fontSize: 13, color: "var(--aura-violet)", fontWeight: 500 }}>{card.attendeeCount} people</span>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              <button
+                onClick={() => act("/api/plan/confirm", "confirmed")}
+                disabled={state === "busy"}
+                className="btn btn--aurora"
+                style={{ flex: 1, opacity: state === "busy" ? 0.6 : 1 }}
+              >
+                I&apos;m in
+              </button>
+              <button
+                onClick={() => act("/api/plan/decline", "dismissed")}
+                disabled={state === "busy"}
+                className="btn"
+                style={{ flex: "none", background: "transparent", color: "var(--aura-ink-55)", border: "1px solid var(--aura-ink-10)" }}
+              >
+                Not this one
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function SummaryCard({ summary, onOpen }: { summary: PlanSummary; onOpen?: () => void }) {
   const card = cardFromSummary(summary);
   return summary.status === "confirmed" ? (
@@ -251,6 +367,7 @@ export function LivePlansTab({
   onOpenPlan,
   currentAttendees = [],
   onRefined,
+  stretch,
 }: {
   upcoming: PlanSummary[];
   past: PlanSummary[];
@@ -258,6 +375,8 @@ export function LivePlansTab({
   onOpenPlan: () => void;
   currentAttendees?: { userId: string; displayName: string }[];
   onRefined?: (plan: PlanResponse) => void;
+  /** Ora's stretch offer (M4.5), shown as a teaser above the list. */
+  stretch?: LiveStretch | null;
 }) {
   const [ask, setAsk] = useState(false);
   const [refine, setRefine] = useState(false);
@@ -277,6 +396,8 @@ export function LivePlansTab({
       </div>
 
       <div style={{ position: "relative", flex: 1, overflowY: "auto", padding: "8px 22px 26px" }}>
+        {stretch && <StretchTeaser stretch={stretch} />}
+
         <div className="aura-label" style={{ marginBottom: 12 }}>
           Coming up
         </div>
