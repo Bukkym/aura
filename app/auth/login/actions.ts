@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { isUnknownUserOtpError } from "@/lib/auth/otpSignInError";
 
 // Server Action invoked by app/auth/login/page.tsx form submission. Asks
 // Supabase to send a magic link email; user clicks it, lands on
@@ -16,9 +17,15 @@ import { createClient } from "@/lib/supabase/server";
 export async function sendMagicLink(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const nextPath = String(formData.get("next") ?? "/");
+  // "signup" arrives only from the onboarding hand-off (the user has just
+  // filled in their draft). Everything else is a sign-in: an existing account
+  // is expected, so we do NOT let Supabase silently create a new one. That's
+  // what surfaces the "you're not signed up yet" message below.
+  const isSignup = String(formData.get("intent") ?? "") === "signup";
 
   if (!email) {
-    redirect("/auth/login?error=Please+enter+your+email");
+    const back = isSignup ? "&intent=signup" : "";
+    redirect(`/auth/login?error=Please+enter+your+email${back}`);
   }
 
   const hdrs = await headers();
@@ -31,6 +38,7 @@ export async function sendMagicLink(formData: FormData) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
     options: {
+      shouldCreateUser: isSignup,
       // Where Supabase sends the user after they click the email link.
       // We pass `next` along so the callback can redirect to the right
       // destination after exchanging the token.
@@ -39,7 +47,15 @@ export async function sendMagicLink(formData: FormData) {
   });
 
   if (error) {
-    redirect(`/auth/login?error=${encodeURIComponent(error.message)}`);
+    // On the sign-in path, an unknown email means the person never onboarded.
+    // Send them back with a dedicated flag so the page can point them at Begin
+    // instead of showing a raw Supabase error.
+    if (!isSignup && isUnknownUserOtpError(error)) {
+      const qs = new URLSearchParams({ email, next: nextPath, notfound: "1" });
+      redirect(`/auth/login?${qs.toString()}`);
+    }
+    const back = isSignup ? "&intent=signup" : "";
+    redirect(`/auth/login?error=${encodeURIComponent(error.message)}${back}`);
   }
 
   const qs = new URLSearchParams({ email, next: nextPath });

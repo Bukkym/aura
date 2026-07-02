@@ -54,6 +54,20 @@ export async function embedQuery(text: string): Promise<number[]> {
   return r.data[0].embedding;
 }
 
+// Intentional runtime embedding of a REAL user's profile at onboarding /
+// plan-create time. Same explicit, reviewed opt-in past the Module-3 guard as
+// embedQuery: a chip-onboarded user gets NULL embeddings, so this lazily
+// computes their self/lookingFor vectors with the SAME model as the seed pool
+// (MODELS.embedding), landing them in the same vector sub-region. Best-effort
+// at the call site: a failure must not block plan creation.
+export async function embedProfile(text: string): Promise<number[]> {
+  const r = await getOpenAI().embeddings.create({
+    model: MODELS.embedding,
+    input: text,
+  });
+  return r.data[0].embedding;
+}
+
 export async function embedBatch(texts: string[]): Promise<number[][]> {
   assertEmbedAllowed();
   if (texts.length === 0) return [];

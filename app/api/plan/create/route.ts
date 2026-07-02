@@ -5,6 +5,8 @@ import { persistPlan } from "@/lib/plans";
 import { buildPlanResponse } from "@/lib/planResponse";
 import { assignArchetype, loadArchetypeProfiles } from "@/lib/archetype";
 import { userFromRow, deriveDisplayNameFromEmail } from "@/lib/userRow";
+import { embedProfile, stringifyExtractedForEmbed } from "@/lib/embed";
+import { narrateWhy } from "@/lib/whyNarrate";
 import type { LookingForExtracted, SelfExtracted, User } from "@/types";
 
 // Re-exported for existing importers (live-plan, live-shell, useLivePlan) that
@@ -146,9 +148,41 @@ export async function POST(request: NextRequest) {
 
   const requester: User = userFromRow(requesterRow);
 
+  // --- Backfill real embeddings (Module 4) ------------------------------
+  //
+  // Chip-onboarded users were written with NULL embeddings (Module 3 was
+  // AI-free). Now we embed their profile with the SAME model as the seed pool
+  // (lib/embed.embedProfile -> text-embedding-3-small) so they land in the same
+  // vector space. Best-effort: deterministic structured matching is still the
+  // source of truth, so a failure here must not block plan creation. Runs on
+  // refine too, since the chip arrays change.
+  try {
+    const [selfEmbedding, lookingForEmbedding] = await Promise.all([
+      embedProfile(stringifyExtractedForEmbed(body.selfExtracted)),
+      embedProfile(stringifyExtractedForEmbed(body.lookingForExtracted)),
+    ]);
+    await sb
+      .from("users")
+      .update({
+        self_embedding: selfEmbedding,
+        looking_for_embedding: lookingForEmbedding,
+      })
+      .eq("id", requesterRow.id);
+  } catch {
+    // keep NULL embeddings; matching does not depend on them in Module 4
+  }
+
   // --- Run the Plan pipeline --------------------------------------------
 
   const plan = await generatePlan(sb, requester);
+
+  // --- Narrate "why this plan" (Module 4 M4.2) --------------------------
+  //
+  // generatePlan already filled plan.whyThisPlan with the deterministic
+  // template. Best-effort, upgrade it to an LLM-narrated line on the same
+  // shared-signal payload; narrateWhy falls back to that template on any
+  // error or timeout, so this never blocks or breaks plan creation.
+  plan.whyThisPlan = await narrateWhy(plan, requester);
 
   // --- Persist the plan -------------------------------------------------
   //

@@ -10,11 +10,19 @@ import { LoginErrorMessage } from "./LoginErrorMessage";
 // stay fully server-rendered and skip useActionState ceremony.
 
 interface PageProps {
-  searchParams: Promise<{ error?: string; next?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    next?: string;
+    intent?: string;
+    notfound?: string;
+    email?: string;
+  }>;
 }
 
 export default async function LoginPage({ searchParams }: PageProps) {
-  const { error, next } = await searchParams;
+  const { error, next, intent, notfound, email } = await searchParams;
+  const isSignup = intent === "signup";
+  const notSignedUp = notfound === "1";
 
   // If already signed in, send the user wherever they were headed (or home).
   const supabase = await createClient();
@@ -47,35 +55,64 @@ export default async function LoginPage({ searchParams }: PageProps) {
         <AuroraRing size={96} state="idle" />
 
         <h1 className="font-display mt-10 text-3xl font-medium tracking-tight text-aura-ink sm:text-4xl">
-          Welcome to Aura
+          {isSignup ? "Confirm your email" : "Welcome back"}
         </h1>
         <p className="mt-3 max-w-sm text-sm text-aura-ink/60">
-          Enter your email. We&apos;ll send you a link to sign in.
+          {isSignup
+            ? "Enter your email. We'll send you a link and a code to finish setting up."
+            : "Enter your email. We'll send you a link and a code to sign in."}
         </p>
 
-        <form
-          action={sendMagicLink}
-          className="mt-10 flex w-full max-w-sm flex-col gap-3"
-        >
-          <input type="hidden" name="next" value={next ?? "/"} />
-          <input
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            placeholder="you@somewhere.com"
-            aria-label="Email address"
-            className="h-12 rounded-full border border-aura-ink/15 bg-aura-bg/60 px-5 text-base text-aura-ink placeholder-aura-ink/35 transition focus:border-aura-violet/60 focus:outline-none focus:ring-2 focus:ring-aura-violet/30"
-          />
-          <button
-            type="submit"
-            className="inline-flex h-12 items-center justify-center rounded-full bg-aura-violet px-8 text-base font-medium text-aura-bg transition hover:bg-ora-violet active:scale-[0.98]"
+        {notSignedUp ? (
+          <div className="mt-10 flex w-full max-w-sm flex-col items-center gap-3 rounded-3xl border border-aura-ink/10 bg-aura-bg/40 px-6 py-7 text-center">
+            <p className="text-sm text-aura-ink/70" role="alert">
+              We couldn&apos;t find an account for{" "}
+              {email ? (
+                <span className="text-aura-ink/90">{email}</span>
+              ) : (
+                "that email"
+              )}
+              . Let&apos;s get you set up first.
+            </p>
+            <Link
+              href="/"
+              className="mt-1 inline-flex h-12 items-center justify-center rounded-full bg-aura-violet px-8 text-base font-medium text-aura-bg transition hover:bg-ora-violet active:scale-[0.98]"
+            >
+              Begin
+            </Link>
+            <Link
+              href="/auth/login"
+              className="text-sm text-aura-ink/50 transition hover:text-aura-ink"
+            >
+              Try a different email
+            </Link>
+          </div>
+        ) : (
+          <form
+            action={sendMagicLink}
+            className="mt-10 flex w-full max-w-sm flex-col gap-3"
           >
-            Send me a link
-          </button>
-          <LoginErrorMessage initialError={error} />
-
-        </form>
+            <input type="hidden" name="next" value={next ?? "/"} />
+            {isSignup ? <input type="hidden" name="intent" value="signup" /> : null}
+            <input
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              defaultValue={email ?? ""}
+              placeholder="you@somewhere.com"
+              aria-label="Email address"
+              className="h-12 rounded-full border border-aura-ink/15 bg-aura-bg/60 px-5 text-base text-aura-ink placeholder-aura-ink/35 transition focus:border-aura-violet/60 focus:outline-none focus:ring-2 focus:ring-aura-violet/30"
+            />
+            <button
+              type="submit"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-aura-violet px-8 text-base font-medium text-aura-bg transition hover:bg-ora-violet active:scale-[0.98]"
+            >
+              {isSignup ? "Send my code" : "Send me a link"}
+            </button>
+            <LoginErrorMessage initialError={error} />
+          </form>
+        )}
       </div>
 
       <span className="pointer-events-none absolute bottom-6 right-6 text-xs text-aura-ink/40">

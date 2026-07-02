@@ -11,7 +11,9 @@ import { canonAll } from "./canon";
 // falls back to these templates on error or timeout.
 
 // Most common canonical tag across a set of members for a given field.
-function topShared(
+// Exported so lib/whyNarrate.ts (Module 4 M4.2) builds its LLM prompt from the
+// same shared-signal payload this module slots into templates.
+export function topShared(
   members: User[],
   pick: (u: User) => string[] | undefined,
 ): string | null {
@@ -32,7 +34,7 @@ function topShared(
   return best;
 }
 
-function firstName(displayName: string): string {
+export function firstName(displayName: string): string {
   return displayName.split(/\s+/)[0] ?? displayName;
 }
 

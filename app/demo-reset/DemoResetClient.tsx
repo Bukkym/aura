@@ -13,6 +13,9 @@ export function DemoResetClient({ error }: { error?: string }) {
   useEffect(() => {
     if (error) return;
     try {
+      // The draft moved to localStorage (survives the magic-link new tab);
+      // the sessionStorage remove covers drafts written before that change.
+      localStorage.removeItem("aura:draft");
       sessionStorage.removeItem("aura:draft");
       sessionStorage.removeItem("aura:plan");
       sessionStorage.removeItem("aura:planStatus");

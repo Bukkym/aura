@@ -1,34 +1,117 @@
-# Ex 19 / 21 — Ora agent, real run transcripts
-# Generated from the project's smoke tests against live Claude + OpenAI embeddings.
+================ ORA AGENT BUILD — SMOKE EVIDENCE (Phases 1-4) ================
+Branch: ora-agent   Date: 2026-06-29   Model: claude-opus-4-8 + text-embedding-3-small
 
-## A. RAG chatbot (npm run smoke:ora) — knowledge base + retrieval + grounding
+######## npm run test (unit) ########
+ Test Files  13 passed (13)
+      Tests  106 passed (106)
+lib test guardrail: 13/13 pure-logic modules covered (8 I/O modules exempt).
+
+######## smoke:ora (Phase 1 RAG: grounded answer + out-of-scope fallback) ########
 Loaded 23 knowledge chunks. Model: claude-opus-4-8.
-
 Q: How does Aura decide who to match me with?
    retrieved: about-aura#What makes Aura different (0.70), how-matching-works#Deterministic, explainable matching (0.65), about-aura#What Aura is (0.63), about-aura#Who Ora is (0.59)
-A: Aura's matching is deterministic, not a black box. Ora compares your structured preferences against other people in your city using a weighted overlap score, which means every match can be explained in plain language. That same score feeds the "why this plan" reason you see on each plan card.
-
+A: Aura's matching is deterministic, not a black box. Ora compares your structured preferences against other people in your city using a weighted overlap score, which is interpretable and explainable in plain language. That score is what feeds the "why this plan" copy you see on a plan card.
 Q: Can I change a plan if I do not like it?
    retrieved: plans#Requesting and withdrawing (0.54), privacy-and-safety#You stay in control (0.51), plans#Plan states (0.42), getting-started#After your first plan (0.41)
-A: Yes, once you have a plan you can ask Ora for changes, or you can decline it and request another. You stay in control, so you can refine what Ora captured or withdraw from a plan you can no longer make.
-
+A: Yes, once you have a plan you can ask Ora for changes, request another one, or decline it if it is not right for you. You stay in control and can also refine or correct what Ora captured.
 Q: Will other people see my phone number?
    retrieved: privacy-and-safety#Numbers stay private (0.51), plans#Privacy in a plan (0.46), privacy-and-safety#Your data (0.41), privacy-and-safety#How AI uses your input (0.31)
-A: No, your phone number stays private. Aura introduces you to your group through the app itself, so you meet people without handing over your contact details up front. In fact, Aura does not even ask for a phone number to create your profile.
-
+A: No, your phone number stays private. Aura introduces you through the app itself, so you meet your group through the plan without handing over your contact details. In fact, Aura does not even ask for a phone number to create your profile.
 Q: What is the capital of France?
    retrieved: 
-A: I'm not sure about that, since it's outside what I can help with here. What I can do is help you connect with a small group and find a place to meet up in your city. Want me to help with that?
+A: I'm not sure about that, as it falls outside what I can help with here. I'm here to assist with questions about Aura, like getting introduced to a small group or finding a place to meet in your city. Let me know if there's anything along those lines I can help with!
 
-## B. In-app agent with tools (npm run smoke:ora-agent) — refinement + grounding + confirm-before-destructive
+######## smoke:ora-agent (Phase 2: refine / knowledge / confirm-before-withdraw) ########
 USER: Can you make my plan more outdoorsy?
 TOOLS: get_current_plan, refine_plan
-ORA: Done! I've swapped your boulder gym session for a hiking plan at a fitting outdoor spot. Want me to keep the same crowd or find different people?
-
+ORA: Done! Your plan is now a hike instead. Want me to keep the same crowd or find different people?
 USER: How does Aura decide who to match me with?
 TOOLS: (none)
-ORA: Aura uses deterministic, explainable matching: it compares your structured preferences against other people in your city using a weighted overlap score. That means every match can be explained in plain language, which is why each plan card shows a "why this plan" reason. Over time, Ora also learns from what you actually do, not just what you said.
-
+ORA: Aura uses deterministic matching, not a black box. Ora compares your structured preferences against other people in your city using a weighted overlap score, so every match can be explained in plain language. That score is what powers the "why this plan" note you see on each plan card.
 USER: Actually cancel my plan
-TOOLS: get_current_plan
-ORA: You're set for a boulder gym session at Ostbloc in Friedrichshain with Anton and Nour. Just to confirm, do you want me to withdraw you from this plan? That frees up your seat.
+TOOLS: (none)
+ORA: I can do that. Just to be sure, you want me to withdraw you from your current plan and free up your seat?
+
+######## smoke:extract (Phase 3: Whisper-style transcript -> Claude -> closed chip taxonomy) ########
+TRANSCRIPT:
+I just moved to Berlin from Lisbon and I'm working on a startup. I'm pretty ambitious but chill, and I love climbing and techno on weekends. I'm looking for a small group of curious, creative people to actually do things with, ideally around Kreuzberg, on weekend evenings. Budget-wise I'm easy.
+SELF: {
+  "personality": [
+    "ambitious",
+    "chill"
+  ],
+  "interests": [
+    "startups",
+    "climbing",
+    "techno"
+  ],
+  "activityTypes": [
+    "boulder gym",
+    "techno clubs"
+  ],
+  "socialPreferences": [],
+  "lifeContext": [
+    "new to berlin from lisbon",
+    "working on a startup"
+  ],
+  "vibeKeywords": [],
+  "availability": [
+    "weekend evenings"
+  ],
+  "neighborhoods": [
+    "Kreuzberg"
+  ],
+  "budget": "any"
+}
+LOOKING FOR: {
+  "personality": [
+    "curious",
+    "creative"
+  ],
+  "interests": [],
+  "socialPreferences": [
+    "small-group"
+  ],
+  "vibeKeywords": [],
+  "connectionType": [
+    "activity-buddies"
+  ],
+  "activityTypes": [],
+  "neighborhoods": [
+    "Kreuzberg"
+  ]
+}
+PASS: every tag is within the closed taxonomy.
+
+######## smoke:onboarding (Phase 4: extract -> missing-field follow-up loop) ########
+=== thin opening (expect follow-up) ===
+UTTERANCES: [ "Hey, I just moved to Berlin and I don't really know anyone yet." ]
+DONE: false
+MISSING: [
+  'self.personality',
+  'self.vibeKeywords',
+  'self.interests',
+  'self.activityTypes',
+  'self.neighborhoods',
+  'self.availability',
+  'self.socialPreferences',
+  'lookingFor.personality',
+  'lookingFor.interests'
+]
+ORA: Welcome to Berlin! How would you describe yourself in a few words, and what kind of vibe are you hoping to find here?
+=== rich description (expect a small gap) ===
+UTTERANCES: [
+  "I'm a chill but ambitious person, pretty curious and creative. I'm into startups, techno and climbing, and on weekends I love the boulder gym and lake days around Kreuzberg. Weekend evenings are best for me. I'm looking for a small group of curious, open-minded people to do things with and share startups and music."
+]
+DONE: false
+MISSING: [ 'self.vibeKeywords', 'self.socialPreferences' ]
+ORA: Love that mix of climbing and techno! Do you lean more toward laid-back coffee-and-deep-chats hangs or higher-energy adventures and nights out when you meet up with new people?
+=== after answering the follow-up (expect complete) ===
+UTTERANCES: [
+  "I'm a chill but ambitious person, pretty curious and creative. I'm into startups, techno and climbing, and on weekends I love the boulder gym and lake days around Kreuzberg. Weekend evenings are best for me. I'm looking for a small group of curious, open-minded people to do things with and share startups and music.",
+  'My vibe is laid-back and creative, and I like small-group, low-pressure hangs.'
+]
+DONE: true
+MISSING: []
+ORA: Got it. I've put together a starting picture of you, have a quick look and tweak anything that's off.
+PASS: thin opening asked a follow-up; rich+answer completed the profile.

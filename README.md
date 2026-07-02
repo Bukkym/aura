@@ -52,7 +52,7 @@ Sign-out: the `/plan` screen shows a "Sign out" control (top-right) that POSTs t
 ### Operator steps (Supabase Dashboard)
 
 - **Authentication → URL Configuration → Redirect URLs**: add `http://localhost:3000/auth/callback` (dev) and the production callback URL.
-- **Authentication → Email Templates → Magic Link**: the template body must include `{{ .Token }}` so the 6-digit code appears in the email. The default template only renders the link.
+- **Authentication → Email Templates → Magic Link** AND **Confirm signup**: both template bodies must include `{{ .Token }}` so the code appears in the email. Returning sign-ins use the Magic Link template; a brand-new account's first email uses Confirm signup. The default templates only render the link, so if only Magic Link is patched, new signups get a link with no code.
 - **Free tier** rate-limits sign-in emails (a few per hour per address). Pre-test the demo account well before a live demo, or wire custom SMTP (Resend) per Slice 6.
 
 ### Manual auth smoke (demo dry-run)

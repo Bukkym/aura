@@ -153,19 +153,53 @@ LLM orchestrates, it does not invent matches).
   "outdoorsy" -> hiking, knowledge Qs answer grounded with no tool, and
   "cancel my plan" confirms before withdrawing. Voice in Phase 3; live DB
   execution of the tools is pending a real signed-in session (auth-gated).
-- [ ] **Phase 3 — Voice pipeline.** Real `lib/transcribe.ts` + `/api/transcribe`
-  (Whisper), real `lib/extract.ts` (Claude -> chip taxonomy) + tests, runtime
-  embedding for real users (relax the guard on this path only).
-- [ ] **Phase 4 — Onboarding agent.** `lib/onboarding/missing.ts` (tested),
-  conversational extraction loop, `/api/onboarding/converse`, wire `/voice` ->
-  loop -> prefilled chips -> create profile + embed.
+- [x] **Phase 3 — Voice pipeline.** DONE. Real `lib/transcribe.ts` (OpenAI
+  Whisper, `MODELS.whisper`) behind a thin, un-auth'd `app/api/transcribe/route.ts`
+  (multipart `audio`, validates type + 25MB cap, try/catch). Real `lib/extract.ts`
+  (Claude `generateText` -> JSON) whose deterministic half is the pure, unit-tested
+  `lib/extractNormalize.ts`: parses the reply (fence/prose tolerant), clamps every
+  tag to the closed taxonomy in 05-onboarding-spec §3 via `lib/canon.ts` (keyed by
+  canonical root so chip-plural forms like "dinner parties" survive), maps friendly
+  connection labels, collapses "anywhere" -> ["any"]. It deliberately does NOT
+  inject skip-defaults, so Phase 4's missing-field checker can see real gaps.
+  Runtime embedding for real users: `lib/embed.embedProfile` (same opt-in as
+  `embedQuery`, `text-embedding-3-small`), wired best-effort into
+  `/api/plan/create` (backfills `self_embedding`/`looking_for_embedding`, never
+  blocks plan creation). Tests 96 passing (+16); guardrail 11/11; tsc clean.
+  Smoke (`npm run smoke:extract`) verified real Claude extraction lands entirely
+  in-taxonomy. Pending live check: `/api/transcribe` against real audio (no
+  fixture yet) and the `/voice` UI wiring, which lands with Phase 4.
+- [x] **Phase 4 — Onboarding agent.** DONE. Pure, tested `lib/onboardingMissing.ts`
+  (which required chips are still below their minimum, aligned to the chip-flow
+  gate, not the prose spec, so the loop asks for exactly what the chips will
+  demand; mirrored lookingFor fields are not asked separately). DI orchestrator
+  `lib/onboardingAgent.ts` (`onboardingConverseTurn`: re-extract the whole
+  conversation, decide ask-one-more vs hand-off, capped at maxAsk follow-ups so
+  the prefilled chips are the safety net) with injected extract/ask fns, tested
+  with stubs. Thin `app/api/onboarding/converse/route.ts` (un-auth'd, validates
+  utterances, Claude phrases the follow-up with the canned question as fallback).
+  `/voice` wired: `VoiceTemplate` now records real audio (MediaRecorder) ->
+  `/api/transcribe` -> `onboardingConverseTurn`, looping through `ScFollowup`
+  until done, then `draftToSelections` prefills `ScChips` (the confirm/edit
+  surface). Every voice step degrades to the chip flow if mic/transcription/
+  converse fails. Profile + first plan + embedding reuse the existing
+  `aura:draft` -> `/api/plan/create` path (Phase 3 added the embedding there).
+  Tests 106 passing (+10 from onboardingMissing + onboardingAgent);
+  guardrail 13/13; tsc clean. Smoke
+  (`npm run smoke:onboarding`) verified: thin opening draws a follow-up, rich
+  description + one answer completes. Live preview verified the screens render
+  and the no-mic fallback drops cleanly into the chips; the converse route's
+  validation returns 400s correctly (the live Claude call is blocked only by the
+  preview server's network sandbox, proven working via the smoke).
 - [~] **Phase 5 — Ex deliverables.** MOSTLY DONE.
   `.claude/agents/aura-context-mapper.md` (Ex 20 read-only sub-agent) created.
-  All Miro answers written: `exercise-screenshots/MIRO-ANSWERS-19-20-21.md`.
-  Working evidence saved: `exercise-screenshots/19-21-ora-agent-run.txt` (real
-  Claude + embedding runs) and `21-knowledge-tree.txt`. Remaining: PNG
-  screenshots for the Miro boards (capture from the evidence files / the
-  sub-agent file), and re-run once voice/onboarding (Phases 3-4) land.
+  Miro answers updated for Phases 3-4: `exercise-screenshots/MIRO-ANSWERS-19-20-21.md`
+  (now 106 tests / 13/13 guardrail, onboarding + voice marked built). Evidence
+  refreshed: `exercise-screenshots/19-21-ora-agent-run.txt` re-run with all four
+  smokes (ora, ora-agent, extract, onboarding) on real Claude + embeddings.
+  PNG screenshots captured: `19-21-onboarding-{entry,voice,chips}.png` via a
+  Playwright script (`npm run shot:onboarding`, points at a running dev server).
+  Remaining (manual): drag the PNGs + smoke-evidence text onto the Miro boards.
 
 Resume rule: pick the first unchecked phase. Each phase ends with tests green
 (`npm run test`) and the lib-test guardrail green (`npm run check:lib-tests`).

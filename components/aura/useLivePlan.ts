@@ -168,10 +168,26 @@ export function useLivePlan(generate: boolean = true): { phase: PlanPhase; statu
 
     function readDraft(): Draft | null {
       try {
-        const raw = sessionStorage.getItem(DRAFT_KEY);
+        // The draft lives in localStorage so it survives the magic-link bounce
+        // opening a new tab. The sessionStorage read is a fallback for drafts
+        // written before that change.
+        const raw =
+          localStorage.getItem(DRAFT_KEY) ?? sessionStorage.getItem(DRAFT_KEY);
         return raw ? (JSON.parse(raw) as Draft) : null;
       } catch {
         return null;
+      }
+    }
+
+    // Once the first plan exists in the DB the draft has served its purpose.
+    // Clearing it keeps a later signed-out user on this browser from generating
+    // a first plan off someone else's answers.
+    function clearDraft(): void {
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+        sessionStorage.removeItem(DRAFT_KEY);
+      } catch {
+        // ignore
       }
     }
 
@@ -195,6 +211,7 @@ export function useLivePlan(generate: boolean = true): { phase: PlanPhase; statu
           const { plan } = (await res.json()) as { plan: PlanResponse };
           if (cancelled) return;
           cachePlan(plan, "ready");
+          clearDraft();
           const remaining = Math.max(0, FORMING_MIN_MS - (Date.now() - startedAt));
           revealTimer = setTimeout(() => {
             if (cancelled) return;

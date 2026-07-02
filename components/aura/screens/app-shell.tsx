@@ -54,8 +54,15 @@ const ASK_SUGGESTIONS = ["Something this weekend", "Move my Plan", "A quieter gr
 
 export function OraAsk({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [sent, setSent] = useState<string | null>(null);
+  // Voice is the primary way to talk to Ora; text is the secondary fallback.
+  const [mode, setMode] = useState<"voice" | "text">("voice");
+  const [listening, setListening] = useState(false);
   useEffect(() => {
-    if (!open) setSent(null);
+    if (!open) {
+      setSent(null);
+      setMode("voice");
+      setListening(false);
+    }
   }, [open]);
   return (
     <div style={{ position: "absolute", inset: 0, zIndex: 60, pointerEvents: open ? "auto" : "none" }}>
@@ -95,22 +102,64 @@ export function OraAsk({ open, onClose }: { open: boolean; onClose: () => void }
               On it. I&apos;ll look into <span style={{ color: "var(--aura-violet)", fontStyle: "italic" }}>&quot;{sent.toLowerCase()}&quot;</span> and send something over shortly.
             </p>
           </div>
-        ) : (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 9, marginBottom: 16 }}>
-            {ASK_SUGGESTIONS.map((s) => (
-              <button key={s} onClick={() => setSent(s)} className="chip chip--outline" style={{ cursor: "pointer", marginBottom: 0 }}>
-                {s}
+        ) : mode === "voice" ? (
+          <>
+            {/* Voice-first: the ring is the main way to talk to Ora. */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "8px 0 2px" }}>
+              <button
+                onClick={() => setListening((v) => !v)}
+                aria-label={listening ? "Stop talking" : "Tap to talk"}
+                style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}
+              >
+                <Ring size={92} state={listening ? "recording" : "idle"} />
               </button>
-            ))}
+              <p
+                style={{
+                  margin: "20px 0 0",
+                  fontFamily: mono,
+                  fontSize: 12,
+                  letterSpacing: "0.16em",
+                  textTransform: "uppercase",
+                  color: listening ? "var(--aura-violet)" : "var(--aura-ink-45)",
+                }}
+              >
+                {listening ? "listening… tap to stop" : "tap to talk"}
+              </p>
+            </div>
+
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 9, justifyContent: "center", marginTop: 20 }}>
+              {ASK_SUGGESTIONS.map((s) => (
+                <button key={s} onClick={() => setSent(s)} className="chip chip--outline" style={{ cursor: "pointer", marginBottom: 0 }}>
+                  {s}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setMode("text")}
+              style={{
+                display: "block",
+                margin: "18px auto 0",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "var(--font-body)",
+                fontSize: 13.5,
+                color: "var(--aura-ink-45)",
+              }}
+            >
+              Type instead
+            </button>
+          </>
+        ) : (
+          // Text is the secondary path; the in-field mic returns to voice.
+          <div className="field-group">
+            <input className="field" placeholder="Type your message…" readOnly style={{ cursor: "default" }} autoFocus />
+            <button className="mic" aria-label="Back to voice" onClick={() => setMode("voice")}>
+              <Mic />
+            </button>
           </div>
         )}
-
-        <div className="field-group" style={{ marginTop: sent ? 8 : 0 }}>
-          <input className="field" placeholder="Type, or hold to talk…" readOnly style={{ cursor: "default" }} />
-          <button className="mic" aria-label="voice">
-            <Mic />
-          </button>
-        </div>
       </div>
     </div>
   );
