@@ -79,7 +79,7 @@ Magic-link email defaults to Supabase's shared SMTP, which is rate-limited (a fe
 3. Supabase Dashboard → Authentication → **Emails → SMTP Settings** → enable custom SMTP:
    - Host `smtp.resend.com`, Port `465`, Username `resend`, Password = the Resend API key.
    - Sender name `aura`, sender email `hello@meetonaura.com`.
-4. Authentication → **Email Templates → Magic Link**: confirm the template still includes the 6-digit `{{ .Token }}` alongside the `{{ .ConfirmationURL }}` link (the OTP path from Slice 1 depends on it). See `README.md` → Auth.
+4. Authentication → **Email Templates → Magic Link** and **Confirm signup**: confirm both templates match `technical/email-templates.md` (the canonical copies). Both must include the `{{ .Token }}` code and use the `token_hash` link format so the link works from any browser. Magic Link is the returning-sign-in email; Confirm signup is a new account's first email, so patching only Magic Link leaves new signups with a link and no code.
 
 ## 6. Post-deploy smoke (do this before the demo)
 

@@ -7,7 +7,7 @@ import { DemoResetClient } from "./DemoResetClient";
 // onboarding → Plan walkthrough can be rehearsed from scratch. Deletes the
 // caller's public.users row (chip data + the requester record the Plan pipeline
 // reads); the next onboarding run re-inserts a fresh row. The client half then
-// clears the aura:draft sessionStorage and returns to /.
+// clears the stored aura:draft and returns to /.
 //
 // The DB delete uses the admin client scoped to the verified user.id, so it
 // works regardless of the RLS delete policy while still only ever touching the

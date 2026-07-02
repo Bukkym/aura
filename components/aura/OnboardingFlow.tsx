@@ -6,9 +6,10 @@
 // /api/onboarding/converse: Ora either asks one warm follow-up or hands back a
 // complete draft. That draft prefills the chip flow, which stays the
 // confirm/edit surface. On the final chip submit we map the selections to the
-// aura:draft contract, stash it in sessionStorage, and hand off to /home, which
+// aura:draft contract, stash it in localStorage, and hand off to /home, which
 // holds the just-in-time auth gate (server redirect) and runs the deterministic
-// pipeline. aura:draft survives the magic-link bounce because it's the same tab.
+// pipeline. localStorage (not sessionStorage) so the draft survives the
+// magic-link bounce even when the email link opens in a new tab.
 //
 // Every voice step degrades gracefully: if the mic, transcription, or the
 // converse call fails, we fall through to the chip flow (prefilled with whatever
@@ -78,12 +79,17 @@ export function OnboardingFlow() {
       // A fresh profile invalidates any previously cached plan + status.
       sessionStorage.removeItem("aura:plan");
       sessionStorage.removeItem("aura:planStatus");
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(mapSelectionsToDraft(sel)));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(mapSelectionsToDraft(sel)));
     } catch {
-      // sessionStorage can fail in private-mode Safari; /home re-prompts if the
+      // Storage can fail in private-mode Safari; /home re-prompts if the
       // draft is missing.
     }
-    router.push("/home");
+    // Hand off with an explicit signup intent so /auth/login creates the
+    // account (shouldCreateUser) rather than treating this as a sign-in and
+    // rejecting the new email. Already-signed-in users pass straight through
+    // login to /home. aura:draft lives in localStorage, so it survives the
+    // bounce even if the email link opens a new tab.
+    router.push("/auth/login?intent=signup&next=/home");
   };
 
   let view: React.ReactNode = null;
