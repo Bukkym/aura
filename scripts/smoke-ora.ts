@@ -1,6 +1,6 @@
 // Smoke test for the Ora RAG path (Phase 0 provider + Phase 1 retrieval).
 // Loads the prebuilt knowledge embeddings, embeds a question, retrieves the
-// most relevant chunks, and asks Claude to answer grounded only on them.
+// most relevant chunks, and asks the model to answer grounded only on them.
 // Run with `npm run smoke:ora`.
 
 import { readFileSync } from "node:fs";

@@ -1,8 +1,8 @@
 // Smoke test for the stretch moment (Module 4 M4.5). Detects a stretch from a
-// stated small-group preference, then narrates it with real Claude, asserting
+// stated small-group preference, then narrates it with the real LLM, asserting
 // the note is honest: suggestion-framed, no em dash, and no claim that Ora
 // "watched" or "noticed" the user's behavior. Run with `npm run smoke:stretch`
-// (needs ANTHROPIC_API_KEY).
+// (needs OPENAI_API_KEY).
 
 import type { Place, Plan, User } from "../types";
 import { detectStretch, stretchFallbackLine } from "../lib/stretchPlan";
@@ -75,7 +75,7 @@ async function main() {
   console.log("\nFALLBACK (deterministic):\n  " + fallback);
 
   const narrated = await narrateStretch(plan, requester, angle, fallback, { timeoutMs: 8000 });
-  console.log("\nNARRATED (Claude):\n  " + narrated + "\n");
+  console.log("\nNARRATED (LLM):\n  " + narrated + "\n");
 
   const lower = narrated.toLowerCase();
   const dishonest = ["watched", "noticed", "i've seen", "i have seen", "your behavior", "i observed"];

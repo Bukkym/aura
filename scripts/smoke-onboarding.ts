@@ -1,7 +1,7 @@
 // Smoke test for the onboarding voice agent (Phase 4). Drives the real
 // extract + missing-field loop: a thin opening line should leave gaps and draw
 // a follow-up question; a rich description should complete in one turn. Run with
-// `npm run smoke:onboarding` (needs ANTHROPIC_API_KEY).
+// `npm run smoke:onboarding` (needs OPENAI_API_KEY).
 
 import { extract } from "../lib/extract";
 import { generateText } from "../lib/aiProvider";

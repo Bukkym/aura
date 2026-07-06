@@ -3,12 +3,13 @@
 // Live in-app shell: Home + Plans tab wired to the real PlanResponse. Same
 // visual language as the prototype's app-shell/plans-tab, but data-driven and
 // without the sample-data Plans history or stretch moment (those stay in /flow,
-// Module 4). Reuses BottomBar + OraAsk (both data-agnostic).
+// Module 4). Reuses BottomBar, plus OraAskLive: the Ask Ora sheet wired to the
+// real agent at /api/ora/chat (the prototype's mock OraAsk stays in /flow).
 
 import { useState } from "react";
 import { Ring, Swatch, Cal, StatusIcon, mono } from "../primitives";
 import { BottomBar } from "./bottom-bar";
-import { OraAsk } from "./app-shell";
+import { OraAskLive } from "./ora-ask-live";
 import { RequestAnotherSheet } from "./request-another";
 import type { PlanResponse } from "@/app/api/plan/create/route";
 import type { PlanStatus, PlanSummary } from "@/types";
@@ -225,7 +226,7 @@ export function LiveHome({
       </div>
 
       <BottomBar active="home" onHome={() => {}} onAsk={() => setAsk(true)} onPlans={onPlans} />
-      <OraAsk open={ask} onClose={() => setAsk(false)} />
+      <OraAskLive open={ask} onClose={() => setAsk(false)} />
     </div>
   );
 }
@@ -446,7 +447,7 @@ export function LivePlansTab({
       </div>
 
       <BottomBar active="plans" onHome={onHome} onAsk={() => setAsk(true)} onPlans={() => {}} />
-      <OraAsk open={ask} onClose={() => setAsk(false)} />
+      <OraAskLive open={ask} onClose={() => setAsk(false)} />
       {onRefined && (
         <RequestAnotherSheet
           open={refine}

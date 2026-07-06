@@ -1,13 +1,15 @@
-import type Anthropic from "@anthropic-ai/sdk";
 import { generateWithTools, type ChatMessage } from "./aiProvider";
+import type { AgentMessage, ToolResultMessage } from "./aiMessages";
 import { ORA_TOOLS, type OraToolResult } from "./oraTools";
 import type { PlanResponse } from "./planResponse";
 
 // The in-app Ora agent: one conversational turn that can answer questions about
 // Aura (grounded in retrieved knowledge) and perform tasks via tool-calling
-// (refine / request / withdraw a plan). The tool runner is injected so the loop
-// can be unit/smoke-tested without a database. I/O orchestration, so this module
-// is exempt from the lib-test guardrail; its pure tool schemas live in
+// (refine / request / withdraw a plan). The transcript uses the provider-
+// agnostic AgentMessage shape from lib/aiMessages.ts, so the same loop runs on
+// OpenAI or Anthropic. The tool runner is injected so the loop can be
+// unit/smoke-tested without a database. I/O orchestration, so this module is
+// exempt from the lib-test guardrail; its pure tool schemas live in
 // lib/oraTools.ts and are tested there.
 
 const ORA_BASE = `You are Ora, the assistant inside Aura, a social app that introduces people to a small compatible group and a place to meet in their city.
@@ -51,8 +53,8 @@ export async function oraAgentTurn(opts: {
 }): Promise<OraTurnResult> {
   const system = buildOraSystem(opts.knowledge);
   const maxSteps = opts.maxSteps ?? 4;
-  const messages: Anthropic.MessageParam[] = [
-    ...(opts.history ?? []).map((m) => ({ role: m.role, content: m.content })),
+  const messages: AgentMessage[] = [
+    ...(opts.history ?? []).map((m): AgentMessage => ({ role: m.role, content: m.content })),
     { role: "user", content: opts.userMessage },
   ];
 
@@ -75,19 +77,15 @@ export async function oraAgentTurn(opts: {
     }
 
     // Echo the assistant's tool-use turn back, then answer each tool call.
-    messages.push({ role: "assistant", content: res.raw.content });
-    const toolResults: Anthropic.ToolResultBlockParam[] = [];
+    messages.push({ role: "assistant", content: res.text, toolCalls: res.toolCalls });
+    const results: ToolResultMessage[] = [];
     for (const call of res.toolCalls) {
       toolsUsed.push(call.name);
       const out = await opts.runTool(call.name, call.input);
       if (out.plan) plan = out.plan;
-      toolResults.push({
-        type: "tool_result",
-        tool_use_id: call.id,
-        content: out.result,
-      });
+      results.push({ toolCallId: call.id, content: out.result });
     }
-    messages.push({ role: "user", content: toolResults });
+    messages.push({ role: "tool", results });
   }
 
   // Ran out of steps: surface whatever the model last said, or a safe fallback.

@@ -1,6 +1,6 @@
 // Smoke test for the real extraction pass (Phase 3). Sends a free-text profile
-// to Claude, prints the normalized chips, and asserts everything landed inside
-// the closed taxonomy. Run with `npm run smoke:extract` (needs ANTHROPIC_API_KEY).
+// to the LLM, prints the normalized chips, and asserts everything landed inside
+// the closed taxonomy. Run with `npm run smoke:extract` (needs OPENAI_API_KEY).
 
 import { extract } from "../lib/extract";
 import { VOCAB } from "../lib/extractNormalize";

@@ -1,5 +1,5 @@
 // Smoke test for the in-app Ora agent (Phase 2). Uses a STUB tool runner (no
-// database) plus a real Claude call, to verify the agent selects the right tool
+// database) plus a real LLM call, to verify the agent selects the right tool
 // and grounds answers. Run with `npm run smoke:ora-agent`.
 
 import { readFileSync } from "node:fs";
