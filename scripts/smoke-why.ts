@@ -1,7 +1,7 @@
 // Smoke test for the LLM-narrated "why this plan" (Module 4 M4.2). Builds a
 // fake plan, prints the deterministic template (the fallback) next to the real
-// Claude narration, and confirms the narration is non-empty, em-dash-free, and
-// not just the template. Run with `npm run smoke:why` (needs ANTHROPIC_API_KEY).
+// LLM narration, and confirms the narration is non-empty, em-dash-free, and
+// not just the template. Run with `npm run smoke:why` (needs OPENAI_API_KEY).
 
 import type { Place, Plan, User } from "../types";
 import { narrateWhy } from "../lib/whyNarrate";
@@ -65,7 +65,7 @@ async function main() {
   const template = plan.whyThisPlan;
   console.log("TEMPLATE (fallback):\n  " + template + "\n");
   const narrated = await narrateWhy(plan, requester, { timeoutMs: 8000 });
-  console.log("NARRATED (Claude):\n  " + narrated + "\n");
+  console.log("NARRATED (LLM):\n  " + narrated + "\n");
 
   if (!narrated || narrated.trim().length === 0) {
     console.error("FAIL: narration is empty");
@@ -76,10 +76,10 @@ async function main() {
     process.exit(1);
   }
   if (narrated === template) {
-    console.error("FAIL: narration fell back to the template (Claude unreachable?)");
+    console.error("FAIL: narration fell back to the template (LLM unreachable?)");
     process.exit(1);
   }
-  console.log("PASS: Claude produced a clean narration distinct from the template.");
+  console.log("PASS: The model produced a clean narration distinct from the template.");
 }
 
 main().catch((err) => {

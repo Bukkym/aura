@@ -4,6 +4,7 @@ import { generatePlan } from "@/lib/generatePlan";
 import { persistPlan, type PlanRefinement } from "@/lib/plans";
 import { userFromRow } from "@/lib/userRow";
 import { buildPlanResponse } from "@/lib/planResponse";
+import { narrateWhy } from "@/lib/whyNarrate";
 
 // POST /api/plan/refine
 //
@@ -92,6 +93,10 @@ export async function POST(request: NextRequest) {
 
   try {
     const plan = await generatePlan(sb, requester, { activityOverride: activityType, excludeUserIds });
+    // Same best-effort narration as /api/plan/create: upgrade the deterministic
+    // template to an LLM-narrated line; narrateWhy falls back to the template
+    // on any error or timeout, so this never blocks the refine.
+    plan.whyThisPlan = await narrateWhy(plan, requester);
     const persistedPlanId = await persistPlan(sb, plan, refinement);
     const response = buildPlanResponse(plan, requester, persistedPlanId);
     return NextResponse.json({ plan: response });

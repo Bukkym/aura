@@ -82,8 +82,21 @@ export async function confirmLivePlan(planId: string): Promise<void> {
   }
 }
 
-// Clears the cached plan + status (used by /demo-reset). The draft is cleared
-// by the reset route's own logic.
+// Screens that render the current plan listen for this event, so an update
+// made elsewhere (the Ask Ora sheet running a plan tool) reflects immediately
+// without a reload.
+const PLAN_EVENT = "aura:plan-changed";
+
+function announcePlanChange(): void {
+  try {
+    window.dispatchEvent(new Event(PLAN_EVENT));
+  } catch {
+    // ignore (SSR or restricted context)
+  }
+}
+
+// Clears the cached plan + status (used by /demo-reset and when Ora withdraws
+// the current plan). The draft is cleared by the reset route's own logic.
 export function clearLivePlan(): void {
   try {
     sessionStorage.removeItem(PLAN_KEY);
@@ -91,10 +104,13 @@ export function clearLivePlan(): void {
   } catch {
     // ignore
   }
+  announcePlanChange();
 }
 
 // Make a plan the cached "current" one, so Home/plan read it instantly. Used
-// after a refine and when loading the current plan from the DB.
+// after a refine and when loading the current plan from the DB. Deliberately
+// silent (no event): useLivePlan's own resolution caches mid-flight, including
+// during the forming beat, and an event there would reveal the plan early.
 function cachePlan(plan: PlanResponse, status: PlanStatus): void {
   try {
     sessionStorage.setItem(PLAN_KEY, JSON.stringify(plan));
@@ -102,6 +118,15 @@ function cachePlan(plan: PlanResponse, status: PlanStatus): void {
   } catch {
     // ignore
   }
+}
+
+/**
+ * Set the current plan from outside the hook (the Ask Ora sheet after a plan
+ * tool ran) and notify every mounted screen.
+ */
+export function cacheLivePlan(plan: PlanResponse, status: PlanStatus): void {
+  cachePlan(plan, status);
+  announcePlanChange();
 }
 
 export interface PlanRefinement {
@@ -152,6 +177,22 @@ export function useLivePlan(generate: boolean = true): { phase: PlanPhase; statu
     return { kind: "loading" };
   });
   const [status, setStatus] = useState<PlanStatus>("ready");
+
+  // React to plan changes made by other surfaces (the Ask Ora sheet): re-read
+  // the cache and show the new plan, or the empty state after a withdrawal.
+  useEffect(() => {
+    function onPlanChanged() {
+      const plan = readCachedPlan();
+      if (plan) {
+        setStatus(getPlanStatus());
+        setPhase({ kind: "ready", plan });
+      } else {
+        setPhase({ kind: "empty" });
+      }
+    }
+    window.addEventListener(PLAN_EVENT, onPlanChanged);
+    return () => window.removeEventListener(PLAN_EVENT, onPlanChanged);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
