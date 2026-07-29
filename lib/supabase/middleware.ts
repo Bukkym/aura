@@ -37,7 +37,21 @@ export async function updateSession(request: NextRequest) {
   // IMPORTANT: must be getUser() and not getSession(). getSession() reads the
   // cookie without revalidating; getUser() round-trips to the Supabase auth
   // server, which is what triggers the refresh flow.
-  await supabase.auth.getUser();
+  //
+  // This round-trip runs on every request, so it must never be able to hang the
+  // whole site. If Supabase is slow or unreachable (e.g. a paused project), we
+  // cap the wait and degrade to "no refresh this pass" rather than letting the
+  // Edge middleware time out and return a 504 on every route. A stale cookie for
+  // one request is recoverable; a site-wide gateway timeout is not.
+  try {
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error("supabase-getuser-timeout")), 3000),
+    );
+    await Promise.race([supabase.auth.getUser(), timeout]);
+  } catch {
+    // Swallow: return the response as-is so the request proceeds unauthenticated
+    // instead of failing. Auth-gated pages will redirect to sign-in as usual.
+  }
 
   return supabaseResponse;
 }
