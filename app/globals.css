@@ -379,6 +379,29 @@ body {
   color: var(--aura-ink);
 }
 
+/* Soft-edition buttons — full-width rounded rectangles per the Warm Aurora
+   mockups (ink primary, ghost secondary, plum accent). Used by the app screens. */
+.btn-soft {
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: center;
+  transition: background-color 180ms var(--ease-out), transform 120ms var(--ease-out), opacity 180ms var(--ease-out);
+}
+.btn-soft:active { transform: scale(var(--press-scale)); }
+.btn-soft--ink { background: var(--aura-ink); color: var(--aura-bg); }
+.btn-soft--ink:hover { background: #33291f; }
+.btn-soft--ink:disabled { background: var(--aura-ink-10); color: var(--aura-ink-40); cursor: not-allowed; transform: none; }
+.btn-soft--plum { background: var(--aura-plum); color: #fff; }
+.btn-soft--ghost { background: none; color: var(--aura-ink-55); }
+.btn-soft--ghost:hover { color: var(--aura-ink); }
+
 /* ==========================================================================
    CHIPS — three treatments, three meanings. outline < pale < bold.
    ========================================================================== */

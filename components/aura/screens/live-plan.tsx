@@ -158,81 +158,65 @@ function PersonIntro({ a }: { a: AttendeeView }) {
 
 function CardView({ plan, onAccept, onBack }: { plan: PlanResponse; onAccept: () => void; onBack?: () => void }) {
   const when = formatWhen(plan.dateTime);
+  const stack = plan.attendees.slice(0, 4);
+  // Recurrence line ("Ada and Nadia again, plus one new") is the differentiator,
+  // but it needs the feedback loop to re-seat liked people. Null until that ships;
+  // the layout already supports it, so it lights up with no redesign.
+  const recurrence: string | null = null;
   return (
     <>
       <div style={{ position: "relative", minHeight: "100%", background: "var(--aura-bg)", color: "var(--aura-ink)", overflow: "hidden" }}>
-        <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", filter: "blur(64px)", background: "var(--bloom-plan)", opacity: 0.55 }} />
-        {onBack && (
-          <button onClick={onBack} style={{ position: "absolute", top: 18, left: 18, zIndex: 2, background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "var(--aura-ink-45)" }}>
-            ← Home
-          </button>
-        )}
-        <div style={{ position: "relative", zIndex: 1, padding: "58px 20px 40px", display: "flex", flexDirection: "column", alignItems: "center" }}>
-          <h2 style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 22, margin: "0 0 18px", textAlign: "center", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>Your first Plan.</h2>
-          <div style={{ background: "var(--aura-bg)", border: "1px solid var(--aura-ink-10)", borderRadius: 22, boxShadow: "var(--shadow-card)", width: "100%", overflow: "hidden" }}>
-            {/* postcard header */}
-            <div style={{ padding: "22px 20px 4px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 12 }}>
-                <Cal c="var(--aura-violet)" />
-                <span style={{ fontSize: 13, fontWeight: 500, color: "var(--aura-violet)" }}>{when}</span>
-              </div>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 26, lineHeight: 1.08, letterSpacing: "0.01em", textTransform: "uppercase" }}>{plan.activityType}</div>
-              <div style={{ position: "relative", marginTop: 14, borderRadius: 16, overflow: "hidden", border: "1px solid var(--aura-ink-10)" }}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/otto-ambience.png" alt={plan.place.name} style={{ display: "block", width: "100%", height: 140, objectFit: "cover" }} />
-                <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, padding: "20px 14px 10px", background: "linear-gradient(to top, rgba(22,13,34,0.72), transparent)", display: "flex", alignItems: "flex-start", gap: 6 }}>
-                  <span style={{ marginTop: 1, flex: "none" }}>
-                    <Pin c="rgba(250,247,242,0.95)" />
-                  </span>
-                  <span style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }}>
-                    <span style={{ fontFamily: mono, fontSize: 11, letterSpacing: "0.14em", textTransform: "uppercase", color: "rgba(250,247,242,0.96)" }}>
-                      {plan.place.name} · {plan.place.neighborhood}
-                    </span>
-                    {plan.place.address && (
-                      <span style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "rgba(250,247,242,0.82)" }}>
-                        {plan.place.address}
-                      </span>
-                    )}
-                  </span>
-                </div>
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 14 }}>
-                {plan.vibe.map((v) => (
-                  <Vibe key={v}>{v}</Vibe>
-                ))}
-              </div>
-            </div>
-            {/* body */}
-            <div style={{ padding: "2px 20px 18px" }}>
-              <div className="aura-divider" />
-              <div className="aura-label" style={{ marginBottom: 8 }}>
-                Why this Plan
-              </div>
-              <p className="aura-body" style={{ color: "var(--aura-ink-70)", margin: 0, fontSize: 15 }}>
-                {plan.whyThisPlan}
-              </p>
-              <div className="aura-divider" />
-              <div className="aura-label" style={{ marginBottom: 4 }}>
-                Who&apos;s coming
-              </div>
-              <p className="aura-body" style={{ fontSize: 14, color: "var(--aura-ink-55)", margin: "0 0 14px" }}>
-                {plan.attendees.length} people Ora thinks you&apos;ll click with. Tap anyone to see why.
-              </p>
-              {plan.attendees.map((a) => (
-                <PersonIntro key={a.userId} a={a} />
+        <div aria-hidden style={{ position: "absolute", inset: 0, pointerEvents: "none", filter: "blur(64px)", background: "var(--bloom-plan)", opacity: 0.45 }} />
+        <div style={{ position: "relative", zIndex: 1, padding: "46px 24px 24px", display: "flex", flexDirection: "column" }}>
+          {onBack && (
+            <button onClick={onBack} style={{ alignSelf: "flex-start", background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "var(--aura-ink-45)", padding: 0, marginBottom: 14 }}>
+              ← Home
+            </button>
+          )}
+          <p className="aura-label" style={{ marginBottom: 8 }}>Your next plan</p>
+          <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 500, fontSize: 26, lineHeight: 1.1, letterSpacing: "-0.01em", margin: "0 0 10px" }}>
+            {cap(plan.activityType)}
+          </h1>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: 12.5, color: "var(--aura-ink-55)", margin: "0 0 18px" }}>
+            {plan.place.name} · {plan.place.neighborhood} · {when}
+          </p>
+
+          {/* attendees summary */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: recurrence ? 8 : 18 }}>
+            <div style={{ display: "flex" }}>
+              {stack.map((a, i) => (
+                <span key={a.userId} style={{ marginLeft: i === 0 ? 0 : -9, borderRadius: "9999px", border: "2px solid var(--aura-bg)", display: "inline-flex" }}>
+                  <Swatch id={a.userId} name={a.displayName} size={32} />
+                </span>
               ))}
             </div>
+            <span style={{ fontSize: 12.5, color: "var(--aura-ink-55)" }}>You + {plan.attendees.length}</span>
           </div>
+          {recurrence && (
+            <p style={{ fontSize: 12.5, color: "var(--aura-plum)", fontWeight: 600, margin: "0 0 18px" }}>{recurrence}</p>
+          )}
+
+          {/* why this plan */}
+          <div style={{ background: "var(--aura-violet-12)", borderRadius: 16, padding: 15, marginBottom: 20 }}>
+            <div className="aura-label" style={{ color: "var(--ora-magenta)", marginBottom: 7 }}>Why this plan</div>
+            <p style={{ fontFamily: "var(--font-serif)", fontSize: 15, lineHeight: 1.5, color: "var(--aura-ink-90)", margin: 0 }}>
+              {plan.whyThisPlan}
+            </p>
+          </div>
+
+          {/* who's coming (per-person detail, tap to expand) */}
+          <div className="aura-label" style={{ marginBottom: 10 }}>Who&apos;s coming</div>
+          {plan.attendees.map((a) => (
+            <PersonIntro key={a.userId} a={a} />
+          ))}
         </div>
-        <span className="by-ora" style={{ position: "absolute", bottom: 40, right: 20 }}>
-          by Ora
-        </span>
       </div>
-      <div style={{ position: "sticky", bottom: 0, zIndex: 30, marginTop: -8 }}>
-        <div style={{ padding: "36px 20px 18px", background: "linear-gradient(to top, var(--aura-bg) 42%, rgba(250,247,242,0.72) 74%, rgba(250,247,242,0))" }}>
-          <button onClick={onAccept} className="btn btn--aurora" style={{ width: "100%", whiteSpace: "nowrap" }}>
-            I&apos;m in →
-          </button>
+      <div style={{ position: "sticky", bottom: 0, zIndex: 30 }}>
+        <div style={{ padding: "26px 24px 20px", background: "linear-gradient(to top, var(--aura-bg) 55%, transparent)", display: "flex", flexDirection: "column", gap: 10 }}>
+          <button onClick={onAccept} className="btn-soft btn-soft--ink">I&apos;m in</button>
+          {onBack && (
+            <button onClick={onBack} className="btn-soft btn-soft--ghost">Ask Ora to change</button>
+          )}
         </div>
       </div>
     </>

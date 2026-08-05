@@ -620,7 +620,7 @@ export function ScChips({
           <span style={{ flex: "none", marginTop: 2 }}>
             <Ring size={26} state="rest" />
           </span>
-          <p style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 19, lineHeight: 1.32, letterSpacing: "-0.01em", margin: 0 }}>{st.ora}</p>
+          <p style={{ fontFamily: "var(--font-serif)", fontWeight: 500, fontSize: 20, lineHeight: 1.28, letterSpacing: "-0.01em", margin: 0 }}>{st.ora}</p>
         </div>
         {st.groups.map((g) => (
           <div key={g.key} style={{ marginBottom: 22 }}>
@@ -649,8 +649,8 @@ export function ScChips({
         <div style={{ height: 18, textAlign: "center", marginBottom: 6, fontSize: 12.5, color: "var(--aura-ink-45)", opacity: ready ? 0 : 1, transition: "opacity 200ms" }}>
           {note}
         </div>
-        <button onClick={next} disabled={!ready} className="btn btn--aurora" style={{ width: "100%", whiteSpace: "nowrap" }}>
-          {step < STEPS.length - 1 ? "Next →" : "Find my people →"}
+        <button onClick={next} disabled={!ready} className="btn-soft btn-soft--ink" style={{ whiteSpace: "nowrap" }}>
+          {step < STEPS.length - 1 ? "Next" : "Find my people"}
         </button>
       </div>
     </div>
