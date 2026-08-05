@@ -67,6 +67,8 @@
   /* TYPOGRAPHY — families. Geist (body) + Cabinet Grotesk (display) load in app/layout.tsx. */
   --font-display: "Cabinet Grotesk", var(--font-geist-sans), "Geist", system-ui, sans-serif;
   --font-body: var(--font-geist-sans), "Geist", "Cabinet Grotesk", system-ui, sans-serif;
+  /* Fraunces — expressive serif for the wordmark, headlines, and Ora's voice (soft edition) */
+  --font-serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
 
   /* TYPE SCALE — 5 distinct styles only */
   --display-size: 56px;

@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Ring, Wordmark, OraBloom, mono } from "../primitives";
 import type { Selections } from "../mapDraft";
 
-// ── Screen 1 · Welcome ──
+// ── Screen 1 · Welcome ── (Warm Aurora, soft edition — matches the locked mockup)
 export function ScWelcome({ onNext }: { onNext: () => void }) {
   return (
     <div
@@ -21,38 +21,81 @@ export function ScWelcome({ onNext }: { onNext: () => void }) {
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0 30px",
+        padding: "44px 26px 26px",
       }}
     >
       <div
         aria-hidden
         style={{ position: "absolute", inset: 0, background: "var(--bloom-welcome)", opacity: 0.6, filter: "blur(64px)" }}
       />
-      <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-        <Ring size={108} state="idle" />
-        <div style={{ marginTop: 34 }}>
-          <Wordmark size={62} />
+      <div
+        style={{
+          position: "relative",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          gap: 22,
+        }}
+      >
+        <Ring size={76} state="idle" />
+        <div style={{ fontFamily: "var(--font-serif)", fontSize: 24, letterSpacing: "0.005em" }}>
+          <span style={{ color: "var(--aura-persimmon)", fontWeight: 400 }}>a</span>ura
         </div>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: 17, color: "var(--aura-ink-70)", margin: "16px 0 0", lineHeight: 1.5, maxWidth: 280 }}>
-          Your people are out there.
-          <br />
-          Let&apos;s find them.
-        </p>
-        <button onClick={onNext} className="btn btn--aurora" style={{ marginTop: 36, padding: "0 56px" }}>
-          Begin
-        </button>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--aura-ink-55)", margin: "20px 0 0" }}>
-          Already have an account?{" "}
-          <Link href="/auth/login" style={{ color: "var(--aura-violet)", fontWeight: 500, textDecoration: "none" }}>
-            Sign in
-          </Link>
+        <h1
+          style={{
+            fontFamily: "var(--font-serif)",
+            fontWeight: 500,
+            fontSize: 30,
+            lineHeight: 1.1,
+            letterSpacing: "-0.01em",
+            margin: 0,
+          }}
+        >
+          Meet people you click with, then keep seeing them.
+        </h1>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 14, lineHeight: 1.55, color: "var(--aura-ink-55)", margin: 0 }}>
+          Tell Ora your vibe. Ora plans it, you show up. A few plans in, that is your crew.
         </p>
       </div>
-      <span className="by-ora" style={{ position: "absolute", bottom: 26, right: 24, color: "var(--aura-ink-40)" }}>
-        by Ora
-      </span>
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 10 }}>
+        <button
+          onClick={onNext}
+          style={{
+            width: "100%",
+            padding: 14,
+            borderRadius: 16,
+            border: "none",
+            cursor: "pointer",
+            fontFamily: "var(--font-body)",
+            fontSize: 14.5,
+            fontWeight: 600,
+            letterSpacing: "-0.01em",
+            background: "var(--aura-ink)",
+            color: "var(--aura-bg)",
+          }}
+        >
+          Begin
+        </button>
+        <button
+          onClick={onNext}
+          style={{
+            width: "100%",
+            padding: 14,
+            borderRadius: 16,
+            border: "none",
+            cursor: "pointer",
+            fontFamily: "var(--font-body)",
+            fontSize: 14.5,
+            fontWeight: 600,
+            background: "none",
+            color: "var(--aura-ink-55)",
+          }}
+        >
+          Talk to Ora
+        </button>
+      </div>
     </div>
   );
 }

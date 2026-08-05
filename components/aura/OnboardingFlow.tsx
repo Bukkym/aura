@@ -93,7 +93,10 @@ export function OnboardingFlow() {
   };
 
   let view: React.ReactNode = null;
-  if (screen === "welcome") view = <ScWelcome onNext={() => go("entry")} />;
+  // Voice + entry-choice are parked for the WTP build: welcome goes straight to
+  // the chip capture. The voice/entry/followup screens stay in the code and can
+  // be re-linked when voice is un-parked.
+  if (screen === "welcome") view = <ScWelcome onNext={() => go("chips")} />;
   else if (screen === "entry") view = <ScEntry onVoice={() => go("voice")} onChips={() => go("chips")} />;
   else if (screen === "voice")
     view = (
