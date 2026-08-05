@@ -167,3 +167,68 @@ These are not blocking the UI flow but should land before the visual system lock
 - **App icon execution** — the indigo + aurora ring concept needs a designed pass before shipping.
 - **Motion language for Ora** — the breathing/gradient-shift behavior needs a defined timing curve and trigger spec when we get to the actual UI.
 - **Photography / illustration style** — if/when marketing surfaces need imagery beyond the gradient system. Lean: real human moments shot in low warm light, never stock-photo "diverse group laughing." Defer until landing page.
+
+---
+
+## LOCKED DIRECTION (2026-08-05): Warm Aurora, soft edition
+
+The everyday product surface is locked. This evolves the system above rather than
+replacing it: the aurora ring and the violet-magenta signature stay as the
+through-line; the surface gets warmer and calmer.
+
+**What this supersedes:** the original doc steered *away* from earth-tones and
+leaned the everyday surface toward atmospheric purple/black (Partiful-adjacent).
+The locked direction keeps a cream everyday surface (as the doc always intended)
+but adds warm, muted earthy support colors (sage, teal) and leads with a softer
+plum rather than the punchier violet. The deep-indigo Ora moments remain, now as
+a *contained bloom* around the ring, not a surface flip. The "steering away from
+earth-tone" note applies to the loud gradient identity, not to these muted,
+grown-up support tones.
+
+**Why:** the punchy violet version read too cool/techy. The founder wanted warm
+and premium. This keeps that warmth while retaining an ownable signature (the
+ring + violet-in-the-ring + a name that means something), so it reads as Aura,
+not as a warm-cream category follower.
+
+### Locked palette
+
+| Token | Hex | Use |
+|-------|-----|-----|
+| Cream | `#F6F2E9` | Everyday surface |
+| Ink | `#201C17` | Text, primary buttons |
+| Plum | `#7E5C90` | Primary accent (bridges the name to aurora violet) |
+| Violet | `#7752E6` | Inside the aurora ring + Ora glow only |
+| Magenta | `#A24E86` | Ring gradient, Ora accents |
+| Persimmon | `#DC5B3C` | Warm secondary / energy |
+| Sage | `#53613C` | Earthy support (chips, variety) |
+| Teal | `#356059` | Earthy support (chips, variety) |
+
+### Type
+
+Fraunces (serif) for the wordmark, expressive headlines, and Ora's "why this
+plan" voice. Cabinet Grotesk for all UI. Serif stays rare so warmth never tips
+into aloof/editorial.
+
+### The ring earns its keep three times
+
+The luminous aurora ring is (1) the brand mark, (2) the "reading your aura"
+moment, and (3) the journey-progress object on the home screen. One motif, made
+literal by the name, that no competitor owns.
+
+### Two honesty rules baked into the visuals
+
+- **The journey is accumulation, not a countdown.** The home ring fills and
+  warms open-endedly ("your circle is forming"), never "3 of 5 until your crew
+  is guaranteed." A stalled journey must never read as a broken promise. Ties to
+  `/product/04-paid-journey-product-spec.md` (guarantee the plan, design the arc,
+  earn it with density).
+- **Checkout pays for the plan, never the outcome.**
+
+### Reference
+
+Six core screens rendered in this palette (welcome, Ora moment, plan card,
+journey home, checkout, post-plan feedback):
+https://claude.ai/code/artifact/a57673be-36cd-47ec-a0fc-210b8d031406
+
+Still to design in this system: onboarding chip flow, accepted-plan logistics
+view, group-life surface, landing page.

@@ -19,6 +19,7 @@
     "smoke:plans": "tsx --env-file=.env.local scripts/smoke-plans.ts",
     "smoke:archetype": "tsx --env-file=.env.local scripts/smoke-archetype.ts",
     "sim:liquidity": "tsx --env-file=.env.local scripts/sim-liquidity.ts",
+    "sim:predictive-lift": "tsx scripts/sim-predictive-lift.ts",
     "build:knowledge": "EMBED_ALLOW_RUNTIME=true tsx --env-file=.env.local scripts/build-knowledge-embeddings.ts",
     "smoke:ora": "EMBED_ALLOW_RUNTIME=true tsx --env-file=.env.local scripts/smoke-ora.ts",
     "smoke:ora-agent": "tsx --env-file=.env.local scripts/smoke-ora-agent.ts",
