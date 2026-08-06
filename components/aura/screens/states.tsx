@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Ring, OraBloom, Wordmark } from "../primitives";
 
-const FINDING_STEPS = ["Reading your aura…", "Looking across Berlin…", "Finding the few who truly fit…"];
+const FINDING_STEPS = ["Reading your aura", "Finding the few who truly fit", "Bringing your people together"];
 
 // The earned wait: processing ring + localized bloom + cycling status, no
 // auto-advance (the fetch decides when we're done).
@@ -17,10 +17,9 @@ export function FindingMoment() {
 }
 
 const FORMING_STEPS = [
-  "Reading your aura…",
-  "Looking across Berlin…",
-  "Finding the few who truly fit…",
-  "Bringing your group together…",
+  "Reading your aura",
+  "Finding the few who truly fit",
+  "Bringing your people together",
 ];
 
 // The deliberate "forming" beat shown once when a Plan is freshly built. Same
@@ -46,8 +45,11 @@ function ProcessingBeat({ steps, intervalMs = 1600 }: { steps: string[]; interva
         <div style={{ display: "flex", justifyContent: "center" }}>
           <Ring size={140} state="processing" dark />
         </div>
-        <p key={i} style={{ marginTop: 38, fontFamily: "var(--font-body)", fontSize: 16.5, color: "var(--aura-ink-90)", lineHeight: 1.4, animation: "flowFade 500ms ease both" }}>
+        <p key={i} style={{ marginTop: 38, fontFamily: "var(--font-serif)", fontWeight: 500, fontSize: 22, color: "var(--aura-ink-90)", lineHeight: 1.3, letterSpacing: "-0.01em", animation: "flowFade 500ms ease both" }}>
           {steps[i]}
+        </p>
+        <p style={{ marginTop: 8, fontFamily: "var(--font-body)", fontSize: 13.5, color: "var(--aura-ink-55)" }}>
+          Finding your people, and why.
         </p>
       </div>
     </div>

@@ -409,6 +409,50 @@ function AcceptedView({ plan, onBack, onDone, onCancel }: { plan: PlanResponse; 
   );
 }
 
+// ── Checkout ── pay for the plan (the guaranteed thing), with the 5-plan
+// journey as the process-framed upsell. Matches the Warm Aurora mockup. Payment
+// is stubbed for now (no Stripe yet); Continue confirms the spot.
+function CheckoutView({ plan, onContinue, onBack }: { plan: PlanResponse; onContinue: () => void; onBack: () => void }) {
+  const when = formatWhen(plan.dateTime);
+  return (
+    <div style={{ position: "relative", height: "100%", background: "var(--aura-bg)", color: "var(--aura-ink)", display: "flex", flexDirection: "column", padding: "46px 24px 24px" }}>
+      <div aria-hidden style={{ position: "absolute", inset: 0, background: "var(--bloom-plan)", opacity: 0.4, filter: "blur(72px)", pointerEvents: "none" }} />
+      <button onClick={onBack} style={{ position: "relative", alignSelf: "flex-start", background: "none", border: "none", cursor: "pointer", fontSize: 14, color: "var(--aura-ink-45)", padding: 0, marginBottom: 14 }}>←</button>
+      <p className="aura-label" style={{ position: "relative", marginBottom: 12 }}>Confirm your spot</p>
+
+      <div style={{ position: "relative", display: "flex", gap: 12, alignItems: "center", marginBottom: 18, background: "#fffdf7", border: "1px solid var(--aura-ink-10)", borderRadius: 16, padding: 14 }}>
+        <Ring size={40} state="rest" />
+        <div>
+          <p style={{ fontWeight: 600, fontSize: 14, margin: 0 }}>{cap(plan.activityType)}</p>
+          <p style={{ fontSize: 11.5, color: "var(--aura-ink-55)", margin: "2px 0 0" }}>{when} · You + {plan.attendees.length}</p>
+        </div>
+      </div>
+
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 11, flex: 1 }}>
+        <div style={{ border: "1.5px solid var(--aura-ink-10)", borderRadius: 16, padding: 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <span style={{ fontWeight: 600, fontSize: 14 }}>This plan</span>
+            <span style={{ fontWeight: 700, fontSize: 15 }}>$18</span>
+          </div>
+          <p style={{ fontSize: 12, color: "var(--aura-ink-55)", margin: "3px 0 0" }}>Just this one. No commitment.</p>
+        </div>
+        <div style={{ border: "1.5px solid var(--aura-plum)", borderRadius: 16, padding: 14, background: "var(--aura-violet-12)" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--aura-plum)" }}>The 5-plan journey</span>
+            <span style={{ fontWeight: 700, fontSize: 15, color: "var(--aura-plum)" }}>$70</span>
+          </div>
+          <p style={{ fontSize: 12, color: "var(--aura-ink-70)", margin: "3px 0 0" }}>Ora keeps bringing back the people you click with. Save $20.</p>
+        </div>
+      </div>
+
+      <button onClick={onContinue} className="btn-soft btn-soft--ink" style={{ position: "relative", marginTop: 14 }}>Continue</button>
+      <p style={{ position: "relative", fontSize: 11, textAlign: "center", color: "var(--aura-ink-55)", margin: "10px 0 0", lineHeight: 1.5 }}>
+        Every plan is a great night, or we make it right. Your number stays private.
+      </p>
+    </div>
+  );
+}
+
 export function LivePlanCard({
   plan,
   status = "ready",
@@ -424,19 +468,30 @@ export function LivePlanCard({
   onBack?: () => void;
   onCancel?: () => void;
 }) {
-  // A plan the user already joined (persisted status) opens straight to the
-  // accepted view, so reopening it never shows the "I'm in" CTA again. Its back
-  // button goes home rather than un-joining; only a fresh accept this session
-  // can toggle back to the card to re-read it.
+  // Flow: plan card → checkout → confirmed. A plan the user already joined
+  // (persisted status) opens straight to the accepted view.
   const alreadyJoined = status === "confirmed";
-  const [accepted, setAccepted] = useState(alreadyJoined);
-  const accept = () => {
-    setAccepted(true);
-    onAccepted?.();
-  };
-  return accepted ? (
-    <AcceptedView plan={plan} onBack={alreadyJoined ? onBack ?? (() => {}) : () => setAccepted(false)} onDone={onDone} onCancel={onCancel} />
-  ) : (
-    <CardView plan={plan} onAccept={accept} onBack={onBack} />
-  );
+  const [step, setStep] = useState<"card" | "checkout" | "accepted">(alreadyJoined ? "accepted" : "card");
+
+  if (step === "accepted")
+    return (
+      <AcceptedView
+        plan={plan}
+        onBack={alreadyJoined ? onBack ?? (() => {}) : () => setStep("card")}
+        onDone={onDone}
+        onCancel={onCancel}
+      />
+    );
+  if (step === "checkout")
+    return (
+      <CheckoutView
+        plan={plan}
+        onBack={() => setStep("card")}
+        onContinue={() => {
+          setStep("accepted");
+          onAccepted?.();
+        }}
+      />
+    );
+  return <CardView plan={plan} onAccept={() => setStep("checkout")} onBack={onBack} />;
 }
