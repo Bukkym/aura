@@ -67,7 +67,7 @@ export function JourneyHome({
       </div>
 
       <h1 style={{ position: "relative", fontFamily: "var(--font-serif)", fontWeight: 500, fontSize: 19, textAlign: "center", margin: 0, letterSpacing: "-0.01em" }}>
-        Your circle is forming.
+        Your crew is forming.
       </h1>
       <p style={{ position: "relative", fontSize: 12.5, color: "var(--aura-ink-55)", textAlign: "center", margin: "4px 0 0" }}>
         {circle.length} faces keep showing up. Ora keeps bringing them back.

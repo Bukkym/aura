@@ -76,7 +76,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
             </p>
             <Link
               href="/"
-              className="mt-1 inline-flex h-12 items-center justify-center rounded-full bg-aura-violet px-8 text-base font-medium text-aura-bg transition hover:bg-ora-violet active:scale-[0.98]"
+              className="mt-1 inline-flex h-12 items-center justify-center rounded-full bg-aura-ink px-8 text-base font-medium text-aura-bg transition hover:opacity-90 active:scale-[0.98]"
             >
               Begin
             </Link>
@@ -106,7 +106,7 @@ export default async function LoginPage({ searchParams }: PageProps) {
             />
             <button
               type="submit"
-              className="inline-flex h-12 items-center justify-center rounded-full bg-aura-violet px-8 text-base font-medium text-aura-bg transition hover:bg-ora-violet active:scale-[0.98]"
+              className="inline-flex h-12 items-center justify-center rounded-full bg-aura-ink px-8 text-base font-medium text-aura-bg transition hover:opacity-90 active:scale-[0.98]"
             >
               {isSignup ? "Send my code" : "Send me a link"}
             </button>

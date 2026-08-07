@@ -17,7 +17,7 @@ const STEPS = [
 
 const FOR = [
   { c: "var(--persimmon)", b: "New to the city.", s: "You moved, and your people are still three time zones away." },
-  { c: "var(--plum)", b: "Rebuilding your circle.", s: "Life shifted, and the old crew drifted. You want a new one." },
+  { c: "var(--plum)", b: "Rebuilding your crew.", s: "Life shifted, and the old one drifted. You want a new one." },
   { c: "var(--teal)", b: "Done with the group-chat graveyard.", s: "Plans that die in “we should hang out soon.” You want them to actually happen." },
   { c: "var(--sage)", b: "Real friends, no logistics.", s: "No swiping, no awkward intros, no being the one who plans everything." },
 ];
@@ -74,7 +74,7 @@ export function Landing() {
         <div className={`${styles.wrap} ${styles.heroGrid}`}>
           <div>
             <h1 className={`${styles.h1} ${styles.serif}`}>Meet people you click with. Then <em>keep</em> seeing them.</h1>
-            <p className={styles.sub}>Aura plans real nights out with a few people who actually fit you, then brings the ones you clicked with back. A few plans in, you have a circle, not a contact list.</p>
+            <p className={styles.sub}>Aura plans real nights out with a few people who actually fit you, then brings the ones you clicked with back. A few plans in, you have a crew, not a contact list.</p>
             <div className={styles.ctaRow}>
               <Link href="/start" className={`${styles.btn} ${styles.btnPlum}`}>Get your first plan</Link>
               <a href="#how" className={`${styles.btn} ${styles.btnOutline}`}>See how it works</a>
@@ -91,7 +91,7 @@ export function Landing() {
       <section className={styles.band} id="how">
         <div className={styles.wrap}>
           <span className={`${styles.lbl} ${styles.eyebrow} ${styles.reveal}`}>How it works</span>
-          <h2 className={`${styles.h2} ${styles.serif} ${styles.reveal}`}>Three easy steps, and the circle builds itself.</h2>
+          <h2 className={`${styles.h2} ${styles.serif} ${styles.reveal}`}>Three easy steps, and your crew comes together.</h2>
           <div className={styles.steps}>
             {STEPS.map((s) => (
               <div key={s.h} className={`${styles.step} ${styles.reveal}`}>
@@ -109,14 +109,14 @@ export function Landing() {
               </div>
             ))}
           </div>
-          <p className={`${styles.arcNote} ${styles.serif} ${styles.reveal}`}>Plan by plan, the same faces keep showing up. <b>That is how a circle forms.</b></p>
+          <p className={`${styles.arcNote} ${styles.serif} ${styles.reveal}`}>Plan by plan, the same faces keep showing up. <b>That is how a crew forms.</b></p>
         </div>
       </section>
 
       <section className={styles.band} style={{ paddingTop: 0 }}>
         <div className={styles.wrap}>
           <span className={`${styles.lbl} ${styles.eyebrow} ${styles.reveal}`}>Why it&apos;s different</span>
-          <h2 className={`${styles.h2} ${styles.serif} ${styles.reveal}`}>Not roulette. A circle that builds.</h2>
+          <h2 className={`${styles.h2} ${styles.serif} ${styles.reveal}`}>Not roulette. A crew that grows.</h2>
           <div className={styles.contrast}>
             <div className={`${styles.cbox} ${styles.cboxDim} ${styles.reveal}`}>
               <h4>The usual night out</h4>
