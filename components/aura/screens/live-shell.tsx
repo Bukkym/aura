@@ -47,17 +47,17 @@ function cardFromSummary(s: PlanSummary): CardPlan {
 
 function headerWhen(iso: string): { big: string; sub: string } {
   const d = new Date(iso);
-  const weekday = d.toLocaleDateString("en-US", { weekday: "long", timeZone: "Europe/Berlin" });
-  const hour = Number(d.toLocaleString("en-US", { hour: "numeric", hour12: false, timeZone: "Europe/Berlin" }));
+  const weekday = d.toLocaleDateString("en-US", { weekday: "long", timeZone: "America/Toronto" });
+  const hour = Number(d.toLocaleString("en-US", { hour: "numeric", hour12: false, timeZone: "America/Toronto" }));
   const daypart = hour < 12 ? "morning" : hour < 17 ? "afternoon" : "evening";
   return { big: `${weekday} ${daypart}`, sub: "Berlin" };
 }
 
 function shortWhen(iso: string): string {
   const d = new Date(iso);
-  const day = d.toLocaleDateString("en-US", { weekday: "long", timeZone: "Europe/Berlin" });
+  const day = d.toLocaleDateString("en-US", { weekday: "long", timeZone: "America/Toronto" });
   const time = d
-    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "Europe/Berlin" })
+    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" })
     .replace(" ", "")
     .toLowerCase();
   return `${day} · ${time}`;

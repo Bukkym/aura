@@ -36,7 +36,7 @@ const BUDGETS: Budget[] = ["low", "mid", "high", "any"];
 
 function neighborhoods(hoods: string[] | undefined): string[] {
   const picks = hoods ?? [];
-  if (picks.length === 0 || picks.includes("Anywhere in Berlin")) return ["any"];
+  if (picks.length === 0 || picks.includes("Anywhere in Toronto")) return ["any"];
   return picks;
 }
 
@@ -63,7 +63,7 @@ const CONNECTION_LABEL: Record<ConnectionType, string> = {
 export function draftToSelections(draft: Draft): Selections {
   const { selfExtracted: s, lookingForExtracted: l } = draft;
   const hoods = (s.neighborhoods ?? []).includes("any")
-    ? ["Anywhere in Berlin"]
+    ? ["Anywhere in Toronto"]
     : s.neighborhoods ?? [];
 
   return {
@@ -82,9 +82,9 @@ export function mapSelectionsToDraft(sel: Selections): Draft {
   const hoods = neighborhoods(sel.h1);
 
   // "help finding my footing here" is a life-context signal too — surfacing it
-  // lets explain() find shared "new to Berlin" with seed newcomers.
+  // lets explain() find shared "new to Toronto" with seed newcomers.
   const lifeContext = (sel.c1 ?? []).includes("help finding my footing here")
-    ? ["new to Berlin"]
+    ? ["new to Toronto"]
     : [];
 
   const connectionType = (sel.c1 ?? [])
