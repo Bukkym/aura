@@ -65,6 +65,7 @@ export function Landing() {
           <div className={`${styles.brand} ${styles.serif}`}><b>a</b>ura</div>
           <div className={styles.navRight}>
             <span className={styles.cityPill}><span className={styles.dot} /> Now in Toronto</span>
+            <Link href="/auth/login" className={styles.signIn}>Sign in</Link>
             <Link href="/start" className={`${styles.btn} ${styles.navCta}`}>Get your first plan</Link>
           </div>
         </div>
