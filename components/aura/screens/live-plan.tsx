@@ -207,7 +207,35 @@ function AcceptedView({ plan, onBack, onDone, onCancel }: { plan: PlanResponse; 
   const [phone, setPhone] = useState("");
   const [confirmingCancel, setConfirmingCancel] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [sending, setSending] = useState(false);
   const stack = plan.attendees.slice(0, 4);
+
+  // Save the phone + send the plan details (email now, SMS when a provider is
+  // wired), then finish. Best-effort: the UI proceeds even if delivery fails.
+  const finish = async () => {
+    setSending(true);
+    try {
+      await fetch("/api/plan/notify", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          phone,
+          details: {
+            activityType: plan.activityType,
+            placeName: plan.place.name,
+            neighborhood: plan.place.neighborhood,
+            address: plan.place.address,
+            when,
+            groupSize: plan.attendees.length,
+          },
+        }),
+      });
+    } catch {
+      // ignore; proceed regardless
+    }
+    setSending(false);
+    onDone?.();
+  };
 
   return (
     <div style={{ position: "relative", minHeight: "100%", background: "var(--aura-bg)", color: "var(--aura-ink)", overflow: "hidden", display: "flex", flexDirection: "column", padding: "46px 24px 24px" }}>
@@ -259,7 +287,7 @@ function AcceptedView({ plan, onBack, onDone, onCancel }: { plan: PlanResponse; 
         </p>
       </div>
 
-      <button onClick={onDone} className="btn-soft btn-soft--ink" style={{ position: "relative", marginTop: 16 }}>Done</button>
+      <button onClick={finish} disabled={sending} className="btn-soft btn-soft--ink" style={{ position: "relative", marginTop: 16 }}>{sending ? "Sending" : "Done"}</button>
 
       {onCancel && (
         <div style={{ position: "relative", marginTop: 14, display: "flex", justifyContent: "center" }}>
@@ -296,6 +324,29 @@ function AcceptedView({ plan, onBack, onDone, onCancel }: { plan: PlanResponse; 
 // is stubbed for now (no Stripe yet); Continue confirms the spot.
 function CheckoutView({ plan, onContinue, onBack }: { plan: PlanResponse; onContinue: () => void; onBack: () => void }) {
   const when = formatWhen(plan.dateTime);
+  const [busy, setBusy] = useState(false);
+
+  // Start a Stripe Checkout session; if payment isn't configured yet the route
+  // replies { skipped: true } and we just proceed (payment is the last switch).
+  const proceed = async () => {
+    setBusy(true);
+    try {
+      const res = await fetch("/api/checkout/session", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ kind: "single" }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { url?: string };
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+    } catch {
+      // ignore; fall through to proceed without payment
+    }
+    setBusy(false);
+    onContinue();
+  };
   return (
     <div style={{ position: "relative", height: "100%", background: "var(--aura-bg)", color: "var(--aura-ink)", display: "flex", flexDirection: "column", padding: "46px 24px 24px" }}>
       <div aria-hidden style={{ position: "absolute", inset: 0, background: "var(--bloom-plan)", opacity: 0.4, filter: "blur(72px)", pointerEvents: "none" }} />
@@ -327,7 +378,7 @@ function CheckoutView({ plan, onContinue, onBack }: { plan: PlanResponse; onCont
         </div>
       </div>
 
-      <button onClick={onContinue} className="btn-soft btn-soft--ink" style={{ position: "relative", marginTop: 14 }}>Continue</button>
+      <button onClick={proceed} disabled={busy} className="btn-soft btn-soft--ink" style={{ position: "relative", marginTop: 14 }}>{busy ? "One moment" : "Continue"}</button>
       <p style={{ position: "relative", fontSize: 11, textAlign: "center", color: "var(--aura-ink-55)", margin: "10px 0 0", lineHeight: 1.5 }}>
         Every plan is a great night, or we make it right. Your number stays private.
       </p>
