@@ -22,6 +22,10 @@ export type Selections = Record<string, string[]>;
 export interface Draft {
   selfExtracted: SelfExtracted;
   lookingForExtracted: LookingForExtracted;
+  // Captured on the name/age step (not from chips), persisted to the user's
+  // profile (display_name, age_range) by /api/plan/create.
+  displayName?: string;
+  ageRange?: { min: number; max: number };
 }
 
 // Onboarding connection labels → the closed ConnectionType set.

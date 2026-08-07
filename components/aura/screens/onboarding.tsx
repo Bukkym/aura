@@ -100,6 +100,58 @@ export function ScWelcome({ onNext }: { onNext: () => void }) {
   );
 }
 
+// ── Screen 1b · Name + age (name required, age optional) ──
+export function ScNameAge({
+  onNext,
+  initialName = "",
+  initialAge = "",
+}: {
+  onNext: (name: string, age: string) => void;
+  initialName?: string;
+  initialAge?: string;
+}) {
+  const [name, setName] = useState(initialName);
+  const [age, setAge] = useState(initialAge);
+  const ready = name.trim().length > 0;
+  const field: React.CSSProperties = {
+    width: "100%",
+    fontFamily: "var(--font-body)",
+    fontSize: 16,
+    padding: "14px 16px",
+    borderRadius: 14,
+    border: "1px solid var(--aura-ink-10)",
+    background: "#fffdf7",
+    color: "var(--aura-ink)",
+    outline: "none",
+    boxSizing: "border-box",
+  };
+  return (
+    <div style={{ position: "relative", height: "100%", background: "var(--aura-bg)", color: "var(--aura-ink)", overflow: "hidden", display: "flex", flexDirection: "column", padding: "44px 26px 26px" }}>
+      <div aria-hidden style={{ position: "absolute", inset: 0, background: "var(--bloom-welcome)", opacity: 0.5, filter: "blur(64px)" }} />
+      <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 20 }}>
+        <Ring size={56} state="rest" />
+        <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 500, fontSize: 27, lineHeight: 1.12, letterSpacing: "-0.01em", margin: 0 }}>
+          First, what should Ora call you?
+        </h1>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your first name" aria-label="Your first name" autoFocus style={field} />
+          <input value={age} onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, "").slice(0, 2))} inputMode="numeric" placeholder="Your age (optional)" aria-label="Your age" style={field} />
+        </div>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 12.5, color: "var(--aura-ink-45)", margin: 0, lineHeight: 1.5 }}>
+          Your name is how your crew knows you. Age just helps Ora match you well.
+        </p>
+      </div>
+      <button
+        onClick={() => ready && onNext(name.trim(), age)}
+        disabled={!ready}
+        style={{ width: "100%", padding: 14, borderRadius: 16, border: "none", cursor: ready ? "pointer" : "not-allowed", fontFamily: "var(--font-body)", fontSize: 14.5, fontWeight: 600, letterSpacing: "-0.01em", background: ready ? "var(--aura-ink)" : "var(--aura-ink-10)", color: ready ? "var(--aura-bg)" : "var(--aura-ink-40)" }}
+      >
+        Continue
+      </button>
+    </div>
+  );
+}
+
 // ── Screen 2 · Entry choice (voice primary · tap-through optional) ──
 export function ScEntry({ onVoice, onChips }: { onVoice: () => void; onChips: () => void }) {
   return (
