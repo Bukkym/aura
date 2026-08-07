@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
-// The voice screen is now an in-flow step of the onboarding spine at /. This
-// route is kept as a redirect so old links (and the magic-link bounce) land in
-// the right place.
-export default function VoicePage() {
-  redirect("/");
+// Parked for the WTP build: voice onboarding is off the live path (welcome goes
+// straight to the chip capture). The voice screens/components remain in the repo
+// (and at tag pre-wtp-full-app) and can be re-linked when voice is un-parked.
+export default function VoiceParked() {
+  redirect("/start");
 }
