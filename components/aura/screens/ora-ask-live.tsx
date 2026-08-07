@@ -31,9 +31,9 @@ type VoiceState = "idle" | "recording" | "transcribing";
 
 function shortWhen(iso: string): string {
   const d = new Date(iso);
-  const day = d.toLocaleDateString("en-US", { weekday: "long", timeZone: "Europe/Berlin" });
+  const day = d.toLocaleDateString("en-US", { weekday: "long", timeZone: "America/Toronto" });
   const time = d
-    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "Europe/Berlin" })
+    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "America/Toronto" })
     .replace(" ", "")
     .toLowerCase();
   return `${day} · ${time}`;

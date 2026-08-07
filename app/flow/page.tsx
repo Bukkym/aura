@@ -1,9 +1,8 @@
-import { AuraFlow } from "@/components/aura/AuraFlow";
+import { redirect } from "next/navigation";
 
-// The full aura product flow recreated from design_handoff_aura: welcome → entry
-// → voice → follow-up → preferences → finding → home → plan → accepted → plans →
-// the stretch moment. Pixel-faithful to the prototype; wiring each screen to the
-// live auth + deterministic matching layer (Slices 1 + 3) is the follow-up.
-export default function FlowPage() {
-  return <AuraFlow />;
+// Parked for the WTP build: the sample-data /flow showcase is off the live path.
+// Component code remains in the repo (and at tag pre-wtp-full-app); this route
+// redirects so nothing off-direction lingers.
+export default function FlowParked() {
+  redirect("/");
 }

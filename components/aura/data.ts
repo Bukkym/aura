@@ -57,7 +57,7 @@ export const PEOPLE: Person[] = [
   {
     id: "lena-w",
     name: "Lena",
-    fit: "DJs house nights, new to Berlin like you",
+    fit: "DJs house nights, new to Toronto like you",
     detail: [
       ["Both into", "music, late nights"],
       ["You'd both show up for", "vinyl pop-ups, dancing"],

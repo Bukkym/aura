@@ -22,6 +22,10 @@ export type Selections = Record<string, string[]>;
 export interface Draft {
   selfExtracted: SelfExtracted;
   lookingForExtracted: LookingForExtracted;
+  // Captured on the name/age step (not from chips), persisted to the user's
+  // profile (display_name, age_range) by /api/plan/create.
+  displayName?: string;
+  ageRange?: { min: number; max: number };
 }
 
 // Onboarding connection labels → the closed ConnectionType set.
@@ -36,7 +40,7 @@ const BUDGETS: Budget[] = ["low", "mid", "high", "any"];
 
 function neighborhoods(hoods: string[] | undefined): string[] {
   const picks = hoods ?? [];
-  if (picks.length === 0 || picks.includes("Anywhere in Berlin")) return ["any"];
+  if (picks.length === 0 || picks.includes("Anywhere in Toronto")) return ["any"];
   return picks;
 }
 
@@ -63,7 +67,7 @@ const CONNECTION_LABEL: Record<ConnectionType, string> = {
 export function draftToSelections(draft: Draft): Selections {
   const { selfExtracted: s, lookingForExtracted: l } = draft;
   const hoods = (s.neighborhoods ?? []).includes("any")
-    ? ["Anywhere in Berlin"]
+    ? ["Anywhere in Toronto"]
     : s.neighborhoods ?? [];
 
   return {
@@ -73,10 +77,7 @@ export function draftToSelections(draft: Draft): Selections {
     ac1: s.activityTypes ?? [],
     h1: hoods,
     av1: s.availability ?? [],
-    b1: [s.budget ?? "any"],
     c1: (l.connectionType ?? []).map((c) => CONNECTION_LABEL[c]).filter(Boolean),
-    p2: l.personality ?? [],
-    in2: l.interests ?? [],
     s1: s.socialPreferences ?? [],
   };
 }
@@ -85,9 +86,9 @@ export function mapSelectionsToDraft(sel: Selections): Draft {
   const hoods = neighborhoods(sel.h1);
 
   // "help finding my footing here" is a life-context signal too — surfacing it
-  // lets explain() find shared "new to Berlin" with seed newcomers.
+  // lets explain() find shared "new to Toronto" with seed newcomers.
   const lifeContext = (sel.c1 ?? []).includes("help finding my footing here")
-    ? ["new to Berlin"]
+    ? ["new to Toronto"]
     : [];
 
   const connectionType = (sel.c1 ?? [])
@@ -107,10 +108,14 @@ export function mapSelectionsToDraft(sel: Selections): Draft {
   };
 
   const lookingForExtracted: LookingForExtracted = {
-    personality: sel.p2 ?? [],
-    interests: sel.in2 ?? [],
-    // Mirror the user's own social style + vibe as what they want around them,
-    // so match.ts's vibe (.10) and social (.10) weights actually fire.
+    // Personality + interests are asked once (about you) and mirrored here, so
+    // match.ts's personality (.35) and interests (.20) weights score you against
+    // people similar to you. The old flow asked these a second time ("people who
+    // are" / "shared interests"); that duplication is removed.
+    personality: sel.p1 ?? [],
+    interests: sel.in1 ?? [],
+    // Social style + vibe are likewise asked once and mirrored, so match.ts's
+    // vibe (.10) and social (.10) weights actually fire.
     socialPreferences: sel.s1 ?? [],
     vibeKeywords: sel.v1 ?? [],
     connectionType,

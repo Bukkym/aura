@@ -9,7 +9,7 @@ import Link from "next/link";
 import { Ring, Wordmark, OraBloom, mono } from "../primitives";
 import type { Selections } from "../mapDraft";
 
-// ── Screen 1 · Welcome ──
+// ── Screen 1 · Welcome ── (Warm Aurora, soft edition — matches the locked mockup)
 export function ScWelcome({ onNext }: { onNext: () => void }) {
   return (
     <div
@@ -21,38 +21,133 @@ export function ScWelcome({ onNext }: { onNext: () => void }) {
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "0 30px",
+        padding: "44px 26px 26px",
       }}
     >
       <div
         aria-hidden
         style={{ position: "absolute", inset: 0, background: "var(--bloom-welcome)", opacity: 0.6, filter: "blur(64px)" }}
       />
-      <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center" }}>
-        <Ring size={108} state="idle" />
-        <div style={{ marginTop: 34 }}>
-          <Wordmark size={62} />
+      <div
+        style={{
+          position: "relative",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "flex-start",
+          gap: 22,
+        }}
+      >
+        <Ring size={76} state="idle" />
+        <div style={{ fontFamily: "var(--font-serif)", fontSize: 24, letterSpacing: "0.005em" }}>
+          <span style={{ color: "var(--aura-persimmon)", fontWeight: 400 }}>a</span>ura
         </div>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: 17, color: "var(--aura-ink-70)", margin: "16px 0 0", lineHeight: 1.5, maxWidth: 280 }}>
-          Your people are out there.
-          <br />
-          Let&apos;s find them.
-        </p>
-        <button onClick={onNext} className="btn btn--aurora" style={{ marginTop: 36, padding: "0 56px" }}>
-          Begin
-        </button>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--aura-ink-55)", margin: "20px 0 0" }}>
-          Already have an account?{" "}
-          <Link href="/auth/login" style={{ color: "var(--aura-violet)", fontWeight: 500, textDecoration: "none" }}>
-            Sign in
-          </Link>
+        <h1
+          style={{
+            fontFamily: "var(--font-serif)",
+            fontWeight: 500,
+            fontSize: 30,
+            lineHeight: 1.1,
+            letterSpacing: "-0.01em",
+            margin: 0,
+          }}
+        >
+          Meet people you click with, then keep seeing them.
+        </h1>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 14, lineHeight: 1.55, color: "var(--aura-ink-55)", margin: 0 }}>
+          Tell Ora your vibe. Ora plans it, you show up. A few plans in, that is your crew.
         </p>
       </div>
-      <span className="by-ora" style={{ position: "absolute", bottom: 26, right: 24, color: "var(--aura-ink-40)" }}>
-        by Ora
-      </span>
+      <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 10 }}>
+        <button
+          onClick={onNext}
+          style={{
+            width: "100%",
+            padding: 14,
+            borderRadius: 16,
+            border: "none",
+            cursor: "pointer",
+            fontFamily: "var(--font-body)",
+            fontSize: 14.5,
+            fontWeight: 600,
+            letterSpacing: "-0.01em",
+            background: "var(--aura-ink)",
+            color: "var(--aura-bg)",
+          }}
+        >
+          Begin
+        </button>
+        <button
+          onClick={onNext}
+          style={{
+            width: "100%",
+            padding: 14,
+            borderRadius: 16,
+            border: "none",
+            cursor: "pointer",
+            fontFamily: "var(--font-body)",
+            fontSize: 14.5,
+            fontWeight: 600,
+            background: "none",
+            color: "var(--aura-ink-55)",
+          }}
+        >
+          Talk to Ora
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Screen 1b · Name + age (name required, age optional) ──
+export function ScNameAge({
+  onNext,
+  initialName = "",
+  initialAge = "",
+}: {
+  onNext: (name: string, age: string) => void;
+  initialName?: string;
+  initialAge?: string;
+}) {
+  const [name, setName] = useState(initialName);
+  const [age, setAge] = useState(initialAge);
+  const ready = name.trim().length > 0;
+  const field: React.CSSProperties = {
+    width: "100%",
+    fontFamily: "var(--font-body)",
+    fontSize: 16,
+    padding: "14px 16px",
+    borderRadius: 14,
+    border: "1px solid var(--aura-ink-10)",
+    background: "#fffdf7",
+    color: "var(--aura-ink)",
+    outline: "none",
+    boxSizing: "border-box",
+  };
+  return (
+    <div style={{ position: "relative", height: "100%", background: "var(--aura-bg)", color: "var(--aura-ink)", overflow: "hidden", display: "flex", flexDirection: "column", padding: "44px 26px 26px" }}>
+      <div aria-hidden style={{ position: "absolute", inset: 0, background: "var(--bloom-welcome)", opacity: 0.5, filter: "blur(64px)" }} />
+      <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", justifyContent: "center", gap: 20 }}>
+        <Ring size={56} state="rest" />
+        <h1 style={{ fontFamily: "var(--font-serif)", fontWeight: 500, fontSize: 27, lineHeight: 1.12, letterSpacing: "-0.01em", margin: 0 }}>
+          First, what should Ora call you?
+        </h1>
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Your first name" aria-label="Your first name" autoFocus style={field} />
+          <input value={age} onChange={(e) => setAge(e.target.value.replace(/[^0-9]/g, "").slice(0, 2))} inputMode="numeric" placeholder="Your age (optional)" aria-label="Your age" style={field} />
+        </div>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 12.5, color: "var(--aura-ink-45)", margin: 0, lineHeight: 1.5 }}>
+          Your name is how your crew knows you. Age just helps Ora match you well.
+        </p>
+      </div>
+      <button
+        onClick={() => ready && onNext(name.trim(), age)}
+        disabled={!ready}
+        style={{ width: "100%", padding: 14, borderRadius: 16, border: "none", cursor: ready ? "pointer" : "not-allowed", fontFamily: "var(--font-body)", fontSize: 14.5, fontWeight: 600, letterSpacing: "-0.01em", background: ready ? "var(--aura-ink)" : "var(--aura-ink-10)", color: ready ? "var(--aura-bg)" : "var(--aura-ink-40)" }}
+      >
+        Continue
+      </button>
     </div>
   );
 }
@@ -412,7 +507,7 @@ const VOCAB = {
   vibe: ["chill", "creative", "cozy", "intellectual", "laid-back", "adventurous", "introspective", "artsy", "genuine", "deep"],
   interests: ["art", "music", "philosophy", "startups", "climbing", "yoga", "cooking", "techno", "vinyl", "books", "design", "indie film", "outdoors", "food"],
   activities: ["dinner parties", "gallery openings", "boulder gym", "lake days", "indie cinema", "museum afternoons", "techno clubs", "book clubs", "brunches", "hiking"],
-  hoods: ["Kreuzberg", "Mitte", "Prenzlauer Berg", "Wedding", "Friedrichshain", "Neukölln", "Tiergarten", "Charlottenburg"],
+  hoods: ["Kensington Market", "Queen West", "Ossington", "Leslieville", "The Annex", "Little Italy", "Riverside", "The Junction"],
   avail: ["weekday evenings", "weekday mornings", "weekend mornings", "weekend afternoons", "weekend evenings", "anytime"],
   budget: ["low", "mid", "high", "any"],
   connection: ["people to do things with", "deep connections", "a friend group", "help finding my footing here"],
@@ -433,6 +528,11 @@ interface Step {
   groups: ChipGroup[];
 }
 
+// Streamlined to 4 steps: we ask personality and interests ONCE (about you) and
+// mirror them into "looking for" at submit (mapDraft), the same way vibe /
+// social / activities are already mirrored. The old flow asked personality and
+// interests twice (self + desired) and a budget question that doesn't feed
+// people-matching; those added friction without adding matching signal.
 const STEPS: Step[] = [
   {
     ora: "First, you. Pick the words that feel like you on a normal week.",
@@ -453,20 +553,12 @@ const STEPS: Step[] = [
     groups: [
       { key: "h1", label: "Around", opts: VOCAB.hoods, min: 1, anywhere: true },
       { key: "av1", label: "Free", opts: VOCAB.avail, min: 1 },
-      { key: "b1", label: "Budget", opts: VOCAB.budget, min: 1, single: true, def: "any" },
     ],
   },
   {
-    ora: "Now them. What kind of connection are you after.",
+    ora: "Last one. The kind of connection you're after, and how you like to hang.",
     groups: [
       { key: "c1", label: "Looking for", opts: VOCAB.connection, min: 1 },
-      { key: "p2", label: "People who are", opts: VOCAB.personality, min: 2 },
-    ],
-  },
-  {
-    ora: "Last one. What you'd want to share with them.",
-    groups: [
-      { key: "in2", label: "Shared interests", opts: VOCAB.interests, min: 1 },
       { key: "s1", label: "How you'd hang", opts: VOCAB.social, min: 1 },
     ],
   },
@@ -511,9 +603,9 @@ export function ScChips({
       const cur = prev[g.key] || [];
       let next: string[];
       if (g.single) next = [opt];
-      else if (opt === "__anywhere") next = ["Anywhere in Berlin"];
+      else if (opt === "__anywhere") next = ["Anywhere in Toronto"];
       else {
-        const without = cur.filter((x) => x !== "Anywhere in Berlin");
+        const without = cur.filter((x) => x !== "Anywhere in Toronto");
         next = without.includes(opt) ? without.filter((x) => x !== opt) : [...without, opt];
       }
       return { ...prev, [g.key]: next };
@@ -521,7 +613,7 @@ export function ScChips({
 
   const unmet = st.groups.filter((g) => {
     const arr = sel[g.key] || [];
-    const n = arr.filter((x) => x !== "Anywhere in Berlin").length + (arr.includes("Anywhere in Berlin") ? 1 : 0);
+    const n = arr.filter((x) => x !== "Anywhere in Toronto").length + (arr.includes("Anywhere in Toronto") ? 1 : 0);
     return n < (g.min || 0);
   });
   const ready = unmet.length === 0;
@@ -577,7 +669,7 @@ export function ScChips({
           <span style={{ flex: "none", marginTop: 2 }}>
             <Ring size={26} state="rest" />
           </span>
-          <p style={{ fontFamily: "var(--font-display)", fontWeight: 500, fontSize: 19, lineHeight: 1.32, letterSpacing: "-0.01em", margin: 0 }}>{st.ora}</p>
+          <p style={{ fontFamily: "var(--font-serif)", fontWeight: 500, fontSize: 20, lineHeight: 1.28, letterSpacing: "-0.01em", margin: 0 }}>{st.ora}</p>
         </div>
         {st.groups.map((g) => (
           <div key={g.key} style={{ marginBottom: 22 }}>
@@ -587,8 +679,8 @@ export function ScChips({
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 9 }}>
               {g.anywhere && (
-                <StepChip on={(sel[g.key] || []).includes("Anywhere in Berlin")} onClick={() => toggle(g, "__anywhere")}>
-                  Anywhere in Berlin
+                <StepChip on={(sel[g.key] || []).includes("Anywhere in Toronto")} onClick={() => toggle(g, "__anywhere")}>
+                  Anywhere in Toronto
                 </StepChip>
               )}
               {g.opts.map((opt) => (
@@ -606,8 +698,8 @@ export function ScChips({
         <div style={{ height: 18, textAlign: "center", marginBottom: 6, fontSize: 12.5, color: "var(--aura-ink-45)", opacity: ready ? 0 : 1, transition: "opacity 200ms" }}>
           {note}
         </div>
-        <button onClick={next} disabled={!ready} className="btn btn--aurora" style={{ width: "100%", whiteSpace: "nowrap" }}>
-          {step < STEPS.length - 1 ? "Next →" : "Find my people →"}
+        <button onClick={next} disabled={!ready} className="btn-soft btn-soft--ink" style={{ whiteSpace: "nowrap" }}>
+          {step < STEPS.length - 1 ? "Next" : "Find my people"}
         </button>
       </div>
     </div>

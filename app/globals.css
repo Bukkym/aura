@@ -8,58 +8,67 @@
    Consumed by the shared primitives + flow screens via var(--token) references.
    ========================================================================== */
 :root {
-  /* COLOR — base tokens (aura mode, the default surface) */
-  --aura-bg: #faf7f2; /* primary background, warm cream */
-  --aura-coral: #ff7bac; /* warm accent / energy */
-  --aura-lavender: #c97dff; /* soft accent / secondary */
-  --aura-violet: #7752e6; /* PRIMARY brand violet (buttons, links, brand) */
-  --aura-ink: #1a1530; /* body text / high-contrast ink (violet-black) */
+  /* COLOR — base tokens (aura mode, the default surface) — Warm Aurora, soft edition */
+  --aura-bg: #f6f2e9; /* primary background, warm cream */
+  --aura-coral: #dc5b3c; /* persimmon — warm secondary / energy (was pink) */
+  --aura-lavender: #b892c9; /* soft warm plum-lavender accent */
+  --aura-violet: #7e5c90; /* PRIMARY accent = plum (chips, fields, small accents) */
+  --aura-ink: #201c17; /* body text / high-contrast warm ink */
+
+  /* soft-edition named accents (used by the new screens) */
+  --aura-plum: #7e5c90;
+  --aura-persimmon: #dc5b3c;
+  --aura-sage: #53613c;
+  --aura-teal: #356059;
+  --aura-ring-violet: #7752e6; /* true luminous violet — RESERVED: ring + Ora only */
 
   /* COLOR — Ora mode (bloom moments only; pure colored light, never near-black) */
   --ora-bg: #0e0b22; /* deep indigo, RESERVED: app icon / future dark canvas only */
   --ora-indigo: #5b2eff;
-  --ora-violet: #a237ff; /* luminous violet, also the single-color brand anchor */
-  --ora-magenta: #ff3d9a;
-  --ora-light: #faf7f2;
-  --aura-anchor: #a237ff;
+  --ora-violet: #7752e6; /* luminous violet used in the ring + Ora glow */
+  --ora-magenta: #a24e86; /* softened magenta */
+  --ora-light: #f6f2e9;
+  --aura-anchor: #7752e6;
 
-  /* COLOR — canonical alpha tints (use ONLY these) */
-  --aura-ink-90: rgba(26, 21, 48, 0.9);
-  --aura-ink-70: rgba(26, 21, 48, 0.7);
-  --aura-ink-55: rgba(26, 21, 48, 0.55);
-  --aura-ink-45: rgba(26, 21, 48, 0.45);
-  --aura-ink-40: rgba(26, 21, 48, 0.4);
-  --aura-ink-10: rgba(26, 21, 48, 0.1);
-  --aura-ink-06: rgba(26, 21, 48, 0.06);
-  --aura-violet-12: rgba(119, 82, 230, 0.12);
-  --aura-violet-10: rgba(119, 82, 230, 0.1);
-  --aura-violet-30: rgba(119, 82, 230, 0.3);
-  --aura-violet-40: rgba(119, 82, 230, 0.4);
-  --aura-lavender-50: rgba(201, 125, 255, 0.5);
-  --aura-lavender-15: rgba(201, 125, 255, 0.15);
+  /* COLOR — canonical alpha tints (warm ink + plum accent) */
+  --aura-ink-90: rgba(32, 28, 23, 0.9);
+  --aura-ink-70: rgba(32, 28, 23, 0.7);
+  --aura-ink-55: rgba(32, 28, 23, 0.55);
+  --aura-ink-45: rgba(32, 28, 23, 0.45);
+  --aura-ink-40: rgba(32, 28, 23, 0.4);
+  --aura-ink-10: rgba(32, 28, 23, 0.1);
+  --aura-ink-06: rgba(32, 28, 23, 0.06);
+  --aura-violet-12: rgba(126, 92, 144, 0.14);
+  --aura-violet-10: rgba(126, 92, 144, 0.1);
+  --aura-violet-30: rgba(126, 92, 144, 0.3);
+  --aura-violet-40: rgba(126, 92, 144, 0.42);
+  --aura-lavender-50: rgba(184, 146, 201, 0.5);
+  --aura-lavender-15: rgba(184, 146, 201, 0.15);
 
-  /* BACKGROUND BLOOM — the always-on aurora behind every aura screen */
+  /* BACKGROUND BLOOM — soft warm aurora behind every aura screen */
   --bloom-welcome:
-    radial-gradient(50% 50% at 25% 20%, rgba(255, 123, 172, 0.28) 0%, transparent 65%),
-    radial-gradient(45% 45% at 80% 30%, rgba(201, 125, 255, 0.22) 0%, transparent 70%),
-    radial-gradient(40% 40% at 60% 90%, rgba(119, 82, 230, 0.18) 0%, transparent 70%);
+    radial-gradient(50% 50% at 25% 20%, rgba(220, 91, 60, 0.12) 0%, transparent 65%),
+    radial-gradient(45% 45% at 80% 30%, rgba(126, 92, 144, 0.16) 0%, transparent 70%),
+    radial-gradient(40% 40% at 60% 90%, rgba(119, 82, 230, 0.12) 0%, transparent 70%);
   --bloom-plan:
-    radial-gradient(60% 55% at 20% 15%, rgba(255, 123, 172, 0.16) 0%, transparent 70%),
-    radial-gradient(55% 55% at 85% 25%, rgba(201, 125, 255, 0.14) 0%, transparent 72%),
-    radial-gradient(60% 60% at 55% 100%, rgba(119, 82, 230, 0.12) 0%, transparent 72%);
+    radial-gradient(60% 55% at 20% 15%, rgba(220, 91, 60, 0.08) 0%, transparent 70%),
+    radial-gradient(55% 55% at 85% 25%, rgba(126, 92, 144, 0.12) 0%, transparent 72%),
+    radial-gradient(60% 60% at 55% 100%, rgba(119, 82, 230, 0.09) 0%, transparent 72%);
 
-  /* ORA BLOOM — localized colored-light overlay during the 3 Ora moments */
+  /* ORA BLOOM — localized warm colored-light overlay during the Ora moment */
   --ora-bloom:
-    radial-gradient(38% 38% at 50% 50%, rgba(162, 55, 255, 0.55) 0%, transparent 70%),
-    radial-gradient(50% 50% at 38% 42%, rgba(255, 61, 154, 0.4) 0%, transparent 72%),
-    radial-gradient(55% 55% at 62% 58%, rgba(201, 125, 255, 0.38) 0%, transparent 74%);
+    radial-gradient(38% 38% at 50% 50%, rgba(119, 82, 230, 0.42) 0%, transparent 70%),
+    radial-gradient(50% 50% at 38% 42%, rgba(162, 78, 134, 0.34) 0%, transparent 72%),
+    radial-gradient(55% 55% at 62% 58%, rgba(220, 91, 60, 0.18) 0%, transparent 74%);
 
-  /* The aurora gradient itself, flows around the ring */
-  --aurora-conic: conic-gradient(from 0deg, #5b2eff, #a237ff, #ff3d9a, #ff7bac, #c97dff, #5b2eff);
+  /* The aurora gradient itself, flows around the ring — warm soft aurora */
+  --aurora-conic: conic-gradient(from 140deg, #9c4f86, #7752e6, #7e5c90, #d0715a, #a24e86, #9c4f86);
 
   /* TYPOGRAPHY — families. Geist (body) + Cabinet Grotesk (display) load in app/layout.tsx. */
   --font-display: "Cabinet Grotesk", var(--font-geist-sans), "Geist", system-ui, sans-serif;
   --font-body: var(--font-geist-sans), "Geist", "Cabinet Grotesk", system-ui, sans-serif;
+  /* Fraunces — expressive serif for the wordmark, headlines, and Ora's voice (soft edition) */
+  --font-serif: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
 
   /* TYPE SCALE — 5 distinct styles only */
   --display-size: 56px;
@@ -314,11 +323,11 @@ body {
   transform: scale(var(--press-scale));
 }
 .btn--primary {
-  background: var(--aura-violet);
+  background: var(--aura-ink);
   color: var(--aura-bg);
 }
 .btn--primary:hover {
-  background: var(--ora-violet);
+  background: #33291f;
 }
 .btn--primary:disabled,
 .btn--primary[disabled] {
@@ -329,10 +338,10 @@ body {
 }
 /* Aurora primary — the hero/payoff CTA. Reserve for the ONE primary action. */
 .btn--aurora {
-  background: linear-gradient(108deg, #7752e6 0%, #a338d6 46%, #ff5c9c 84%, #ff7bac 100%);
+  background: linear-gradient(108deg, #7752e6 0%, #a24e86 52%, #dc5b3c 100%);
   background-size: 140% 140%;
   color: #fff;
-  box-shadow: 0 10px 26px rgba(150, 60, 170, 0.32), 0 2px 8px rgba(120, 40, 150, 0.18);
+  box-shadow: 0 10px 26px rgba(150, 70, 90, 0.30), 0 2px 8px rgba(120, 60, 60, 0.16);
   transition:
     background-position 320ms var(--ease-out),
     transform 120ms var(--ease-out),
@@ -369,6 +378,29 @@ body {
 .btn--back:hover {
   color: var(--aura-ink);
 }
+
+/* Soft-edition buttons — full-width rounded rectangles per the Warm Aurora
+   mockups (ink primary, ghost secondary, plum accent). Used by the app screens. */
+.btn-soft {
+  width: 100%;
+  padding: 14px;
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: center;
+  transition: background-color 180ms var(--ease-out), transform 120ms var(--ease-out), opacity 180ms var(--ease-out);
+}
+.btn-soft:active { transform: scale(var(--press-scale)); }
+.btn-soft--ink { background: var(--aura-ink); color: var(--aura-bg); }
+.btn-soft--ink:hover { background: #33291f; }
+.btn-soft--ink:disabled { background: var(--aura-ink-10); color: var(--aura-ink-40); cursor: not-allowed; transform: none; }
+.btn-soft--plum { background: var(--aura-plum); color: #fff; }
+.btn-soft--ghost { background: none; color: var(--aura-ink-55); }
+.btn-soft--ghost:hover { color: var(--aura-ink); }
 
 /* ==========================================================================
    CHIPS — three treatments, three meanings. outline < pale < bold.

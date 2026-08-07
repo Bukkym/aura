@@ -8,19 +8,25 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Warm Aurora, soft edition. Kept in sync with the CSS tokens in
+        // app/globals.css so Tailwind-styled surfaces (auth, widgets) match.
         aura: {
-          bg: "#FAF7F2",
-          coral: "#FF7BAC",
-          lavender: "#C97DFF",
-          violet: "#7752E6",
-          ink: "#1A1530",
+          bg: "#F6F2E9",
+          coral: "#DC5B3C", // persimmon (warm secondary)
+          lavender: "#B892C9",
+          violet: "#7E5C90", // plum — primary accent
+          ink: "#201C17", // warm ink
+          plum: "#7E5C90",
+          persimmon: "#DC5B3C",
+          sage: "#53613C",
+          teal: "#356059",
         },
         ora: {
           bg: "#0E0B22",
           indigo: "#5B2EFF",
-          violet: "#A237FF",
-          magenta: "#FF3D9A",
-          light: "#FAF7F2",
+          violet: "#7752E6", // true luminous violet — ring + Ora only
+          magenta: "#A24E86",
+          light: "#F6F2E9",
         },
       },
       fontFamily: {

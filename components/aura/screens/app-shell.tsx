@@ -359,7 +359,7 @@ export function Home({
       <div style={{ position: "relative", display: "flex", alignItems: "flex-start", justifyContent: "space-between", padding: "56px 22px 12px" }}>
         <div>
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: 25, letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>Friday evening</div>
-          <div style={{ fontSize: 13.5, color: "var(--aura-ink-55)", marginTop: 2 }}>Berlin · Kreuzberg</div>
+          <div style={{ fontSize: 13.5, color: "var(--aura-ink-55)", marginTop: 2 }}>Toronto · Queen West</div>
         </div>
         <span
           style={{

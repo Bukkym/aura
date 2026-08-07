@@ -4,15 +4,15 @@ import "./globals.css";
 import FeedbackWidget from "@/components/FeedbackWidget";
 
 export const metadata: Metadata = {
-  title: "Aura · Your people are out there",
-  description: "Your people are out there. Let's find them.",
+  title: "aura · meet people you click with",
+  description: "Meet people you click with, then keep seeing them.",
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#FAF7F2",
+  themeColor: "#F6F2E9",
 };
 
 export default function RootLayout({
@@ -27,6 +27,12 @@ export default function RootLayout({
         <link
           rel="stylesheet"
           href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@500,700&display=swap"
+        />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&display=swap"
         />
       </head>
       {/*

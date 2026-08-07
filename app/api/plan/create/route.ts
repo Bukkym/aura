@@ -32,6 +32,8 @@ export type { AttendeeView, PlanResponse } from "@/lib/planResponse";
 interface CreatePlanBody {
   selfExtracted?: SelfExtracted;
   lookingForExtracted?: LookingForExtracted;
+  displayName?: string;
+  ageRange?: { min: number; max: number };
 }
 
 export async function POST(request: NextRequest) {
@@ -67,7 +69,10 @@ export async function POST(request: NextRequest) {
   // later. No embeddings are written (Module 3 is AI-free); the columns are
   // nullable.
 
-  const displayName = deriveDisplayNameFromEmail(authUser.email);
+  const displayName =
+    typeof body.displayName === "string" && body.displayName.trim().length > 0
+      ? body.displayName.trim()
+      : deriveDisplayNameFromEmail(authUser.email);
 
   // Try to find an existing row first so we can preserve the same id across
   // calls (refinement reuses it). onConflict on auth_user_id would be cleaner
@@ -102,12 +107,17 @@ export async function POST(request: NextRequest) {
     // keep prior/null archetype
   }
 
+  const ageMin = body.ageRange?.min ?? existing?.age_range_min ?? null;
+  const ageMax = body.ageRange?.max ?? existing?.age_range_max ?? null;
+
   let requesterRow;
   if (existing) {
     const { data, error } = await sb
       .from("users")
       .update({
         display_name: displayName,
+        age_range_min: ageMin,
+        age_range_max: ageMax,
         self_extracted: body.selfExtracted,
         looking_for_extracted: body.lookingForExtracted,
         archetype,
@@ -128,7 +138,9 @@ export async function POST(request: NextRequest) {
       .insert({
         auth_user_id: authUser.id,
         display_name: displayName,
-        city: "Berlin",
+        age_range_min: ageMin,
+        age_range_max: ageMax,
+        city: "Toronto",
         raw_inputs: rawInputs,
         self_extracted: body.selfExtracted,
         looking_for_extracted: body.lookingForExtracted,

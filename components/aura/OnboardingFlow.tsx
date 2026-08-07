@@ -17,7 +17,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ScWelcome, ScEntry, ScVoice, ScFollowup, ScChips } from "./screens/onboarding";
+import { ScWelcome, ScNameAge, ScEntry, ScVoice, ScFollowup, ScChips } from "./screens/onboarding";
 import { PhoneFrame } from "./PhoneFrame";
 import {
   draftToSelections,
@@ -28,7 +28,7 @@ import {
 
 const STORAGE_KEY = "aura:draft";
 
-type Screen = "welcome" | "entry" | "voice" | "followup" | "chips";
+type Screen = "welcome" | "nameAge" | "entry" | "voice" | "followup" | "chips";
 
 interface ConverseResult {
   done: boolean;
@@ -46,6 +46,8 @@ export function OnboardingFlow() {
   const [utterances, setUtterances] = useState<string[]>([]);
   const [prefill, setPrefill] = useState<Selections | undefined>();
   const [followupQ, setFollowupQ] = useState("");
+  const [name, setName] = useState("");
+  const [age, setAge] = useState("");
 
   // One voice turn: append the new transcript, ask the converse route what to do
   // next, then either show the follow-up or move to the prefilled chips.
@@ -79,7 +81,11 @@ export function OnboardingFlow() {
       // A fresh profile invalidates any previously cached plan + status.
       sessionStorage.removeItem("aura:plan");
       sessionStorage.removeItem("aura:planStatus");
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(mapSelectionsToDraft(sel)));
+      const draft = mapSelectionsToDraft(sel);
+      if (name.trim()) draft.displayName = name.trim();
+      const ageNum = parseInt(age, 10);
+      if (!Number.isNaN(ageNum) && ageNum > 0) draft.ageRange = { min: ageNum, max: ageNum };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
     } catch {
       // Storage can fail in private-mode Safari; /home re-prompts if the
       // draft is missing.
@@ -93,7 +99,22 @@ export function OnboardingFlow() {
   };
 
   let view: React.ReactNode = null;
-  if (screen === "welcome") view = <ScWelcome onNext={() => go("entry")} />;
+  // Voice + entry-choice are parked for the WTP build: welcome → name/age →
+  // chip capture. The voice/entry/followup screens stay in the code and can be
+  // re-linked when voice is un-parked.
+  if (screen === "welcome") view = <ScWelcome onNext={() => go("nameAge")} />;
+  else if (screen === "nameAge")
+    view = (
+      <ScNameAge
+        initialName={name}
+        initialAge={age}
+        onNext={(n, a) => {
+          setName(n);
+          setAge(a);
+          go("chips");
+        }}
+      />
+    );
   else if (screen === "entry") view = <ScEntry onVoice={() => go("voice")} onChips={() => go("chips")} />;
   else if (screen === "voice")
     view = (
