@@ -108,7 +108,7 @@ export function JourneyHome({
             ))}
           </div>
           <div style={{ fontSize: 10.5, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--aura-ink-55)", fontWeight: 600 }}>
-            {done ? "Five plans in" : `Activity ${step} of ${total}`}
+            {done ? "Five plans in" : step === 0 ? "Your journey starts" : `Activity ${step} of ${total}`}
           </div>
         </div>
       )}

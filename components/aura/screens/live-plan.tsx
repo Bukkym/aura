@@ -325,16 +325,25 @@ function AcceptedView({ plan, onBack, onDone, onCancel }: { plan: PlanResponse; 
 function CheckoutView({ plan, onContinue, onBack }: { plan: PlanResponse; onContinue: () => void; onBack: () => void }) {
   const when = formatWhen(plan.dateTime);
   const [busy, setBusy] = useState(false);
+  const [choice, setChoice] = useState<"single" | "journey">("single");
 
-  // Start a Stripe Checkout session; if payment isn't configured yet the route
-  // replies { skipped: true } and we just proceed (payment is the last switch).
+  // Commit to a crew if they chose the journey, then start a Stripe Checkout
+  // session; if payment isn't configured yet the route replies { skipped: true }
+  // and we just proceed (payment is the last switch).
   const proceed = async () => {
     setBusy(true);
+    if (choice === "journey") {
+      try {
+        await fetch("/api/crew/start", { method: "POST" });
+      } catch {
+        // ignore; the plan still proceeds
+      }
+    }
     try {
       const res = await fetch("/api/checkout/session", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ kind: "single" }),
+        body: JSON.stringify({ kind: choice }),
       });
       const data = (await res.json().catch(() => ({}))) as { url?: string };
       if (data?.url) {
@@ -362,20 +371,26 @@ function CheckoutView({ plan, onContinue, onBack }: { plan: PlanResponse; onCont
       </div>
 
       <div style={{ position: "relative", display: "flex", flexDirection: "column", gap: 11, flex: 1 }}>
-        <div style={{ border: "1.5px solid var(--aura-ink-10)", borderRadius: 16, padding: 14 }}>
+        <button
+          onClick={() => setChoice("single")}
+          style={{ textAlign: "left", cursor: "pointer", width: "100%", background: "none", border: choice === "single" ? "2px solid var(--aura-ink)" : "1.5px solid var(--aura-ink-10)", borderRadius: 16, padding: 14 }}
+        >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
             <span style={{ fontWeight: 600, fontSize: 14 }}>This plan</span>
             <span style={{ fontWeight: 700, fontSize: 15 }}>$18</span>
           </div>
           <p style={{ fontSize: 12, color: "var(--aura-ink-55)", margin: "3px 0 0" }}>Just this one. No commitment.</p>
-        </div>
-        <div style={{ border: "1.5px solid var(--aura-plum)", borderRadius: 16, padding: 14, background: "var(--aura-violet-12)" }}>
+        </button>
+        <button
+          onClick={() => setChoice("journey")}
+          style={{ textAlign: "left", cursor: "pointer", width: "100%", border: choice === "journey" ? "2px solid var(--aura-plum)" : "1.5px solid var(--aura-plum)", borderRadius: 16, padding: 14, background: "var(--aura-violet-12)" }}
+        >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--aura-plum)" }}>The 5-plan journey</span>
+            <span style={{ fontWeight: 700, fontSize: 14, color: "var(--aura-plum)" }}>The 5-plan journey <span style={{ fontWeight: 600, fontSize: 11 }}>· form a crew</span></span>
             <span style={{ fontWeight: 700, fontSize: 15, color: "var(--aura-plum)" }}>$70</span>
           </div>
           <p style={{ fontSize: 12, color: "var(--aura-ink-70)", margin: "3px 0 0" }}>Ora keeps bringing back the people you click with. Save $20.</p>
-        </div>
+        </button>
       </div>
 
       <button onClick={proceed} disabled={busy} className="btn-soft btn-soft--ink" style={{ position: "relative", marginTop: 14 }}>{busy ? "One moment" : "Continue"}</button>

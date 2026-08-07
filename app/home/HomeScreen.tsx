@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PhoneFrame } from "@/components/aura/PhoneFrame";
 import { useLivePlan } from "@/components/aura/useLivePlan";
@@ -8,11 +9,9 @@ import { BottomBar } from "@/components/aura/screens/bottom-bar";
 import { FindingMoment, FormingMoment, NoDraftState, ErrorState } from "@/components/aura/screens/states";
 import { SignOutButton } from "@/components/SignOutButton";
 
-// Home is the journey. Dual-track: everyone starts in "single" mode (one-off
-// plans) with the ring resting as a standing invite to start a crew; committing
-// to the 5-plan journey (at checkout) flips them to "crew" mode with the
-// activity-N-of-5 tracker. Crew mode + progress needs a backend flag + a
-// completed-plan count, deferred; until then Home renders single mode.
+// Home is the dual-track journey. /api/journey says whether the user committed
+// to a crew (crew mode → activity N of 5) or is doing single plans (ring rests,
+// "Start a crew" opts in). Progress + crew come from their confirmed plans.
 
 const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
 
@@ -26,11 +25,39 @@ function formatWhen(iso: string): string {
   return `${day} · ${time}`;
 }
 
+interface Journey {
+  onCrewJourney: boolean;
+  step: number;
+  crew: { id: string; name: string }[];
+}
+
 export function HomeScreen() {
   const router = useRouter();
   const { phase } = useLivePlan(true);
+  const [journey, setJourney] = useState<Journey | null>(null);
 
-  // Transitional / non-journey phases render full-screen, no bar.
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/journey")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (alive && d && !d.error) setJourney(d as Journey);
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  const startCrew = async () => {
+    try {
+      await fetch("/api/crew/start", { method: "POST" });
+    } catch {
+      // ignore; optimistic flip below
+    }
+    setJourney((j) => ({ onCrewJourney: true, step: j?.step ?? 0, crew: j?.crew ?? [] }));
+  };
+
   if (phase.kind === "loading") return <Shell inner={<FindingMoment />} />;
   if (phase.kind === "forming") return <Shell inner={<FormingMoment />} />;
   if (phase.kind === "no-draft") return <Shell inner={<NoDraftState />} />;
@@ -38,15 +65,23 @@ export function HomeScreen() {
 
   const plan = phase.kind === "ready" ? phase.plan : null;
   const name = (plan?.createdForDisplayName || "there").split(" ")[0];
+  const mode: "crew" | "single" = journey?.onCrewJourney ? "crew" : "single";
+  const crew =
+    journey?.crew && journey.crew.length > 0
+      ? journey.crew
+      : plan
+        ? plan.attendees.slice(0, 3).map((a) => ({ id: a.userId, name: a.displayName }))
+        : [];
 
   const home = (
     <JourneyHome
       name={name}
-      mode="single"
-      crew={plan ? plan.attendees.slice(0, 3).map((a) => ({ id: a.userId, name: a.displayName })) : []}
+      mode={mode}
+      step={journey?.step ?? 0}
+      crew={crew}
       upNext={plan ? { title: cap(plan.activityType), when: formatWhen(plan.dateTime) } : undefined}
       onJoinNext={() => router.push("/plan")}
-      onStartCrew={() => router.push("/plan")}
+      onStartCrew={startCrew}
       onPlanSingle={() => router.push("/plan")}
     />
   );
