@@ -70,7 +70,7 @@ export function JourneyHome({
         Your crew is forming.
       </h1>
       <p style={{ position: "relative", fontSize: 12.5, color: "var(--aura-ink-55)", textAlign: "center", margin: "4px 0 0" }}>
-        {circle.length} faces keep showing up. Ora keeps bringing them back.
+        Ora brings the people you click with back, plan by plan.
       </p>
 
       <div style={{ position: "relative", flex: 1 }} />

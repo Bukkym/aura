@@ -3,14 +3,26 @@
 import { useRouter } from "next/navigation";
 import { PhoneFrame } from "@/components/aura/PhoneFrame";
 import { useLivePlan } from "@/components/aura/useLivePlan";
-import { LiveHome } from "@/components/aura/screens/live-shell";
+import { JourneyHome } from "@/components/aura/screens/journey-home";
 import { FindingMoment, FormingMoment, NoDraftState, EmptyPlanState, ErrorState } from "@/components/aura/screens/states";
 import { SignOutButton } from "@/components/SignOutButton";
-import { TodayBadge } from "@/components/TodayBadge";
 
-// Home owns the "finding" beat: it generates the Plan (once) and caches it, so
-// /plan and /plans read the warm cache. Status (ready/confirmed) reflects an
-// accept made on /plan.
+// Home is the journey: the "finding" beat generates the plan (once, cached),
+// then Home shows the crew forming + the up-next plan. Tapping the plan opens
+// the full plan card (/plan → checkout → confirmed).
+
+const cap = (s: string) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : s);
+
+function formatWhen(iso: string): string {
+  const d = new Date(iso);
+  const day = d.toLocaleDateString("en-US", { weekday: "short", timeZone: "Europe/Berlin" });
+  const time = d
+    .toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", timeZone: "Europe/Berlin" })
+    .replace(" ", "")
+    .toLowerCase();
+  return `${day} · ${time}`;
+}
+
 export function HomeScreen() {
   const router = useRouter();
   const { phase, status } = useLivePlan(true);
@@ -21,7 +33,22 @@ export function HomeScreen() {
   else if (phase.kind === "no-draft") inner = <NoDraftState />;
   else if (phase.kind === "empty") inner = <EmptyPlanState onSeePlans={() => router.push("/plans")} />;
   else if (phase.kind === "error") inner = <ErrorState message={phase.message} />;
-  else inner = <LiveHome plan={phase.plan} status={status} onOpenPlan={() => router.push("/plan")} onPlans={() => router.push("/plans")} />;
+  else {
+    const plan = phase.plan;
+    const first = (plan.createdForDisplayName || "there").split(" ")[0];
+    inner = (
+      <JourneyHome
+        name={first}
+        circle={plan.attendees.slice(0, 3).map((a) => ({ id: a.userId, name: a.displayName }))}
+        upNext={{
+          title: cap(plan.activityType),
+          when: formatWhen(plan.dateTime),
+          joined: status === "confirmed",
+        }}
+        onJoinNext={() => router.push("/plan")}
+      />
+    );
+  }
 
   return (
     <PhoneFrame
@@ -31,7 +58,6 @@ export function HomeScreen() {
           <SignOutButton />
         </div>
       }
-      footer={<TodayBadge />}
     >
       {inner}
     </PhoneFrame>
