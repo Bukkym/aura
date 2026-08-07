@@ -12,15 +12,36 @@ export type FeedbackPerson = { id: string; name: string };
 export function FeedbackView({
   planLabel,
   people,
-  onSave,
+  planId,
+  onSaved,
 }: {
   planLabel: string;
   people: FeedbackPerson[];
-  onSave?: (picks: Record<string, boolean>) => void;
+  /** When set, Save records the picks to /api/plan/feedback. Omit in demos. */
+  planId?: string;
+  onSaved?: () => void;
 }) {
   const [picks, setPicks] = useState<Record<string, boolean>>({});
   const [comeBack, setComeBack] = useState(true);
+  const [saving, setSaving] = useState(false);
   const toggle = (id: string) => setPicks((p) => ({ ...p, [id]: !p[id] }));
+
+  const save = async () => {
+    setSaving(true);
+    if (planId) {
+      try {
+        await fetch("/api/plan/feedback", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ planId, picks }),
+        });
+      } catch {
+        // best-effort; the UI proceeds regardless
+      }
+    }
+    setSaving(false);
+    onSaved?.();
+  };
 
   return (
     <div style={{ height: "100%", background: "var(--aura-bg)", color: "var(--aura-ink)", display: "flex", flexDirection: "column", padding: "46px 24px 24px" }}>
@@ -97,7 +118,7 @@ export function FeedbackView({
           })}
         </div>
       </div>
-      <button onClick={() => onSave?.(picks)} className="btn-soft btn-soft--ink">Save</button>
+      <button onClick={save} disabled={saving} className="btn-soft btn-soft--ink">{saving ? "Saving" : "Save"}</button>
     </div>
   );
 }
