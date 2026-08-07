@@ -73,10 +73,7 @@ export function draftToSelections(draft: Draft): Selections {
     ac1: s.activityTypes ?? [],
     h1: hoods,
     av1: s.availability ?? [],
-    b1: [s.budget ?? "any"],
     c1: (l.connectionType ?? []).map((c) => CONNECTION_LABEL[c]).filter(Boolean),
-    p2: l.personality ?? [],
-    in2: l.interests ?? [],
     s1: s.socialPreferences ?? [],
   };
 }
@@ -107,10 +104,14 @@ export function mapSelectionsToDraft(sel: Selections): Draft {
   };
 
   const lookingForExtracted: LookingForExtracted = {
-    personality: sel.p2 ?? [],
-    interests: sel.in2 ?? [],
-    // Mirror the user's own social style + vibe as what they want around them,
-    // so match.ts's vibe (.10) and social (.10) weights actually fire.
+    // Personality + interests are asked once (about you) and mirrored here, so
+    // match.ts's personality (.35) and interests (.20) weights score you against
+    // people similar to you. The old flow asked these a second time ("people who
+    // are" / "shared interests"); that duplication is removed.
+    personality: sel.p1 ?? [],
+    interests: sel.in1 ?? [],
+    // Social style + vibe are likewise asked once and mirrored, so match.ts's
+    // vibe (.10) and social (.10) weights actually fire.
     socialPreferences: sel.s1 ?? [],
     vibeKeywords: sel.v1 ?? [],
     connectionType,

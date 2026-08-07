@@ -476,6 +476,11 @@ interface Step {
   groups: ChipGroup[];
 }
 
+// Streamlined to 4 steps: we ask personality and interests ONCE (about you) and
+// mirror them into "looking for" at submit (mapDraft), the same way vibe /
+// social / activities are already mirrored. The old flow asked personality and
+// interests twice (self + desired) and a budget question that doesn't feed
+// people-matching; those added friction without adding matching signal.
 const STEPS: Step[] = [
   {
     ora: "First, you. Pick the words that feel like you on a normal week.",
@@ -496,20 +501,12 @@ const STEPS: Step[] = [
     groups: [
       { key: "h1", label: "Around", opts: VOCAB.hoods, min: 1, anywhere: true },
       { key: "av1", label: "Free", opts: VOCAB.avail, min: 1 },
-      { key: "b1", label: "Budget", opts: VOCAB.budget, min: 1, single: true, def: "any" },
     ],
   },
   {
-    ora: "Now them. What kind of connection are you after.",
+    ora: "Last one. The kind of connection you're after, and how you like to hang.",
     groups: [
       { key: "c1", label: "Looking for", opts: VOCAB.connection, min: 1 },
-      { key: "p2", label: "People who are", opts: VOCAB.personality, min: 2 },
-    ],
-  },
-  {
-    ora: "Last one. What you'd want to share with them.",
-    groups: [
-      { key: "in2", label: "Shared interests", opts: VOCAB.interests, min: 1 },
       { key: "s1", label: "How you'd hang", opts: VOCAB.social, min: 1 },
     ],
   },
