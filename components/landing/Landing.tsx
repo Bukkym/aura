@@ -24,6 +24,7 @@ const FOR = [
 
 export function Landing() {
   const [city, setCity] = useState("toronto");
+  const [email, setEmail] = useState("");
   const [confirm, setConfirm] = useState("");
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -44,18 +45,12 @@ export function Landing() {
     return () => io.disconnect();
   }, []);
 
-  const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const email = (form.elements.namedItem("email") as HTMLInputElement).value.trim();
-    if (!/.+@.+\..+/.test(email)) { (form.elements.namedItem("email") as HTMLInputElement).focus(); return; }
-    setConfirm(
-      city === "toronto"
-        ? "You're on the list. We'll email your first Toronto plan soon."
-        : "Thanks. We'll let you know the moment Aura reaches your city.",
-    );
-    form.reset();
-    setCity("toronto");
+  // Non-Toronto only: capture a waitlist email (local confirm for now). Toronto
+  // visitors go straight into onboarding via the link, no email needed.
+  const handleWaitlist = () => {
+    if (!/.+@.+\..+/.test(email.trim())) return;
+    setConfirm("Thanks. We'll tell you the moment Aura reaches your city.");
+    setEmail("");
   };
 
   return (
@@ -170,27 +165,35 @@ export function Landing() {
           <div className={styles.ringWrap}><div className={styles.bloom} /><div className={styles.ring} /></div>
           <span className={`${styles.lbl} ${styles.eyebrow}`}>Aura is starting in Toronto</span>
           <h2 className={`${styles.h2} ${styles.serif}`} style={{ margin: "10px auto 0" }}>Be one of the first.</h2>
-          <p className={styles.bandSub} style={{ marginInline: "auto" }}>Pick your city and leave your email. We will send you your first plan.</p>
+          <p className={styles.bandSub} style={{ marginInline: "auto" }}>
+            {city === "toronto"
+              ? "Tell Ora your vibe and get your first plan. Takes about a minute."
+              : "Not in Toronto yet? Leave your email and we'll come to you."}
+          </p>
 
-          {confirm ? (
-            <div className={styles.confirm}>{confirm}</div>
-          ) : (
-            <form className={styles.signup} onSubmit={onSubmit} noValidate>
-              <div className={styles.field}>
-                <select name="city" aria-label="Your city" className={styles.select} value={city} onChange={(e) => setCity(e.target.value)}>
-                  <option value="toronto">Toronto</option>
-                  <option value="other">Somewhere else</option>
-                </select>
-              </div>
-              <div className={styles.field}>
-                <input type="email" name="email" placeholder="you@email.com" aria-label="Email" className={styles.email} required />
-              </div>
-              <button className={`${styles.btn} ${styles.btnPlum}`} type="submit">
-                {city === "toronto" ? "Get your first plan" : "Join the waitlist"}
-              </button>
-            </form>
-          )}
-          <small className={styles.fine}>Not in Toronto yet? Pick &quot;somewhere else&quot; and we will tell you the moment Aura reaches you.</small>
+          <div className={styles.signup}>
+            <div className={styles.field}>
+              <select aria-label="Your city" className={styles.select} value={city} onChange={(e) => { setCity(e.target.value); setConfirm(""); }}>
+                <option value="toronto">Toronto</option>
+                <option value="other">Somewhere else</option>
+              </select>
+            </div>
+            {city === "toronto" ? (
+              <Link href="/start" className={`${styles.btn} ${styles.btnPlum}`} style={{ flex: 1, justifyContent: "center" }}>
+                Get your first plan
+              </Link>
+            ) : confirm ? (
+              <div className={styles.confirm} style={{ flex: 1, margin: 0 }}>{confirm}</div>
+            ) : (
+              <>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@email.com" aria-label="Email" className={styles.email} style={{ flex: 1 }} />
+                <button className={`${styles.btn} ${styles.btnPlum}`} type="button" onClick={handleWaitlist}>Join the waitlist</button>
+              </>
+            )}
+          </div>
+          <small className={styles.fine}>
+            {city === "toronto" ? "No account to set up first, you just start." : "We'll only email you when Aura reaches your city."}
+          </small>
         </div>
       </section>
 
