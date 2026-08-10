@@ -26,7 +26,11 @@
   color: var(--ink);
   line-height: 1.55;
   font-family: var(--font-body, ui-sans-serif, system-ui, -apple-system, sans-serif);
-  overflow-x: hidden;
+  /* clip, NOT hidden: overflow-x:hidden forces overflow-y to auto (per spec),
+     which made .page a nested scroll container inside the document scroll and
+     caused the "scroll pauses, scroll again to continue" chaining on desktop.
+     clip prevents horizontal overflow without becoming a scroll container. */
+  overflow-x: clip;
   min-height: 100%;
 }
 @media (prefers-color-scheme: dark) {
@@ -89,14 +93,13 @@
 
 .ringWrap { position: relative; display: grid; place-items: center; }
 .bloom { position: absolute; width: 150%; aspect-ratio: 1; border-radius: 50%;
-  background: radial-gradient(circle, var(--bloom) 0%, transparent 62%); }
-/* The ring is a masked conic-gradient, which cannot be GPU-composited. Kept
-   STATIC on purpose: animating it repaints the whole gradient every frame, which
-   competed with scroll and caused the "stops, then continues" jank on desktop. */
-.ring { border-radius: 50%; aspect-ratio: 1;
+  background: radial-gradient(circle, var(--bloom) 0%, transparent 62%); animation: breathe 7s ease-in-out infinite;
+  will-change: transform, opacity; }
+.ring { border-radius: 50%; aspect-ratio: 1; will-change: transform;
   background: conic-gradient(from 140deg, var(--ring-a), var(--ring-b), var(--ring-c), var(--ring-d), var(--ring-a));
   -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 15px), #000 calc(100% - 14px));
-  mask: radial-gradient(farthest-side, transparent calc(100% - 15px), #000 calc(100% - 14px)); }
+  mask: radial-gradient(farthest-side, transparent calc(100% - 15px), #000 calc(100% - 14px));
+  animation: spin 26s linear infinite, breathe 7s ease-in-out infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.95; } 50% { transform: scale(1.04); opacity: 1; } }
 
