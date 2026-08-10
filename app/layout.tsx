@@ -4,8 +4,23 @@ import "./globals.css";
 import FeedbackWidget from "@/components/FeedbackWidget";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://meetonaura.com"),
   title: "aura · meet people you click with",
-  description: "Meet people you click with, then keep seeing them.",
+  description:
+    "Real nights out with a few people who fit you, then Ora brings the ones you clicked with back. A few plans in, that's your crew.",
+  openGraph: {
+    title: "aura — meet people you click with",
+    description:
+      "Real nights out with a few people who fit you, then Ora brings the ones you clicked with back. A few plans in, that's your crew.",
+    siteName: "aura",
+    url: "https://meetonaura.com",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "aura — meet people you click with",
+    description: "Real nights out with a few people who fit you, then Ora brings the ones you clicked with back.",
+  },
 };
 
 export const viewport: Viewport = {
