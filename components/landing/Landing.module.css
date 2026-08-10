@@ -1,4 +1,4 @@
-/* Aura public landing page — Warm Aurora, soft edition.
+/* Aura public landing page. Warm Aurora, soft edition.
    Light = Aura cream world. Dark = warm espresso (not an indigo surface flip). */
 .page {
   --bg: #f6f2e9;
@@ -97,7 +97,9 @@
   background: conic-gradient(from 140deg, var(--ring-a), var(--ring-b), var(--ring-c), var(--ring-d), var(--ring-a));
   -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 15px), #000 calc(100% - 14px));
   mask: radial-gradient(farthest-side, transparent calc(100% - 15px), #000 calc(100% - 14px));
-  animation: spin 26s linear infinite, breathe 7s ease-in-out infinite; }
+  /* Rest state pulses only (per brand); the continuous spin on a large masked
+     conic-gradient was forcing repaints and janking scroll on big screens. */
+  animation: breathe 7s ease-in-out infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.95; } 50% { transform: scale(1.04); opacity: 1; } }
 

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description:
     "Real nights out with a few people who fit you, then Ora brings the ones you clicked with back. A few plans in, that's your crew.",
   openGraph: {
-    title: "aura — meet people you click with",
+    title: "aura · meet people you click with",
     description:
       "Real nights out with a few people who fit you, then Ora brings the ones you clicked with back. A few plans in, that's your crew.",
     siteName: "aura",
@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "aura — meet people you click with",
+    title: "aura · meet people you click with",
     description: "Real nights out with a few people who fit you, then Ora brings the ones you clicked with back.",
   },
 };
