@@ -134,6 +134,108 @@ The model that earns genuine authority cannot be bought or copied. It has to be 
 
 ---
 
+## Positioning vs. the Data Economy (why Ora is not a data vendor)
+
+Context: as of mid-2026, roughly $100B of market cap has formed around companies
+that sell data to frontier labs (Scale ~$29B, Surge ~$15B, Mercor ~$10B,
+Handshake ~$3.3B, Invisible, Hive, Snorkel, Turing, Labelbox, micro1, and
+others). The natural question is whether Ora belongs in that category. It does
+not, and the distinction is strategic, not cosmetic.
+
+**Elicited vs. revealed is the line that matters.** Those companies sell
+*elicited* data: humans paid to produce annotations, preference pairs, expert
+demonstrations, and evals, under instruction. It is a labor business whose moat
+is operational throughput, which is why it commoditizes as labs internalize
+labeling and synthetic data improves. Ora's data is *revealed behavioral
+outcome* data: who actually clicked, reciprocated, kept showing up, and
+converged into a durable group, generated as a byproduct of people pursuing real
+social goals. Three properties make it a different asset class:
+
+1. **Revealed, not stated.** It is incentive-compatible behavior, not a
+   self-report or a paid label. That is the stated-vs-revealed gap this document
+   is built around.
+2. **Labeled by reality, not by a rater.** The outcome (friendship formed or
+   not) is ground truth with a real consequence loop, which is exactly what most
+   training corpora lack.
+3. **A capability frontier models cannot reach.** Human social fit is not
+   verifiable from text, not self-generable, and not present in the pretraining
+   corpus in outcome-labeled form. The web has social talk, not social outcomes.
+
+**Implication for value capture:** selling raw rows to a lab is selling the seed
+corn. The lab trains a general model and Ora loses its only moat. The capture
+path is Ora *being* the vertical intelligence, and eventually the compatibility
+model / reward model / benchmark for human fit that others build on, not a data
+feed. The closest analog in the list above is Mercor and Handshake (matching
+marketplaces whose data exhaust became the asset), not Scale (a labeling
+vendor).
+
+**The reward-system trap.** Centering the platform on paying users for the
+data-generating act (paying to rate, to attend, to "connect") would collapse the
+one property that makes the data valuable: authenticity. Extrinsic reward crowds
+out intrinsic motivation (the overjustification effect; Deci and Ryan's
+self-determination theory) and invites Goodhart gaming, converting a
+revealed-preference dataset into an elicited one, i.e. demoting Ora into the
+commoditizing category it should transcend. It also imports the positivity bias
+already flagged for synthetic users (future-considerations §2) into real users,
+and attracts mercenary low-intent users who fail the liquidity test
+(future-considerations §4). The rule: **reward the friendship, never the
+rating.** Safe incentives reinforce outcomes the user already wants (status or
+loyalty for showing up and forming a group); unsafe incentives pay for the
+judgment signals themselves. Any data-dividend must be a flat, aggregate share
+decoupled from individual feedback content.
+
+---
+
+## How Big Can This Realistically Get?
+
+Framed as scenarios, because the ceiling depends on which layer captures value.
+Numbers are order-of-magnitude, not forecasts.
+
+**Structural headwinds to price in first:**
+- Friendship monetizes worse than dating: lower urgency, lower willingness to
+  pay. The friendship-app graveyard is real.
+- The success-churn paradox: if the product works, the user forms a group and
+  needs it less. Phase 3 (Group Life) is the attempt to solve this and is
+  unproven.
+- Liquidity is a city-by-city cold start: the future-considerations §4 sim puts
+  the floor near 150+ active availability-overlapping users per city just to
+  make one cohort viable.
+- Trust: this is intimate relational data. A data-broker pivot could nuke the
+  consumer trust that generates the data.
+
+**Base case (consumer product that works): ~$10-50M ARR, ~$100-500M enterprise
+value.** A regional-to-multi-city friendship product that leads its niche. This
+is already a good outcome for a social app; most never reach it. Bounded by the
+headwinds above.
+
+**Bull case (category-defining consumer + early intelligence line): ~$100-500M
+ARR, ~$2-10B EV.** The brand for IRL friendship formation across major cities,
+the wedge extended into adjacent connection contexts (professional, communities,
+events), with an early B2B compatibility line. Requires solving liquidity in
+many cities and cracking the churn paradox. A Bumble-scale outcome, plus some.
+
+**Moonshot (the thesis in this document realized): $10B+, plausibly $10-50B.**
+The compatibility model becomes infrastructure, the reward model for human fit,
+used across matching problems (hiring, teams, communities, dating, AI-mediated
+connection). A genuine vertical foundation model on a proprietary dataset no one
+can replicate from a standing start. Requires: the consumer flywheel spinning
+long enough to accumulate years of outcome data at scale; demonstrable evidence
+the model predicts fit better than general models; and a real market for
+social-fit intelligence. Low probability, high magnitude. This is the only path
+that justifies comparison to the data-economy comps, and even then the realistic
+ceiling is single-digit-to-low-double-digit billions for one company, not the
+~$100B aggregate of the whole category.
+
+**Honest synthesis:** the consumer app is a hundreds-of-millions business in a
+good outcome. The intelligence layer is a call option on top of it that could
+make it a multi-billion, potentially $10B+, company. The option is real because
+the dataset is genuinely unique, but it is option value, not a directly
+executable plan, and it pays off only if the consumer flywheel runs for years
+first. The reward-system move is the fastest way to sell that option cheaply.
+
+---
+
 ## Change Log
 
 - 2026-05-08: Document created. Captures the long-term Ora intelligence vision, data flywheel model, three phases of intelligence, near-term product implications, and deck narrative.
+- 2026-08-05: Added "Positioning vs. the Data Economy" (the elicited-vs-revealed distinction, why Ora is not a data vendor, the reward-system trap) and "How Big Can This Realistically Get?" (base / bull / moonshot sizing with the structural headwinds). Prompted by the question of whether Aura belongs in the ~$100B data-labeling category.
