@@ -89,17 +89,14 @@
 
 .ringWrap { position: relative; display: grid; place-items: center; }
 .bloom { position: absolute; width: 150%; aspect-ratio: 1; border-radius: 50%;
-  background: radial-gradient(circle, var(--bloom) 0%, transparent 62%); animation: breathe 7s ease-in-out infinite;
-  will-change: transform, opacity; }
-/* will-change promotes the ring to its own GPU layer, so the spin/breathe don't
-   force full repaints while the page scrolls. */
-.ring { border-radius: 50%; aspect-ratio: 1; will-change: transform; transform: translateZ(0);
+  background: radial-gradient(circle, var(--bloom) 0%, transparent 62%); }
+/* The ring is a masked conic-gradient, which cannot be GPU-composited. Kept
+   STATIC on purpose: animating it repaints the whole gradient every frame, which
+   competed with scroll and caused the "stops, then continues" jank on desktop. */
+.ring { border-radius: 50%; aspect-ratio: 1;
   background: conic-gradient(from 140deg, var(--ring-a), var(--ring-b), var(--ring-c), var(--ring-d), var(--ring-a));
   -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 15px), #000 calc(100% - 14px));
-  mask: radial-gradient(farthest-side, transparent calc(100% - 15px), #000 calc(100% - 14px));
-  /* Rest state pulses only (per brand); the continuous spin on a large masked
-     conic-gradient was forcing repaints and janking scroll on big screens. */
-  animation: breathe 7s ease-in-out infinite; }
+  mask: radial-gradient(farthest-side, transparent calc(100% - 15px), #000 calc(100% - 14px)); }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes breathe { 0%, 100% { transform: scale(1); opacity: 0.95; } 50% { transform: scale(1.04); opacity: 1; } }
 
