@@ -4,10 +4,10 @@ import { join } from "node:path";
 
 // The link-share card (og:image). A branded 1200x630: warm-dark Aura ground with
 // an aurora glow, the serif "aura" wordmark, and the tagline. No dominating
-// circle — the aurora reads as light, not a big orb. Rendered server-side via
+// circle, the aurora reads as light, not a big orb. Rendered server-side via
 // satori (nodejs runtime, so we can read the bundled fonts).
 
-export const alt = "aura — meet people you click with, then keep seeing them";
+export const alt = "aura · meet people you click with, then keep seeing them";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
